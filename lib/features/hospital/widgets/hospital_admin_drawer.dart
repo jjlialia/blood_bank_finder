@@ -5,6 +5,7 @@ import 'package:blood_bank_finder/features/auth/screens/login_screen.dart';
 import 'package:blood_bank_finder/features/hospital/screens/hospital_admin_dashboard.dart';
 import 'package:blood_bank_finder/features/hospital/screens/inventory_management_screen.dart';
 import 'package:blood_bank_finder/features/hospital/screens/blood_requests_list_screen.dart';
+import 'package:blood_bank_finder/features/hospital/screens/hospital_profile_screen.dart';
 
 class HospitalAdminDrawer extends StatelessWidget {
   const HospitalAdminDrawer({super.key});
@@ -54,6 +55,16 @@ class HospitalAdminDrawer extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) => const BloodRequestsListScreen(),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.local_hospital),
+            title: const Text('Hospital Profile'),
+            onTap: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HospitalProfileScreen(),
               ),
             ),
           ),

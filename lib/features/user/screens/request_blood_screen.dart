@@ -16,6 +16,7 @@ class RequestBloodScreen extends StatefulWidget {
 
 class _RequestBloodScreenState extends State<RequestBloodScreen> {
   final DatabaseService _db = DatabaseService();
+  late Stream<List<HospitalModel>> _hospitalsStream;
   final _formKey = GlobalKey<FormState>();
 
   String? _selectedBloodType;
@@ -23,6 +24,12 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
   final _unitsController = TextEditingController(text: '1.0');
   final _contactController = TextEditingController();
   bool _isSworn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hospitalsStream = _db.streamHospitals();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +55,14 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
               ),
               const SizedBox(height: 16),
               StreamBuilder<List<HospitalModel>>(
-                stream: _db.streamHospitals(),
+                stream: _hospitalsStream,
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Text(
+                      'Error loading hospitals: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red),
+                    );
+                  }
                   if (!snapshot.hasData) {
                     return const CircularProgressIndicator();
                   }
@@ -72,13 +85,23 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
               CustomTextField(
                 label: 'Quantity (Units)',
                 controller: _unitsController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Required';
+                  final n = double.tryParse(v);
+                  if (n == null || n <= 0) return 'Must be > 0';
+                  return null;
+                },
               ),
               CustomTextField(
                 label: 'Contact Details',
                 controller: _contactController,
                 prefixIcon: Icons.phone,
                 keyboardType: TextInputType.phone,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Contact required' : null,
               ),
               const SizedBox(height: 16),
               CheckboxListTile(

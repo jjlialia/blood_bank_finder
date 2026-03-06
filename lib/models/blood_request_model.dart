@@ -12,6 +12,7 @@ class BloodRequestModel {
   final String contactNumber;
   final double quantity;
   final DateTime createdAt;
+  final String? adminMessage;
 
   BloodRequestModel({
     this.id,
@@ -25,6 +26,7 @@ class BloodRequestModel {
     required this.contactNumber,
     required this.quantity,
     required this.createdAt,
+    this.adminMessage,
   });
 
   factory BloodRequestModel.fromMap(
@@ -43,6 +45,7 @@ class BloodRequestModel {
       contactNumber: data['contactNumber'] ?? '',
       quantity: (data['quantity'] ?? 0.0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      adminMessage: data['adminMessage'],
     );
   }
 
@@ -58,6 +61,7 @@ class BloodRequestModel {
       'contactNumber': contactNumber,
       'quantity': quantity,
       'createdAt': Timestamp.fromDate(createdAt),
+      'adminMessage': adminMessage,
     };
   }
 }

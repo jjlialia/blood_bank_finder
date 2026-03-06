@@ -10,8 +10,11 @@ class UserModel {
   final String mobile;
   final String gender;
   final String bloodGroup;
+  final String islandGroup;
   final String city;
+  final String barangay;
   final String address;
+  final String? hospitalId;
   final bool isBanned;
   final DateTime createdAt;
 
@@ -25,8 +28,11 @@ class UserModel {
     required this.mobile,
     required this.gender,
     required this.bloodGroup,
+    required this.islandGroup,
     required this.city,
+    required this.barangay,
     required this.address,
+    this.hospitalId,
     required this.isBanned,
     required this.createdAt,
   });
@@ -42,8 +48,11 @@ class UserModel {
       mobile: data['mobile'] ?? '',
       gender: data['gender'] ?? '',
       bloodGroup: data['bloodGroup'] ?? '',
+      islandGroup: data['islandGroup'] ?? '',
       city: data['city'] ?? '',
+      barangay: data['barangay'] ?? '',
       address: data['address'] ?? '',
+      hospitalId: data['hospitalId'],
       isBanned: data['isBanned'] ?? false,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
@@ -60,8 +69,11 @@ class UserModel {
       'mobile': mobile,
       'gender': gender,
       'bloodGroup': bloodGroup,
+      'islandGroup': islandGroup,
       'city': city,
+      'barangay': barangay,
       'address': address,
+      'hospitalId': hospitalId,
       'isBanned': isBanned,
       'createdAt': Timestamp.fromDate(createdAt),
     };

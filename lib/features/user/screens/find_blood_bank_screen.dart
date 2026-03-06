@@ -14,19 +14,9 @@ class FindBloodBankScreen extends StatefulWidget {
 class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
   final DatabaseService _db = DatabaseService();
   String _searchQuery = '';
+  String? _selectedIsland;
   String? _selectedCity;
-  String? _selectedBloodType;
-
-  final List<String> _bloodTypes = [
-    'A+',
-    'A-',
-    'B+',
-    'B-',
-    'O+',
-    'O-',
-    'AB+',
-    'AB-',
-  ];
+  String? _selectedBarangay;
 
   @override
   Widget build(BuildContext context) {
@@ -48,46 +38,85 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        initialValue: _selectedBloodType,
+                        value: _selectedIsland,
                         decoration: const InputDecoration(
-                          labelText: 'Blood Type',
+                          labelText: 'Island',
                           isDense: true,
                         ),
-                        items: _bloodTypes
+                        items: PhLocationData.islandGroups
                             .map(
                               (e) => DropdownMenuItem(value: e, child: Text(e)),
                             )
                             .toList(),
-                        onChanged: (v) =>
-                            setState(() => _selectedBloodType = v),
+                        onChanged: (v) => setState(() {
+                          _selectedIsland = v;
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        }),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        initialValue: _selectedCity,
+                        value: _selectedCity,
                         decoration: const InputDecoration(
                           labelText: 'City',
                           isDense: true,
                         ),
-                        items: PhLocationData.allCities
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(
-                                  e,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (v) => setState(() => _selectedCity = v),
+                        items:
+                            (_selectedIsland == null
+                                    ? []
+                                    : PhLocationData.getCitiesForIsland(
+                                        _selectedIsland!,
+                                      ))
+                                .map(
+                                  (e) => DropdownMenuItem<String>(
+                                    value: e,
+                                    child: Text(
+                                      e,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (v) => setState(() {
+                          _selectedCity = v;
+                          _selectedBarangay = null;
+                        }),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedBarangay,
+                        decoration: const InputDecoration(
+                          labelText: 'Barangay',
+                          isDense: true,
+                        ),
+                        items:
+                            (_selectedCity == null
+                                    ? []
+                                    : PhLocationData.getBarangaysForCity(
+                                        _selectedCity!,
+                                      ))
+                                .map(
+                                  (e) => DropdownMenuItem<String>(
+                                    value: e,
+                                    child: Text(
+                                      e,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (v) => setState(() => _selectedBarangay = v),
                       ),
                     ),
                     IconButton(
                       onPressed: () => setState(() {
+                        _selectedIsland = null;
                         _selectedCity = null;
-                        _selectedBloodType = null;
+                        _selectedBarangay = null;
                       }),
                       icon: const Icon(Icons.clear),
                     ),
@@ -99,8 +128,9 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
           Expanded(
             child: StreamBuilder<List<HospitalModel>>(
               stream: _db.streamHospitals(
+                islandGroup: _selectedIsland,
                 city: _selectedCity,
-                bloodType: _selectedBloodType,
+                barangay: _selectedBarangay,
               ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {

@@ -18,7 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final Map<String, dynamic> _formData = {
     'gender': 'Male',
     'bloodGroup': 'A+',
-    'island': null,
+    'islandGroup': null,
     'city': null,
     'barangay': null,
   };
@@ -106,7 +106,7 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 16),
               PhLocationPicker(
                 onLocationChanged: (island, city, barangay) {
-                  _formData['island'] = island;
+                  _formData['islandGroup'] = island;
                   _formData['city'] = city;
                   _formData['barangay'] = barangay;
                 },

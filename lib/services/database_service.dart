@@ -13,6 +13,10 @@ class DatabaseService {
     await _db.collection('users').doc(user.uid).set(user.toMap());
   }
 
+  Future<void> updateUser(UserModel user) async {
+    await _db.collection('users').doc(user.uid).update(user.toMap());
+  }
+
   Future<UserModel?> getUser(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (doc.exists && doc.data() != null) {
@@ -40,6 +44,17 @@ class DatabaseService {
     await _db.collection('users').doc(uid).update({'isBanned': isBanned});
   }
 
+  Future<void> updateUserRoleAndHospital({
+    required String uid,
+    required String role,
+    String? hospitalId,
+  }) async {
+    await _db.collection('users').doc(uid).update({
+      'role': role,
+      'hospitalId': hospitalId,
+    });
+  }
+
   // --- Hospitals Repository ---
   Future<void> addHospital(HospitalModel hospital) async {
     await _db.collection('hospitals').add(hospital.toMap());
@@ -49,20 +64,32 @@ class DatabaseService {
     await _db.collection('hospitals').doc(hospitalId).delete();
   }
 
+  Future<void> updateHospital(String hospitalId, HospitalModel hospital) async {
+    await _db.collection('hospitals').doc(hospitalId).update(hospital.toMap());
+  }
+
   Stream<List<HospitalModel>> streamHospitals({
+    String? islandGroup,
     String? city,
-    String? bloodType,
+    String? barangay,
+    bool allowAll = false, // Added to show inactive hospitals to Super Admin
   }) {
-    Query query = _db
-        .collection('hospitals')
-        .where('isActive', isEqualTo: true);
+    Query query = _db.collection('hospitals');
+
+    if (!allowAll) {
+      query = query.where('isActive', isEqualTo: true);
+    }
+
+    if (islandGroup != null && islandGroup.isNotEmpty) {
+      query = query.where('islandGroup', isEqualTo: islandGroup);
+    }
 
     if (city != null && city.isNotEmpty) {
       query = query.where('city', isEqualTo: city);
     }
 
-    if (bloodType != null && bloodType.isNotEmpty) {
-      query = query.where('availableBloodTypes', arrayContains: bloodType);
+    if (barangay != null && barangay.isNotEmpty) {
+      query = query.where('barangay', isEqualTo: barangay);
     }
 
     return query.snapshots().map((snapshot) {
@@ -107,10 +134,88 @@ class DatabaseService {
         });
   }
 
-  Future<void> updateRequestStatus(String requestId, String status) async {
+  Future<void> updateRequestStatus(
+    String requestId,
+    String status, {
+    String? adminMessage,
+  }) async {
     await _db.collection('blood_requests').doc(requestId).update({
       'status': status,
+      if (adminMessage != null) 'adminMessage': adminMessage,
     });
+  }
+
+  Future<void> updateRequestStatusWithNotification({
+    required BloodRequestModel request,
+    required String newStatus,
+    String? adminMessage,
+  }) async {
+    // 1. Update the request status
+    await updateRequestStatus(
+      request.id!,
+      newStatus,
+      adminMessage: adminMessage,
+    );
+
+    // 2. Create a notification for the user
+    String title = '';
+    String body = '';
+    String type = '';
+
+    switch (newStatus) {
+      case 'approved':
+        title = 'Request Approved!';
+        body =
+            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} has been approved.';
+        type = 'request_approved';
+        break;
+      case 'on progress':
+        title = 'Request is now On Progress';
+        body =
+            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} is now being processed.';
+        type = 'request_on_progress';
+        break;
+      case 'completed':
+        title = 'Request Completed';
+        body =
+            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} is now complete. Thank you for using Blood Bank Finder!';
+        type = 'request_completed';
+        break;
+      case 'rejected':
+        title = 'Request Rejected';
+        body =
+            'Sorry, your ${request.type} for ${request.bloodType} at ${request.hospitalName} was rejected.';
+        type = 'request_rejected';
+        break;
+    }
+
+    if (adminMessage != null && adminMessage.isNotEmpty) {
+      body += '\n\nMessage from hospital: "$adminMessage"';
+    }
+
+    if (title.isNotEmpty) {
+      final notification = NotificationModel(
+        userId: request.userId,
+        message: body,
+        isRead: false,
+        createdAt: DateTime.now(),
+      );
+
+      final data = notification.toMap();
+      data['type'] = type;
+      data['title'] = title;
+      data['body'] = body;
+
+      await _db.collection('notifications').add(data);
+    }
+  }
+
+  Future<HospitalModel?> getHospital(String id) async {
+    final doc = await _db.collection('hospitals').doc(id).get();
+    if (doc.exists && doc.data() != null) {
+      return HospitalModel.fromMap(doc.data()!, doc.id);
+    }
+    return null;
   }
 
   // --- Inventory Repository ---
