@@ -63,32 +63,31 @@ class InventoryManagementScreen extends StatelessWidget {
                           ),
                         ),
                         subtitle: Text('Inventory: $units Units'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.remove_circle,
-                                color: Colors.red,
-                              ),
-                              onPressed: () => db.updateInventory(
-                                hospitalId,
-                                type,
-                                units > 0 ? units - 1 : 0,
-                              ),
+                        trailing: SizedBox(
+                          width: 100,
+                          child: TextField(
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.add_circle,
-                                color: Colors.green,
-                              ),
-                              onPressed: () => db.updateInventory(
-                                hospitalId,
-                                type,
-                                units + 1,
-                              ),
+                            textAlign: TextAlign.center,
+                            decoration: const InputDecoration(
+                              hintText: 'Qty',
+                              isDense: true,
+                              border: OutlineInputBorder(),
                             ),
-                          ],
+                            onSubmitted: (value) {
+                              final newUnits = double.tryParse(value);
+                              if (newUnits != null && newUnits >= 0) {
+                                db.updateInventory(hospitalId, type, newUnits);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Updated $type to $newUnits'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                         ),
                       ),
                     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/hospital_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../services/database_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../core/utils/ph_locations.dart';
@@ -215,7 +216,33 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final url = Uri.parse(
+                    'https://www.google.com/maps/search/?api=1&query=${h.latitude},${h.longitude}',
+                  );
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not open map')),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.map),
+                label: const Text('Show on Map'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Close'),
               ),

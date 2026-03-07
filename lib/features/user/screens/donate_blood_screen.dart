@@ -24,6 +24,12 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isSworn = false;
 
+  bool _ageOk = false;
+  bool _weightOk = false;
+  bool _travelOk = false;
+  bool _medsOk = false;
+  bool _wellOk = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,11 +46,22 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         type: StepperType.vertical,
         currentStep: _currentStep,
         onStepContinue: () {
-          if (_currentStep == 2) {
+          if (_currentStep == 0) {
+            if (!(_ageOk && _weightOk && _travelOk && _medsOk && _wellOk)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('You must meet all eligibility criteria.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+          }
+          if (_currentStep == 3) {
             if (!_formKey.currentState!.validate()) return;
           }
 
-          if (_currentStep < 3) {
+          if (_currentStep < 4) {
             setState(() => _currentStep++);
           } else {
             _submitDonation(auth);
@@ -55,8 +72,43 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         },
         steps: [
           Step(
-            title: const Text('Select Blood Type'),
+            title: const Text('Eligibility Quiz'),
             isActive: _currentStep >= 0,
+            content: Column(
+              children: [
+                CheckboxListTile(
+                  title: const Text('Are you between 18-65 years old?'),
+                  value: _ageOk,
+                  onChanged: (v) => setState(() => _ageOk = v ?? false),
+                ),
+                CheckboxListTile(
+                  title: const Text('Do you weigh at least 50kg?'),
+                  value: _weightOk,
+                  onChanged: (v) => setState(() => _weightOk = v ?? false),
+                ),
+                CheckboxListTile(
+                  title: const Text(
+                    'No recent international travel (6 months)?',
+                  ),
+                  value: _travelOk,
+                  onChanged: (v) => setState(() => _travelOk = v ?? false),
+                ),
+                CheckboxListTile(
+                  title: const Text('No recent medications (7 days)?'),
+                  value: _medsOk,
+                  onChanged: (v) => setState(() => _medsOk = v ?? false),
+                ),
+                CheckboxListTile(
+                  title: const Text('Are you feeling well today?'),
+                  value: _wellOk,
+                  onChanged: (v) => setState(() => _wellOk = v ?? false),
+                ),
+              ],
+            ),
+          ),
+          Step(
+            title: const Text('Select Blood Type'),
+            isActive: _currentStep >= 1,
             content: DropdownButtonFormField<String>(
               initialValue: _selectedBloodType,
               items: [
@@ -75,7 +127,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           ),
           Step(
             title: const Text('Select Hospital'),
-            isActive: _currentStep >= 1,
+            isActive: _currentStep >= 2,
             content: StreamBuilder<List<HospitalModel>>(
               stream: _hospitalsStream,
               builder: (context, snapshot) {
@@ -104,7 +156,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           ),
           Step(
             title: const Text('Details'),
-            isActive: _currentStep >= 2,
+            isActive: _currentStep >= 3,
             content: Form(
               key: _formKey,
               child: Column(
@@ -136,7 +188,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           ),
           Step(
             title: const Text('Declaration'),
-            isActive: _currentStep >= 3,
+            isActive: _currentStep >= 4,
             content: CheckboxListTile(
               title: const Text(
                 'I swear that the information provided is true.',
