@@ -19,7 +19,7 @@ The frontend is built using Flutter, following a feature-based architecture comb
 
 ### Core Logic (`lib/core/`)
 - **`core/providers/auth_provider.dart`**: Manages the authentication state system-wide. It handles login, logout, and registration logic, exposing current user data to the entire app.
-- **`core/theme/app_theme.dart`**: Defines the visual identity of the app. It centralizes colors, typography, and button styles to ensure UI consistency.
+- **`core/theme/app_theme.dart`**: Defines the visual identity of the app. It now uses a premium **Deep Burgundy (#8B0000)** and **Soft Grey (#F5F5F5)** palette with refined typography and Material 3 design tokens.
 
 ### Data Models (`lib/models/`)
 These files define the structure of data exchanged within the app and with Firebase/FastAPI.
@@ -33,10 +33,14 @@ These files define the structure of data exchanged within the app and with Fireb
 The app is modularized by user roles and specific functionalities.
 - **`features/auth/`**: Contains screens for login, signup, and splash logic.
 - **`features/user/`**:
+    - **`user_home_screen.dart`**: A comprehensive **Donor Dashboard** that tracks eligibility status and highlights urgent blood needs at nearby hospitals.
+    - `find_blood_bank_screen.dart`: Refactored with a **Unified Search Bar** and interactive **Filter Chips** for seamless hospital and location discovery.
     - `request_blood_screen.dart`: UI for seekers to post new requests.
     - `profile_screen.dart`: View and edit personal donor profile.
+    - `notifications_screen.dart`: Styled for consistency, showing real-time updates on requests and donation status.
 - **`features/hospital/`**:
-    - `hospital_admin_dashboard.dart`: The hub for hospital administrators to manage stock and view requests.
+    - **`hospital_admin_dashboard.dart`**: The hub for hospital administrators, now featuring **Visual Inventory Stats** (progress bars) for real-time stock monitoring.
+    - `blood_requests_list_screen.dart`: Lists all hospital-specific requests with **Quick Swipe Actions** for fast approval or rejection.
 - **`features/super_admin/`**: High-level screens for system administrators to manage hospitals and overall system health.
 
 ### Services (`lib/services/`)

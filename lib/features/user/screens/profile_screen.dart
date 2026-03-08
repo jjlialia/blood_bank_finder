@@ -98,7 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Theme.of(context).primaryColor,
         actions: [
           if (user != null)
             IconButton(
@@ -127,10 +127,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.redAccent,
-                      child: Icon(Icons.person, size: 60, color: Colors.white),
+                      backgroundColor: Theme.of(context).primaryColor,
+                      child: const Icon(
+                        Icons.person,
+                        size: 60,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -233,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             _isLoading ? 'Saving...' : 'Save Changes',
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
+                            backgroundColor: Theme.of(context).primaryColor,
                             foregroundColor: Colors.white,
                           ),
                         ),
@@ -275,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, color: Colors.redAccent),
+          Icon(icon, color: Theme.of(context).primaryColor),
           const SizedBox(width: 20),
           Expanded(
             child: Column(

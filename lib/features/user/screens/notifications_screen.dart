@@ -10,12 +10,10 @@ class NotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
     final userId = auth.user?.uid;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: Colors.redAccent,
-      ),
+      appBar: AppBar(title: const Text('Notifications')),
       body: userId == null
           ? const Center(child: Text('Unauthorized'))
           : StreamBuilder<QuerySnapshot>(
@@ -98,7 +96,7 @@ class NotificationsScreen extends StatelessWidget {
                       child: ListTile(
                         leading: Icon(
                           _getIconForType(data['type']),
-                          color: Colors.redAccent,
+                          color: theme.primaryColor,
                         ),
                         title: Text(
                           data['title'] ?? 'Notification',
@@ -151,7 +149,7 @@ class NotificationsScreen extends StatelessWidget {
                 children: [
                   Icon(
                     _getIconForType(data['type']),
-                    color: Colors.redAccent,
+                    color: Theme.of(context).primaryColor,
                     size: 32,
                   ),
                   const SizedBox(width: 16),
@@ -199,7 +197,7 @@ class NotificationsScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),

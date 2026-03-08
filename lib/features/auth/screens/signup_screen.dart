@@ -57,12 +57,12 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Personal Information',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.redAccent,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
               const SizedBox(height: 16),
@@ -95,12 +95,12 @@ class _SignupScreenState extends State<SignupScreen> {
               ], 'bloodGroup'),
 
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Location Details',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.redAccent,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
               const SizedBox(height: 16),
@@ -119,12 +119,12 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
 
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Account Credentials',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.redAccent,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
               const SizedBox(height: 16),

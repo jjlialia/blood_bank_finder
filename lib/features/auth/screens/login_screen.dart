@@ -71,7 +71,11 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                const Icon(Icons.bloodtype, size: 80, color: Colors.redAccent),
+                Icon(
+                  Icons.bloodtype,
+                  size: 80,
+                  color: Theme.of(context).primaryColor,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Welcome Back',
@@ -81,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Blood Bank Finder',
                   style: GoogleFonts.outfit(
                     fontSize: 18,
-                    color: Colors.redAccent,
+                    color: Theme.of(context).primaryColor,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

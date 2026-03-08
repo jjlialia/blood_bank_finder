@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
           // Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/images/main.webp',
+              'assets/images/splash_bg.jpg',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 debugPrint('Asset Error: $error');
@@ -130,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: ElevatedButton(
                     onPressed: _navigateToLogin,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 55),
                       shape: RoundedRectangleBorder(

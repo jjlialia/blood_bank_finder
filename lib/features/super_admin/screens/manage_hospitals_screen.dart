@@ -96,7 +96,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
         onPressed: () => _showHospitalDialog(),
         label: const Text('Register Hospital'),
         icon: const Icon(Icons.add),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Theme.of(context).primaryColor,
       ),
     );
   }
@@ -108,70 +108,71 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    hospital.name,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+      builder: (context) => SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      hospital.name,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const Divider(height: 32),
-            _detailRow(Icons.email, 'Email', hospital.email),
-            _detailRow(
-              Icons.location_on,
-              'Location',
-              '${hospital.barangay}, ${hospital.city}, ${hospital.islandGroup}',
-            ),
-            _detailRow(Icons.map, 'Address', hospital.address),
-            _detailRow(Icons.phone, 'Contact', hospital.contactNumber),
-            _detailRow(
-              Icons.bloodtype,
-              'Available Blood Types',
-              hospital.availableBloodTypes.isEmpty
-                  ? 'None'
-                  : hospital.availableBloodTypes.join(', '),
-            ),
-            _detailRow(
-              hospital.isActive ? Icons.check_circle : Icons.cancel,
-              'Status',
-              hospital.isActive ? 'Active' : 'Inactive',
-              color: hospital.isActive ? Colors.green : Colors.red,
-            ),
-            _detailRow(
-              Icons.calendar_today,
-              'Registered On',
-              hospital.createdAt.toString().split(' ')[0],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showHospitalDialog(hospital: hospital);
-                },
-                icon: const Icon(Icons.edit),
-                label: const Text('Edit Hospital Info'),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const Divider(height: 32),
+              _detailRow(Icons.email, 'Email', hospital.email),
+              _detailRow(
+                Icons.location_on,
+                'Location',
+                '${hospital.barangay}, ${hospital.city}, ${hospital.islandGroup}',
+              ),
+              _detailRow(Icons.map, 'Address', hospital.address),
+              _detailRow(Icons.phone, 'Contact', hospital.contactNumber),
+              _detailRow(
+                Icons.bloodtype,
+                'Available Blood Types',
+                hospital.availableBloodTypes.isEmpty
+                    ? 'None'
+                    : hospital.availableBloodTypes.join(', '),
+              ),
+              _detailRow(
+                hospital.isActive ? Icons.check_circle : Icons.cancel,
+                'Status',
+                hospital.isActive ? 'Active' : 'Inactive',
+                color: hospital.isActive ? Colors.green : Colors.red,
+              ),
+              _detailRow(
+                Icons.calendar_today,
+                'Registered On',
+                hospital.createdAt.toString().split(' ')[0],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showHospitalDialog(hospital: hospital);
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Edit Hospital Info'),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -183,7 +184,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 22, color: color ?? Colors.redAccent),
+          Icon(icon, size: 22, color: color ?? Theme.of(context).primaryColor),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

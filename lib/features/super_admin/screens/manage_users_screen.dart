@@ -65,7 +65,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                       leading: CircleAvatar(
                         backgroundColor: user.isBanned
                             ? Colors.grey
-                            : Colors.redAccent,
+                            : Theme.of(context).primaryColor,
                         child: const Icon(Icons.person, color: Colors.white),
                       ),
                       title: Text('${user.firstName} ${user.lastName}'),

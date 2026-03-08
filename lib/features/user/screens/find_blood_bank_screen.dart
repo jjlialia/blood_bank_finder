@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../models/hospital_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/database_service.dart';
-import '../../../shared/widgets/custom_text_field.dart';
 import '../../../core/utils/ph_locations.dart';
 
 class FindBloodBankScreen extends StatefulWidget {
@@ -28,100 +27,59 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CustomTextField(
-                  label: 'Search Hospital Name',
-                  prefixIcon: Icons.search,
-                  onChanged: (v) => setState(() => _searchQuery = v),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: InputDecoration(
+                      hintText: 'Search Hospital or Location...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedIsland,
-                        decoration: const InputDecoration(
-                          labelText: 'Island',
-                          isDense: true,
-                        ),
-                        items: PhLocationData.islandGroups
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
-                            )
-                            .toList(),
-                        onChanged: (v) => setState(() {
-                          _selectedIsland = v;
-                          _selectedCity = null;
-                          _selectedBarangay = null;
-                        }),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip(
+                        label: _selectedIsland ?? 'Island',
+                        isSelected: _selectedIsland != null,
+                        onTap: () => _showLocationPicker(context, 'island'),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedCity,
-                        decoration: const InputDecoration(
-                          labelText: 'City',
-                          isDense: true,
-                        ),
-                        items:
-                            (_selectedIsland == null
-                                    ? []
-                                    : PhLocationData.getCitiesForIsland(
-                                        _selectedIsland!,
-                                      ))
-                                .map(
-                                  (e) => DropdownMenuItem<String>(
-                                    value: e,
-                                    child: Text(
-                                      e,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (v) => setState(() {
-                          _selectedCity = v;
-                          _selectedBarangay = null;
-                        }),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
+                        label: _selectedCity ?? 'City',
+                        isSelected: _selectedCity != null,
+                        onTap: () => _showLocationPicker(context, 'city'),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedBarangay,
-                        decoration: const InputDecoration(
-                          labelText: 'Barangay',
-                          isDense: true,
-                        ),
-                        items:
-                            (_selectedCity == null
-                                    ? []
-                                    : PhLocationData.getBarangaysForCity(
-                                        _selectedCity!,
-                                      ))
-                                .map(
-                                  (e) => DropdownMenuItem<String>(
-                                    value: e,
-                                    child: Text(
-                                      e,
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (v) => setState(() => _selectedBarangay = v),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
+                        label: _selectedBarangay ?? 'Barangay',
+                        isSelected: _selectedBarangay != null,
+                        onTap: () => _showLocationPicker(context, 'barangay'),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(() {
-                        _selectedIsland = null;
-                        _selectedCity = null;
-                        _selectedBarangay = null;
-                      }),
-                      icon: const Icon(Icons.clear),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -162,9 +120,9 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                         vertical: 8,
                       ),
                       child: ListTile(
-                        leading: const CircleAvatar(
-                          backgroundColor: Colors.redAccent,
-                          child: Icon(
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          child: const Icon(
                             Icons.local_hospital,
                             color: Colors.white,
                           ),
@@ -234,7 +192,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                 icon: const Icon(Icons.map),
                 label: const Text('Show on Map'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -260,9 +218,152 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.redAccent),
+          Icon(icon, size: 20, color: Theme.of(context).primaryColor),
           const SizedBox(width: 12),
           Expanded(child: Text('$label: $value')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.primaryColor : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? theme.primaryColor : Colors.grey.shade300,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey.shade700,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 13,
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.close, size: 14, color: Colors.white),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLocationPicker(BuildContext context, String type) {
+    List<String> items = [];
+    String title = '';
+
+    if (type == 'island') {
+      items = PhLocationData.islandGroups;
+      title = 'Select Island';
+    } else if (type == 'city') {
+      if (_selectedIsland == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select an Island first')),
+        );
+        return;
+      }
+      items = PhLocationData.getCitiesForIsland(_selectedIsland!);
+      title = 'Select City';
+    } else if (type == 'barangay') {
+      if (_selectedCity == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a City first')),
+        );
+        return;
+      }
+      items = PhLocationData.getBarangaysForCity(_selectedCity!);
+      title = 'Select Barangay';
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const Divider(),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: items.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return ListTile(
+                    title: const Text('All / Clear'),
+                    onTap: () {
+                      setState(() {
+                        if (type == 'island') {
+                          _selectedIsland = null;
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        } else if (type == 'city') {
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        } else {
+                          _selectedBarangay = null;
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                  );
+                }
+                final item = items[index - 1];
+                return ListTile(
+                  title: Text(item),
+                  onTap: () {
+                    setState(() {
+                      if (type == 'island') {
+                        _selectedIsland = item;
+                        _selectedCity = null;
+                        _selectedBarangay = null;
+                      } else if (type == 'city') {
+                        _selectedCity = item;
+                        _selectedBarangay = null;
+                      } else {
+                        _selectedBarangay = item;
+                      }
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import '../../../models/hospital_model.dart';
 import '../../../services/database_service.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
+import '../../../shared/widgets/hospital_picker_sheet.dart';
 
 class DonateBloodScreen extends StatefulWidget {
   const DonateBloodScreen({super.key});
@@ -15,7 +16,6 @@ class DonateBloodScreen extends StatefulWidget {
 
 class _DonateBloodScreenState extends State<DonateBloodScreen> {
   final DatabaseService _db = DatabaseService();
-  late Stream<List<HospitalModel>> _hospitalsStream;
   int _currentStep = 0;
   String? _selectedBloodType;
   HospitalModel? _selectedHospital;
@@ -33,7 +33,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   @override
   void initState() {
     super.initState();
-    _hospitalsStream = _db.streamHospitals();
   }
 
   @override
@@ -128,30 +127,69 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           Step(
             title: const Text('Select Hospital'),
             isActive: _currentStep >= 2,
-            content: StreamBuilder<List<HospitalModel>>(
-              stream: _hospitalsStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Text(
-                    'Error loading hospitals: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.red),
-                  );
-                }
-                if (!snapshot.hasData) return const CircularProgressIndicator();
-                final hospitals = snapshot.data!;
-                return DropdownButtonFormField<HospitalModel>(
-                  initialValue: _selectedHospital,
-                  items: hospitals
-                      .map(
-                        (h) => DropdownMenuItem(value: h, child: Text(h.name)),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedHospital = v),
-                  decoration: const InputDecoration(
-                    labelText: 'Where to donate?',
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => HospitalPickerSheet(
+                        onHospitalSelected: (h) {
+                          setState(() => _selectedHospital = h);
+                        },
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.local_hospital,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedHospital?.name ?? 'Where to donate?',
+                            style: TextStyle(
+                              color: _selectedHospital == null
+                                  ? Colors.grey.shade600
+                                  : Colors.black,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                      ],
+                    ),
                   ),
-                );
-              },
+                ),
+                if (_selectedHospital != null) ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      'Location: ${_selectedHospital!.barangay}, ${_selectedHospital!.city}',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           Step(

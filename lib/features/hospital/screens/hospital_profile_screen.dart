@@ -197,7 +197,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 child: ElevatedButton(
                   onPressed: _saveProfile,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: Theme.of(context).primaryColor,
                   ),
                   child: const Text(
                     'Update Hospital Profile',

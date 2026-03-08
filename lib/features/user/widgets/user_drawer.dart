@@ -21,11 +21,11 @@ class UserDrawer extends StatelessWidget {
               '${user?.firstName ?? ''} ${user?.lastName ?? ''}',
             ),
             accountEmail: Text(user?.email ?? ''),
-            currentAccountPicture: const CircleAvatar(
+            currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
-              child: Icon(Icons.person, color: Colors.redAccent),
+              child: Icon(Icons.person, color: Theme.of(context).primaryColor),
             ),
-            decoration: const BoxDecoration(color: Colors.redAccent),
+            decoration: BoxDecoration(color: Theme.of(context).primaryColor),
           ),
           ListTile(
             leading: const Icon(Icons.home),

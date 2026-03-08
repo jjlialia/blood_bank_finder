@@ -106,28 +106,73 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                         itemBuilder: (context, index) {
                           final req = filteredRequests[index];
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: ListTile(
-                              title: Text('${req.userName} (${req.bloodType})'),
-                              subtitle: Text(
-                                'Type: ${req.type} | Units: ${req.quantity}',
+                          return Dismissible(
+                            key: Key(req.id ?? index.toString()),
+                            background: Container(
+                              color: Colors.green,
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.only(left: 20),
+                              child: const Icon(
+                                Icons.check,
+                                color: Colors.white,
                               ),
-                              trailing: Chip(
-                                label: Text(
-                                  req.status.toUpperCase(),
+                            ),
+                            secondaryBackground: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                              ),
+                            ),
+                            confirmDismiss: (direction) async {
+                              if (direction == DismissDirection.startToEnd) {
+                                // Approve/Complete
+                                await db.updateRequestStatusWithNotification(
+                                  request: req,
+                                  newStatus: 'completed',
+                                  adminMessage: 'Approved via quick action.',
+                                );
+                                return true;
+                              } else {
+                                // Reject
+                                await db.updateRequestStatusWithNotification(
+                                  request: req,
+                                  newStatus: 'rejected',
+                                  adminMessage: 'Rejected via quick action.',
+                                );
+                                return true;
+                              }
+                            },
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: ListTile(
+                                title: Text(
+                                  '${req.userName} (${req.bloodType})',
                                   style: const TextStyle(
-                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                backgroundColor: _getStatusColor(req.status),
+                                subtitle: Text(
+                                  'Type: ${req.type} | Units: ${req.quantity}',
+                                ),
+                                trailing: Chip(
+                                  label: Text(
+                                    req.status.toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  backgroundColor: _getStatusColor(req.status),
+                                ),
+                                onTap: () =>
+                                    _showDetailedRequestView(context, req),
                               ),
-                              onTap: () =>
-                                  _showDetailedRequestView(context, req),
                             ),
                           );
                         },
@@ -309,7 +354,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
             ),
             child: const Text('Save & Notify User'),

@@ -128,32 +128,59 @@ class HospitalAdminDashboard extends StatelessWidget {
         final items = snapshot.data!;
         if (items.isEmpty) {
           return const Center(
-            child: Text(
-              'No inventory data. Add from Inventory screen.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Text(
+                'No inventory data. Add from Inventory screen.',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
             ),
           );
         }
 
         return Card(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.all(16),
             child: Column(
-              children: items.take(4).map((i) {
-                return ListTile(
-                  dense: true,
-                  title: Text(
-                    i.bloodType,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  trailing: Text(
-                    '${i.units} Units',
-                    style: TextStyle(
-                      color: i.units < 5 ? Colors.red : Colors.black,
-                      fontWeight: i.units < 5
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
+              children: items.take(6).map((i) {
+                final double progress = (i.units / 20).clamp(0.0, 1.0);
+                final Color color = i.units < 5 ? Colors.red : Colors.green;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Type ${i.bloodType}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            '${i.units} Units',
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                          minHeight: 8,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }).toList(),
