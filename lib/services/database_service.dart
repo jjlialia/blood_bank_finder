@@ -1,23 +1,39 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 import '../models/user_model.dart';
 import '../models/hospital_model.dart';
 import '../models/blood_request_model.dart';
 import '../models/inventory_model.dart';
 import '../models/notification_model.dart';
+import 'api_service.dart';
 
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final ApiService _api = ApiService();
 
   // --- Users Repository ---
   Future<void> saveUser(UserModel user) async {
-    await _db.collection('users').doc(user.uid).set(user.toMap());
+    // Sync to Backend (which handles Firestore persistence)
+    final response = await _api.post('/users/', user.toMap());
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to save user: ${response.body}');
+    }
   }
 
   Future<void> updateUser(UserModel user) async {
-    await _db.collection('users').doc(user.uid).update(user.toMap());
+    final response = await _api.put('/users/${user.uid}', user.toMap());
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update user: ${response.body}');
+    }
   }
 
   Future<UserModel?> getUser(String uid) async {
+    final response = await _api.get('/users/$uid');
+    if (response.statusCode == 200) {
+      return UserModel.fromMap(jsonDecode(response.body));
+    }
+
+    // Fallback to Firestore for now
     final doc = await _db.collection('users').doc(uid).get();
     if (doc.exists && doc.data() != null) {
       return UserModel.fromMap(doc.data()!);
@@ -41,7 +57,13 @@ class DatabaseService {
   }
 
   Future<void> toggleUserBan(String uid, bool isBanned) async {
-    await _db.collection('users').doc(uid).update({'isBanned': isBanned});
+    final response = await _api.patch(
+      '/users/$uid/ban?is_banned=$isBanned',
+      {},
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to toggle ban: ${response.body}');
+    }
   }
 
   Future<void> updateUserRoleAndHospital({
@@ -49,23 +71,34 @@ class DatabaseService {
     required String role,
     String? hospitalId,
   }) async {
-    await _db.collection('users').doc(uid).update({
-      'role': role,
-      'hospitalId': hospitalId,
-    });
+    final url =
+        '/users/$uid/role?role=$role${hospitalId != null ? '&hospital_id=$hospitalId' : ''}';
+    final response = await _api.patch(url, {});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update role: ${response.body}');
+    }
   }
 
   // --- Hospitals Repository ---
   Future<void> addHospital(HospitalModel hospital) async {
-    await _db.collection('hospitals').add(hospital.toMap());
+    final response = await _api.post('/hospitals/', hospital.toMap());
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to add hospital: ${response.body}');
+    }
   }
 
   Future<void> deleteHospital(String hospitalId) async {
-    await _db.collection('hospitals').doc(hospitalId).delete();
+    final response = await _api.delete('/hospitals/$hospitalId');
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete hospital: ${response.body}');
+    }
   }
 
   Future<void> updateHospital(String hospitalId, HospitalModel hospital) async {
-    await _db.collection('hospitals').doc(hospitalId).update(hospital.toMap());
+    final response = await _api.put('/hospitals/$hospitalId', hospital.toMap());
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update hospital: ${response.body}');
+    }
   }
 
   Stream<List<HospitalModel>> streamHospitals({
@@ -106,10 +139,16 @@ class DatabaseService {
 
   // --- Blood Requests Repository ---
   Future<void> createBloodRequest(BloodRequestModel request) async {
-    await _db.collection('blood_requests').add(request.toMap());
+    final response = await _api.post('/blood-requests/', request.toMap());
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to create blood request: ${response.body}');
+    }
   }
 
   Stream<List<BloodRequestModel>> streamAllBloodRequests() {
+    // For "Full Migration", we should eventually use WebSockets or Polling.
+    // For now, I'll keep the Firestore stream to maintain real-time UI,
+    // but the writes are already going through the API.
     return _db
         .collection('blood_requests')
         .orderBy('createdAt', descending: true)
@@ -139,10 +178,13 @@ class DatabaseService {
     String status, {
     String? adminMessage,
   }) async {
-    await _db.collection('blood_requests').doc(requestId).update({
-      'status': status,
-      if (adminMessage != null) 'adminMessage': adminMessage,
-    });
+    final response = await _api.patch(
+      '/blood-requests/$requestId/status?status=$status',
+      {},
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update request status: ${response.body}');
+    }
   }
 
   Future<void> updateRequestStatusWithNotification({
@@ -150,64 +192,12 @@ class DatabaseService {
     required String newStatus,
     String? adminMessage,
   }) async {
-    // 1. Update the request status
+    // The backend now handles notification creation within the status update endpoint.
     await updateRequestStatus(
       request.id!,
       newStatus,
       adminMessage: adminMessage,
     );
-
-    // 2. Create a notification for the user
-    String title = '';
-    String body = '';
-    String type = '';
-
-    switch (newStatus) {
-      case 'approved':
-        title = 'Request Approved!';
-        body =
-            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} has been approved.';
-        type = 'request_approved';
-        break;
-      case 'on progress':
-        title = 'Request is now On Progress';
-        body =
-            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} is now being processed.';
-        type = 'request_on_progress';
-        break;
-      case 'completed':
-        title = 'Request Completed';
-        body =
-            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} is now complete. Thank you for using Blood Bank Finder!';
-        type = 'request_completed';
-        break;
-      case 'rejected':
-        title = 'Request Rejected';
-        body =
-            'Sorry, your ${request.type} for ${request.bloodType} at ${request.hospitalName} was rejected.';
-        type = 'request_rejected';
-        break;
-    }
-
-    if (adminMessage != null && adminMessage.isNotEmpty) {
-      body += '\n\nMessage from hospital: "$adminMessage"';
-    }
-
-    if (title.isNotEmpty) {
-      final notification = NotificationModel(
-        userId: request.userId,
-        message: body,
-        isRead: false,
-        createdAt: DateTime.now(),
-      );
-
-      final data = notification.toMap();
-      data['type'] = type;
-      data['title'] = title;
-      data['body'] = body;
-
-      await _db.collection('notifications').add(data);
-    }
   }
 
   Future<HospitalModel?> getHospital(String id) async {
@@ -224,19 +214,17 @@ class DatabaseService {
     String bloodType,
     double units,
   ) async {
-    await _db
-        .collection('hospitals')
-        .doc(hospitalId)
-        .collection('inventory')
-        .doc(bloodType)
-        .set({
-          'blood_type': bloodType,
-          'units': units,
-          'last_updated': FieldValue.serverTimestamp(),
-        });
+    final response = await _api.put(
+      '/hospitals/$hospitalId/inventory/$bloodType',
+      {'units': units},
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update inventory: ${response.body}');
+    }
   }
 
   Stream<List<InventoryModel>> streamInventory(String hospitalId) {
+    // Keep Firestore stream for real-time for now
     return _db
         .collection('hospitals')
         .doc(hospitalId)
@@ -251,10 +239,14 @@ class DatabaseService {
 
   // --- Notifications Repository ---
   Future<void> sendNotification(NotificationModel notification) async {
-    await _db.collection('notifications').add(notification.toMap());
+    final response = await _api.post('/notifications/', notification.toMap());
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to send notification: ${response.body}');
+    }
   }
 
   Stream<List<NotificationModel>> streamUserNotifications(String userId) {
+    // Keep Firestore stream for real-time for now
     return _db
         .collection('notifications')
         .where('userId', isEqualTo: userId)
@@ -265,5 +257,30 @@ class DatabaseService {
               .map((doc) => NotificationModel.fromMap(doc.data(), doc.id))
               .toList();
         });
+  }
+
+  // --- Locations Repository ---
+  Future<List<String>> getIslandGroups() async {
+    final response = await _api.get('/locations/island-groups');
+    if (response.statusCode == 200) {
+      return List<String>.from(jsonDecode(response.body));
+    }
+    return [];
+  }
+
+  Future<List<String>> getCities(String islandGroup) async {
+    final response = await _api.get('/locations/cities/$islandGroup');
+    if (response.statusCode == 200) {
+      return List<String>.from(jsonDecode(response.body));
+    }
+    return [];
+  }
+
+  Future<List<String>> getBarangays(String city) async {
+    final response = await _api.get('/locations/barangays/$city');
+    if (response.statusCode == 200) {
+      return List<String>.from(jsonDecode(response.body));
+    }
+    return [];
   }
 }

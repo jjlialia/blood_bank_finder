@@ -1,0 +1,58 @@
+﻿.\gradlew : WARNING: A 
+restricted method in 
+java.lang.System has been 
+called
+At line:1 char:1
++ .\gradlew properties > 
+gradlew_properties.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (WARNING  
+  : A rest...has been call   
+ ed:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+WARNING: 
+java.lang.System::load has 
+been called by net.rubygrapef
+ruit.platform.internal.Native
+LibraryLoader in an unnamed 
+module (file:/C:/Users/The%20
+Chosen%20One/.gradle/wrapper/
+dists/gradle-8.14-all/c2qonpi
+39x1mddn7hk5gh9iqj/gradle-8.1
+4/lib/native-platform-0.22-mi
+lestone-28.jar)
+WARNING: Use --enable-native-
+access=ALL-UNNAMED to avoid 
+a warning for callers in 
+this module
+WARNING: Restricted methods 
+will be blocked in a future 
+release unless native access 
+is enabled
+
+
+FAILURE: Build failed with 
+an exception.
+
+* What went wrong:
+25.0.1
+
+* Try:
+> Run with --stacktrace 
+option to get the stack 
+trace.
+> Run with --info or --debug 
+option to get more log 
+output.
+> Run with --scan to get 
+full insights.
+> Get more help at 
+https://help.gradle.org.
+
+BUILD FAILED in 3s
+

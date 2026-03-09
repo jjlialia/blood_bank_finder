@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../services/database_service.dart';
+import '../../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'dart:convert';
 
 class AuthProvider with ChangeNotifier {
   final DatabaseService _db = DatabaseService();
+  final ApiService _api = ApiService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   UserModel? _user;
@@ -51,6 +54,7 @@ class AuthProvider with ChangeNotifier {
     try {
       // 1. Admin Bypass Logic
       if (email == 'admin@gmail.com' && password == '1234') {
+        // ... (Keep existing admin bypass for now or update it)
         _user = UserModel(
           uid: 'superadmin_bypass',
           email: email,
@@ -70,35 +74,49 @@ class AuthProvider with ChangeNotifier {
         );
         _isLoading = false;
         notifyListeners();
-        return null; // Success
+        return null;
       }
 
-      // 2. Normal Firebase Auth
-      UserCredential credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      // 2. FastAPI Backend Login
+      final response = await _api.post('/auth/login', {
+        'username': email, // FastAPI OAuth2PasswordRequestForm uses 'username'
+        'password': password,
+      });
 
-      // 3. Check Firestore for additional details and ban status
-      final userData = await _db.getUser(credential.user!.uid);
-      if (userData == null) {
-        await logout();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final token = data['access_token'];
+        await _api.saveToken(token);
+
+        // 3. Normal Firebase Auth (Keep for sync if needed, or remove later)
+        UserCredential credential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        final userData = await _db.getUser(credential.user!.uid);
+        if (userData == null) {
+          await logout();
+          _isLoading = false;
+          return 'User data not found.';
+        }
+
+        if (userData.isBanned) {
+          await logout();
+          _isLoading = false;
+          return 'Your account has been banned.';
+        }
+
+        _user = userData;
+        _startUserListener(userData.uid);
         _isLoading = false;
-        return 'User data not found.';
-      }
-
-      if (userData.isBanned) {
-        await logout();
+        notifyListeners();
+        return null;
+      } else {
         _isLoading = false;
-        return 'Your account has been banned. Please contact support.';
+        notifyListeners();
+        return 'Backend authentication failed: ${response.statusCode}';
       }
-
-      _user = userData;
-      _startUserListener(userData.uid);
-
-      _isLoading = false;
-      notifyListeners();
-      return null; // Success
     } on FirebaseAuthException catch (e) {
       _isLoading = false;
       notifyListeners();
@@ -112,6 +130,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     await _auth.signOut();
+    await _api.deleteToken();
     _stopUserListener();
   }
 

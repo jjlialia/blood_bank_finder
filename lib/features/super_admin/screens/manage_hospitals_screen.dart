@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../models/hospital_model.dart';
+import 'package:provider/provider.dart';
 import '../../../services/database_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../../../core/utils/ph_locations.dart';
+import '../../../core/providers/location_provider.dart';
 import '../widgets/super_admin_drawer.dart';
 
 class ManageHospitalsScreen extends StatefulWidget {
@@ -15,6 +16,14 @@ class ManageHospitalsScreen extends StatefulWidget {
 class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
   final DatabaseService _db = DatabaseService();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LocationProvider>().fetchIslandGroups();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -302,12 +311,15 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Island Group',
                         ),
-                        items: PhLocationData.islandGroups
+                        items: context
+                            .read<LocationProvider>()
+                            .islandGroups
                             .map(
                               (e) => DropdownMenuItem(value: e, child: Text(e)),
                             )
                             .toList(),
-                        onChanged: (v) {
+                        onChanged: (v) async {
+                          if (v == null) return;
                           setModalState(() {
                             selectedIsland = v;
                             selectedCity = null;
@@ -318,11 +330,18 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                       ),
                       const SizedBox(height: 16),
                       if (selectedIsland != null)
-                        DropdownButtonFormField<String>(
-                          value: selectedCity,
-                          decoration: const InputDecoration(labelText: 'City'),
-                          items:
-                              PhLocationData.getCitiesForIsland(selectedIsland!)
+                        FutureBuilder<List<String>>(
+                          future: context.read<LocationProvider>().getCities(
+                            selectedIsland!,
+                          ),
+                          builder: (context, snapshot) {
+                            final cities = snapshot.data ?? [];
+                            return DropdownButtonFormField<String>(
+                              value: selectedCity,
+                              decoration: const InputDecoration(
+                                labelText: 'City',
+                              ),
+                              items: cities
                                   .map(
                                     (e) => DropdownMenuItem(
                                       value: e,
@@ -330,23 +349,31 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                                     ),
                                   )
                                   .toList(),
-                          onChanged: (v) {
-                            setModalState(() {
-                              selectedCity = v;
-                              selectedBarangay = null;
-                            });
+                              onChanged: (v) async {
+                                if (v == null) return;
+                                setModalState(() {
+                                  selectedCity = v;
+                                  selectedBarangay = null;
+                                });
+                              },
+                              validator: (v) => v == null ? 'Required' : null,
+                            );
                           },
-                          validator: (v) => v == null ? 'Required' : null,
                         ),
                       const SizedBox(height: 16),
                       if (selectedCity != null)
-                        DropdownButtonFormField<String>(
-                          value: selectedBarangay,
-                          decoration: const InputDecoration(
-                            labelText: 'Barangay',
+                        FutureBuilder<List<String>>(
+                          future: context.read<LocationProvider>().getBarangays(
+                            selectedCity!,
                           ),
-                          items:
-                              PhLocationData.getBarangaysForCity(selectedCity!)
+                          builder: (context, snapshot) {
+                            final barangays = snapshot.data ?? [];
+                            return DropdownButtonFormField<String>(
+                              value: selectedBarangay,
+                              decoration: const InputDecoration(
+                                labelText: 'Barangay',
+                              ),
+                              items: barangays
                                   .map(
                                     (e) => DropdownMenuItem(
                                       value: e,
@@ -354,12 +381,14 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                                     ),
                                   )
                                   .toList(),
-                          onChanged: (v) {
-                            setModalState(() {
-                              selectedBarangay = v;
-                            });
+                              onChanged: (v) {
+                                setModalState(() {
+                                  selectedBarangay = v;
+                                });
+                              },
+                              validator: (v) => v == null ? 'Required' : null,
+                            );
                           },
-                          validator: (v) => v == null ? 'Required' : null,
                         ),
                       const SizedBox(height: 16),
                       CustomTextField(

@@ -13,6 +13,11 @@ def get_service(db=Depends(get_db)):
 async def create_user(user: UserCreate, service: FirestoreService = Depends(get_service)):
     return await service.create_or_update_user(user.uid, user.dict())
 
+@router.put("/{uid}", response_model=UserResponse)
+async def update_user(uid: str, user: UserCreate, service: FirestoreService = Depends(get_service)):
+    await service.update_user(uid, user.dict())
+    return {**user.dict(), "uid": uid}
+
 @router.get("/{uid}", response_model=UserResponse)
 async def get_user(uid: str, service: FirestoreService = Depends(get_service)):
     user = await service.get_user(uid)

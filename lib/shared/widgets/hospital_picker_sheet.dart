@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/hospital_model.dart';
 import '../../services/database_service.dart';
-import '../../core/utils/ph_locations.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/location_provider.dart';
 
 class HospitalPickerSheet extends StatefulWidget {
   final Function(HospitalModel) onHospitalSelected;
@@ -18,6 +19,14 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
   String? _selectedIsland;
   String? _selectedCity;
   String? _selectedBarangay;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LocationProvider>().fetchIslandGroups();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -229,12 +238,13 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
     );
   }
 
-  void _showLocationPicker(BuildContext context, String type) {
+  void _showLocationPicker(BuildContext context, String type) async {
+    final locationProvider = context.read<LocationProvider>();
     List<String> items = [];
     String title = '';
 
     if (type == 'island') {
-      items = PhLocationData.islandGroups;
+      items = locationProvider.islandGroups;
       title = 'Select Island Group';
     } else if (type == 'city') {
       if (_selectedIsland == null) {
@@ -243,7 +253,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
         );
         return;
       }
-      items = PhLocationData.getCitiesForIsland(_selectedIsland!);
+      items = await locationProvider.getCities(_selectedIsland!);
       title = 'Select City';
     } else if (type == 'barangay') {
       if (_selectedCity == null) {
@@ -252,7 +262,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
         );
         return;
       }
-      items = PhLocationData.getBarangaysForCity(_selectedCity!);
+      items = await locationProvider.getBarangays(_selectedCity!);
       title = 'Select Barangay';
     }
 
