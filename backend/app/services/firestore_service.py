@@ -39,6 +39,9 @@ class FirestoreService:
     async def delete_hospital(self, hospital_id: str):
         self.db.collection('hospitals').document(hospital_id).delete()
 
+    async def update_hospital(self, hospital_id: str, hospital_data: dict):
+        self.db.collection('hospitals').document(hospital_id).update(hospital_data)
+
     async def list_hospitals(self, is_active: bool = True, island_group: str = None, city: str = None, barangay: str = None) -> List[dict]:
         query = self.db.collection('hospitals')
         if is_active is not None:
@@ -81,26 +84,51 @@ class FirestoreService:
             requests.append(data)
         return requests
 
-    async def update_request_status(self, request_id: str, status: str):
+    async def update_request_status(self, request_id: str, status: str, admin_message: Optional[str] = None):
         doc_ref = self.db.collection('blood_requests').document(request_id)
-        doc_ref.update({'status': status})
+        update_data = {'status': status}
+        if admin_message:
+            update_data['adminMessage'] = admin_message
+        doc_ref.update(update_data)
         
         # Trigger notification logic
         doc = doc_ref.get()
         if doc.exists:
             request_data = doc.to_dict()
-            if status in ['approved', 'rejected']:
-                title = "Request Approved!" if status == 'approved' else "Request Rejected"
-                message = f"Your {request_data['type']} for {request_data['bloodType']} at {request_data['hospitalName']} has been {status}."
+            
+            title = ""
+            body = ""
+            notif_type = ""
+
+            if status == 'approved':
+                title = "Request Approved!"
+                body = f"Your {request_data['type']} for {request_data['bloodType']} at {request_data['hospitalName']} has been approved."
+                notif_type = "request_approved"
+            elif status == 'on progress':
+                title = "Request is now On Progress"
+                body = f"Your {request_data['type']} for {request_data['bloodType']} at {request_data['hospitalName']} is now being processed."
+                notif_type = "request_on_progress"
+            elif status == 'completed':
+                title = "Request Completed"
+                body = f"Your {request_data['type']} for {request_data['bloodType']} at {request_data['hospitalName']} is now complete. Thank you!"
+                notif_type = "request_completed"
+            elif status == 'rejected':
+                title = "Request Rejected"
+                body = f"Sorry, your {request_data['type']} for {request_data['bloodType']} at {request_data['hospitalName']} was rejected."
+                notif_type = "request_rejected"
+
+            if title:
+                if admin_message:
+                    body += f"\n\nMessage from hospital: \"{admin_message}\""
                 
                 notification_data = {
                     'userId': request_data['userId'],
-                    'message': message,
+                    'message': body,
                     'isRead': False,
                     'createdAt': datetime.now(),
-                    'type': f"request_{status}",
+                    'type': notif_type,
                     'title': title,
-                    'body': message
+                    'body': body
                 }
                 self.db.collection('notifications').add(notification_data)
 

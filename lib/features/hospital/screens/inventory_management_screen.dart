@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../services/database_service.dart';
+import '../../../services/api_service.dart';
 import '../../../models/inventory_model.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
@@ -78,7 +79,8 @@ class InventoryManagementScreen extends StatelessWidget {
                             onSubmitted: (value) {
                               final newUnits = double.tryParse(value);
                               if (newUnits != null && newUnits >= 0) {
-                                db.updateInventory(hospitalId, type, newUnits);
+                                final ApiService api = ApiService();
+                                api.updateInventory(hospitalId, type, newUnits);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('Updated $type to $newUnits'),

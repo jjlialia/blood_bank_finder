@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../models/blood_request_model.dart';
 import '../../../services/database_service.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../services/api_service.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
 
@@ -129,17 +130,19 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                             confirmDismiss: (direction) async {
                               if (direction == DismissDirection.startToEnd) {
                                 // Approve/Complete
-                                await db.updateRequestStatusWithNotification(
-                                  request: req,
-                                  newStatus: 'completed',
+                                final ApiService api = ApiService();
+                                await api.updateRequestStatus(
+                                  req.id!,
+                                  'completed',
                                   adminMessage: 'Approved via quick action.',
                                 );
                                 return true;
                               } else {
                                 // Reject
-                                await db.updateRequestStatusWithNotification(
-                                  request: req,
-                                  newStatus: 'rejected',
+                                final ApiService api = ApiService();
+                                await api.updateRequestStatus(
+                                  req.id!,
+                                  'rejected',
                                   adminMessage: 'Rejected via quick action.',
                                 );
                                 return true;
@@ -306,7 +309,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   ) {
     String selectedStatus = req.status;
     final messageController = TextEditingController();
-    final db = DatabaseService();
+    final ApiService api = ApiService();
 
     return StatefulBuilder(
       builder: (context, setModalState) => Column(
@@ -339,9 +342,9 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
               final navigator = Navigator.of(context);
               final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-              await db.updateRequestStatusWithNotification(
-                request: req,
-                newStatus: selectedStatus,
+              await api.updateRequestStatus(
+                req.id!,
+                selectedStatus,
                 adminMessage: messageController.text,
               );
 

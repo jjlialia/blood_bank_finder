@@ -14,10 +14,13 @@ async def add_hospital(hospital: HospitalCreate, service: FirestoreService = Dep
     doc_id = await service.add_hospital(hospital.dict())
     return {**hospital.dict(), "id": doc_id}
 
+@router.put("/{hospital_id}", response_model=HospitalResponse)
+async def update_hospital(hospital_id: str, hospital: HospitalCreate, service: FirestoreService = Depends(get_service)):
+    # We use HospitalCreate model for update as it contains all necessary fields
+    await service.update_hospital(hospital_id, hospital.dict())
+    return {**hospital.dict(), "id": hospital_id}
+
 @router.delete("/{hospital_id}")
-async def delete_hospital(hospital_id: str, service: FirestoreService = Depends(get_service)):
-    await service.delete_hospital(hospital_id)
-    return {"message": "Hospital deleted"}
 
 @router.get("/", response_model=List[HospitalResponse])
 async def list_hospitals(

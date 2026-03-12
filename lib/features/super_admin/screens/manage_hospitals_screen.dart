@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/hospital_model.dart';
 import '../../../services/database_service.dart';
+import '../../../services/api_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../core/utils/ph_locations.dart';
 import '../widgets/super_admin_drawer.dart';
@@ -14,6 +15,7 @@ class ManageHospitalsScreen extends StatefulWidget {
 
 class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
   final DatabaseService _db = DatabaseService();
+  final ApiService _api = ApiService();
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -222,7 +224,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
             onPressed: () async {
               final navigator = Navigator.of(context);
               final scaffoldMessenger = ScaffoldMessenger.of(context);
-              await _db.deleteHospital(id);
+              await _api.deleteHospital(id);
               if (mounted) {
                 navigator.pop();
                 scaffoldMessenger.showSnackBar(
@@ -424,9 +426,9 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                       final scaffoldMessenger = ScaffoldMessenger.of(context);
 
                       if (isEditing) {
-                        await _db.updateHospital(hospital.id!, updatedHospital);
+                        await _api.updateHospital(hospital.id!, updatedHospital);
                       } else {
-                        await _db.addHospital(updatedHospital);
+                        await _api.addHospital(updatedHospital);
                       }
 
                       if (mounted) {

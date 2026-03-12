@@ -29,29 +29,25 @@ service cloud.firestore {
     // Hospitals Collection
     match /hospitals/{hospitalId} {
       allow read: if true; // Publicly searchable
-      allow create: if isSuperAdmin();
-      allow update: if isSuperAdmin() || (isHospitalAdmin() && getUserData().hospitalId == hospitalId);
-      allow delete: if isSuperAdmin();
+      allow write: if false; // Handled by FastAPI (Super Admin/Hospital Admin)
       
       // Inventory Sub-collection
       match /inventory/{type} {
         allow read: if true;
-        allow write: if isHospitalAdmin() && getUserData().hospitalId == hospitalId;
+        allow write: if false; // Handled by FastAPI
       }
     }
 
     // Blood Requests Collection
     match /blood_requests/{requestId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update: if isHospitalAdmin() || isSuperAdmin();
-      allow delete: if isSuperAdmin();
+      allow write: if false; // Handled by FastAPI
     }
 
     // Notifications Collection
     match /notifications/{notifId} {
       allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow create: if isHospitalAdmin() || isSuperAdmin();
+      allow create: if false; // Handled by FastAPI
       allow update: if isAuthenticated() && request.auth.uid == resource.data.userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
       allow delete: if false;
     }
