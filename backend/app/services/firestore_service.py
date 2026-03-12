@@ -12,21 +12,10 @@ class FirestoreService:
         self.db.collection('users').document(user_id).set(user_data)
         return user_data
 
-    async def update_user(self, user_id: str, user_data: dict):
-        self.db.collection('users').document(user_id).update(user_data)
-
     async def get_user(self, user_id: str) -> Optional[dict]:
         doc = self.db.collection('users').document(user_id).get()
         if doc.exists:
             return doc.to_dict()
-        return None
-
-    async def get_user_by_email(self, email: str) -> Optional[dict]:
-        docs = self.db.collection('users').where('email', '==', email).limit(1).stream()
-        for doc in docs:
-            data = doc.to_dict()
-            data['uid'] = doc.id
-            return data
         return None
 
     async def list_all_users(self) -> List[dict]:
@@ -46,9 +35,6 @@ class FirestoreService:
     async def add_hospital(self, hospital_data: dict) -> str:
         _, doc_ref = self.db.collection('hospitals').add(hospital_data)
         return doc_ref.id
-
-    async def update_hospital(self, hospital_id: str, hospital_data: dict):
-        self.db.collection('hospitals').document(hospital_id).set(hospital_data, merge=True)
 
     async def delete_hospital(self, hospital_id: str):
         self.db.collection('hospitals').document(hospital_id).delete()
@@ -143,18 +129,3 @@ class FirestoreService:
             data['id'] = doc.id
             notifications.append(data)
         return notifications
-
-    # --- Locations (Dynamic) ---
-    async def get_island_groups(self) -> List[str]:
-        # This could be from a collection 'locations'
-        return ["Luzon", "Visayas", "Mindanao"]
-
-    async def get_cities(self, island_group: str) -> List[str]:
-        # In a real app, fetch from PSGC data stored in Firestore
-        docs = self.db.collection('cities').where('islandGroup', '==', island_group).stream()
-        return [doc.id for doc in docs]
-
-    async def get_barangays(self, city: str) -> List[str]:
-        # Fetch from PSGC data
-        docs = self.db.collection('barangays').where('city', '==', city).stream()
-        return [doc.id for doc in docs]

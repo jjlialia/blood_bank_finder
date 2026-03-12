@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../models/hospital_model.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:provider/provider.dart';
 import '../../../services/database_service.dart';
-import '../../../core/providers/location_provider.dart';
+import '../../../core/utils/ph_locations.dart';
 
 class FindBloodBankScreen extends StatefulWidget {
   const FindBloodBankScreen({super.key});
@@ -18,14 +17,6 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
   String? _selectedIsland;
   String? _selectedCity;
   String? _selectedBarangay;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LocationProvider>().fetchIslandGroups();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +35,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -254,7 +245,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: theme.primaryColor.withOpacity(0.3),
+                    color: theme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -282,13 +273,12 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
-  void _showLocationPicker(BuildContext context, String type) async {
-    final locationProvider = context.read<LocationProvider>();
+  void _showLocationPicker(BuildContext context, String type) {
     List<String> items = [];
     String title = '';
 
     if (type == 'island') {
-      items = locationProvider.islandGroups;
+      items = PhLocationData.islandGroups;
       title = 'Select Island';
     } else if (type == 'city') {
       if (_selectedIsland == null) {
@@ -297,7 +287,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
         );
         return;
       }
-      items = await locationProvider.getCities(_selectedIsland!);
+      items = PhLocationData.getCitiesForIsland(_selectedIsland!);
       title = 'Select City';
     } else if (type == 'barangay') {
       if (_selectedCity == null) {
@@ -306,7 +296,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
         );
         return;
       }
-      items = await locationProvider.getBarangays(_selectedCity!);
+      items = PhLocationData.getBarangaysForCity(_selectedCity!);
       title = 'Select Barangay';
     }
 

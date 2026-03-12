@@ -19,12 +19,6 @@ async def delete_hospital(hospital_id: str, service: FirestoreService = Depends(
     await service.delete_hospital(hospital_id)
     return {"message": "Hospital deleted"}
 
-@router.put("/{hospital_id}", response_model=HospitalResponse)
-async def update_hospital(hospital_id: str, hospital: HospitalCreate, service: FirestoreService = Depends(get_service)):
-    # Need to update service to handle this
-    await service.update_hospital(hospital_id, hospital.dict())
-    return {**hospital.dict(), "id": hospital_id}
-
 @router.get("/", response_model=List[HospitalResponse])
 async def list_hospitals(
     is_active: bool = True,

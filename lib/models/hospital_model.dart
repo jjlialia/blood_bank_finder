@@ -1,12 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-DateTime _parseDateTime(dynamic value) {
-  if (value is Timestamp) return value.toDate();
-  if (value is String) return DateTime.parse(value);
-  if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
-  return DateTime.now();
-}
-
 class HospitalModel {
   final String? id;
   final String name;
@@ -52,7 +45,7 @@ class HospitalModel {
       longitude: (data['longitude'] ?? 0.0).toDouble(),
       availableBloodTypes: List<String>.from(data['availableBloodTypes'] ?? []),
       isActive: data['isActive'] ?? true,
-      createdAt: _parseDateTime(data['createdAt']),
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
 

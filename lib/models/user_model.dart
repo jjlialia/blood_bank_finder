@@ -1,12 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-DateTime _parseDateTime(dynamic value) {
-  if (value is Timestamp) return value.toDate();
-  if (value is String) return DateTime.parse(value);
-  if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
-  return DateTime.now();
-}
-
 class UserModel {
   final String uid;
   final String email;
@@ -61,7 +54,7 @@ class UserModel {
       address: data['address'] ?? '',
       hospitalId: data['hospitalId'],
       isBanned: data['isBanned'] ?? false,
-      createdAt: _parseDateTime(data['createdAt']),
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
 

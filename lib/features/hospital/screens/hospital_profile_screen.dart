@@ -4,7 +4,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../models/hospital_model.dart';
 import '../../../services/database_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../../../core/providers/location_provider.dart';
+import '../../../core/utils/ph_locations.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
 
@@ -34,9 +34,6 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   void initState() {
     super.initState();
     _loadHospital();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LocationProvider>().fetchIslandGroups();
-    });
   }
 
   Future<void> _loadHospital() async {
@@ -125,16 +122,12 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                value: _selectedIsland,
+                initialValue: _selectedIsland,
                 decoration: const InputDecoration(labelText: 'Island Group'),
-                items: context
-                    .read<LocationProvider>()
-                    .islandGroups
+                items: PhLocationData.islandGroups
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
-                onChanged: (v) async {
-                  if (v == null) return;
-                  await context.read<LocationProvider>().getCities(v);
+                onChanged: (v) {
                   setState(() {
                     _selectedIsland = v;
                     _selectedCity = null;
@@ -145,52 +138,30 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
               ),
               const SizedBox(height: 16),
               if (_selectedIsland != null)
-                FutureBuilder<List<String>>(
-                  future: context.read<LocationProvider>().getCities(
-                    _selectedIsland!,
-                  ),
-                  builder: (context, snapshot) {
-                    final cities = snapshot.data ?? [];
-                    return DropdownButtonFormField<String>(
-                      value: _selectedCity,
-                      decoration: const InputDecoration(labelText: 'City'),
-                      items: cities
-                          .map(
-                            (e) => DropdownMenuItem(value: e, child: Text(e)),
-                          )
-                          .toList(),
-                      onChanged: (v) async {
-                        if (v == null) return;
-                        await context.read<LocationProvider>().getBarangays(v);
-                        setState(() {
-                          _selectedCity = v;
-                          _selectedBarangay = null;
-                        });
-                      },
-                      validator: (v) => v == null ? 'Required' : null,
-                    );
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedCity,
+                  decoration: const InputDecoration(labelText: 'City'),
+                  items: PhLocationData.getCitiesForIsland(_selectedIsland!)
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedCity = v;
+                      _selectedBarangay = null;
+                    });
                   },
+                  validator: (v) => v == null ? 'Required' : null,
                 ),
               const SizedBox(height: 16),
               if (_selectedCity != null)
-                FutureBuilder<List<String>>(
-                  future: context.read<LocationProvider>().getBarangays(
-                    _selectedCity!,
-                  ),
-                  builder: (context, snapshot) {
-                    final barangays = snapshot.data ?? [];
-                    return DropdownButtonFormField<String>(
-                      value: _selectedBarangay,
-                      decoration: const InputDecoration(labelText: 'Barangay'),
-                      items: barangays
-                          .map(
-                            (e) => DropdownMenuItem(value: e, child: Text(e)),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(() => _selectedBarangay = v),
-                      validator: (v) => v == null ? 'Required' : null,
-                    );
-                  },
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedBarangay,
+                  decoration: const InputDecoration(labelText: 'Barangay'),
+                  items: PhLocationData.getBarangaysForCity(_selectedCity!)
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedBarangay = v),
+                  validator: (v) => v == null ? 'Required' : null,
                 ),
               const SizedBox(height: 16),
               CustomTextField(

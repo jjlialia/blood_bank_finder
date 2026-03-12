@@ -4,6 +4,3 @@ firebase-admin
 python-dotenv
 pydantic
 pydantic-settings
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart

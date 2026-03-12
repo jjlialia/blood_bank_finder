@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/hospital_model.dart';
 import '../../services/database_service.dart';
-import 'package:provider/provider.dart';
-import '../../core/providers/location_provider.dart';
+import '../../core/utils/ph_locations.dart';
 
 class HospitalPickerSheet extends StatefulWidget {
   final Function(HospitalModel) onHospitalSelected;
@@ -19,14 +18,6 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
   String? _selectedIsland;
   String? _selectedCity;
   String? _selectedBarangay;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<LocationProvider>().fetchIslandGroups();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +39,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -171,7 +162,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.primaryColor.withOpacity(0.1),
+                            color: theme.primaryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -238,13 +229,12 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
     );
   }
 
-  void _showLocationPicker(BuildContext context, String type) async {
-    final locationProvider = context.read<LocationProvider>();
+  void _showLocationPicker(BuildContext context, String type) {
     List<String> items = [];
     String title = '';
 
     if (type == 'island') {
-      items = locationProvider.islandGroups;
+      items = PhLocationData.islandGroups;
       title = 'Select Island Group';
     } else if (type == 'city') {
       if (_selectedIsland == null) {
@@ -253,7 +243,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
         );
         return;
       }
-      items = await locationProvider.getCities(_selectedIsland!);
+      items = PhLocationData.getCitiesForIsland(_selectedIsland!);
       title = 'Select City';
     } else if (type == 'barangay') {
       if (_selectedCity == null) {
@@ -262,7 +252,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
         );
         return;
       }
-      items = await locationProvider.getBarangays(_selectedCity!);
+      items = PhLocationData.getBarangaysForCity(_selectedCity!);
       title = 'Select Barangay';
     }
 

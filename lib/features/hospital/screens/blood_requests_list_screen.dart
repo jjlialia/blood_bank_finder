@@ -313,7 +313,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DropdownButtonFormField<String>(
-            value: selectedStatus,
+            initialValue: selectedStatus,
             decoration: const InputDecoration(labelText: 'New Status'),
             items: ['pending', 'on progress', 'completed', 'rejected']
                 .map(

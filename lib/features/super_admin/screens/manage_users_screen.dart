@@ -83,18 +83,17 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             activeThumbColor: Colors.green,
                             onChanged: (active) async {
                               await _db.toggleUserBan(user.uid, !active);
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      active ? 'User Unbanned' : 'User Banned',
-                                    ),
-                                    backgroundColor: active
-                                        ? Colors.green
-                                        : Colors.red,
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    active ? 'User Unbanned' : 'User Banned',
                                   ),
-                                );
-                              }
+                                  backgroundColor: active
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              );
                             },
                           ),
                         ],
@@ -125,7 +124,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: selectedRole,
+                initialValue: selectedRole,
                 decoration: const InputDecoration(labelText: 'User Role'),
                 items: const [
                   DropdownMenuItem(value: 'user', child: Text('Standard User')),
@@ -164,7 +163,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                     );
 
                     return DropdownButtonFormField<String>(
-                      value: isValidValue ? selectedHospitalId : null,
+                      initialValue: isValidValue ? selectedHospitalId : null,
                       decoration: const InputDecoration(
                         labelText: 'Assign Hospital',
                       ),
@@ -207,6 +206,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   role: selectedRole,
                   hospitalId: selectedHospitalId,
                 );
+
+                if (!mounted) return;
 
                 navigator.pop();
                 scaffoldMessenger.showSnackBar(

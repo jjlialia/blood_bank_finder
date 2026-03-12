@@ -49,12 +49,12 @@ class UserHomeScreen extends StatelessWidget {
                     return Container(
                       width: double.infinity,
                       height: 220,
-                      color: theme.primaryColor.withOpacity(0.1),
+                      color: theme.primaryColor.withValues(alpha: 0.1),
                       child: Center(
                         child: Icon(
                           Icons.volunteer_activism,
                           size: 64,
-                          color: theme.primaryColor.withOpacity(0.5),
+                          color: theme.primaryColor.withValues(alpha: 0.5),
                         ),
                       ),
                     );
@@ -69,9 +69,9 @@ class UserHomeScreen extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withOpacity(0.4),
+                        Colors.black.withValues(alpha: 0.4),
                         Colors.transparent,
-                        Colors.black.withOpacity(0.4),
+                        Colors.black.withValues(alpha: 0.4),
                       ],
                     ),
                   ),
@@ -84,7 +84,7 @@ class UserHomeScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         child: const Icon(
                           Icons.person,
                           color: Colors.white,
@@ -98,7 +98,7 @@ class UserHomeScreen extends StatelessWidget {
                           Text(
                             'Hello,',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                           Text(
@@ -132,7 +132,7 @@ class UserHomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.primaryColor.withOpacity(0.3),
+                          color: theme.primaryColor.withValues(alpha: 0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),
@@ -206,7 +206,7 @@ class UserHomeScreen extends StatelessWidget {
                         context,
                         'Find Banks',
                         Icons.search,
-                        theme.primaryColor.withOpacity(0.08),
+                        theme.primaryColor.withValues(alpha: 0.08),
                         const FindBloodBankScreen(),
                       ),
                       const SizedBox(width: 16),
@@ -284,11 +284,11 @@ class UserHomeScreen extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -325,7 +325,7 @@ class UserHomeScreen extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: Theme.of(context).primaryColor),

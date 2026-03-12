@@ -1,0 +1,6 @@
+[info] Statements in an if should be enclosed in a block (C:\Users\The Chosen One\OneDrive\Documents\blood bank finder\lib\features\super_admin\screens\manage_hospitals_screen.dart:291:29)
+[info] Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check (C:\Users\The Chosen One\OneDrive\Documents\blood bank finder\lib\features\super_admin\screens\manage_users_screen.dart:87:54)
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\The Chosen One\OneDrive\Documents\blood bank finder\lib\features\user\screens\user_home_screen.dart:101:51)
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\The Chosen One\OneDrive\Documents\blood bank finder\lib\features\user\screens\user_home_screen.dart:328:51)
+[info] Use the null-aware marker '?' rather than a null check via an 'if' (C:\Users\The Chosen One\OneDrive\Documents\blood bank finder\lib\services\database_service.dart:144:7)
+[info] 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss (C:\Users\The Chosen One\OneDrive\Documents\blood bank finder\lib\shared\widgets\hospital_picker_sheet.dart:42:39)
