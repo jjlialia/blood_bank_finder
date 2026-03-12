@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/models/hospital_model.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/services/database_service.dart';
-import '../../../core/utils/ph_locations.dart';
+import '../../../core/services/location_service.dart';
+import '../widgets/hospital_map_view.dart';
 
 class FindBloodBankScreen extends StatefulWidget {
   const FindBloodBankScreen({super.key});
@@ -13,15 +14,29 @@ class FindBloodBankScreen extends StatefulWidget {
 
 class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
   final DatabaseService _db = DatabaseService();
+  final LocationService _locationSvc = LocationService();
   String _searchQuery = '';
   String? _selectedIsland;
+  String? _selectedRegion;
   String? _selectedCity;
   String? _selectedBarangay;
+  bool _isMapView = false;
+  LatLng? _mapCenter;
+  double _mapZoom = 12;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Find Blood Bank')),
+      appBar: AppBar(
+        title: const Text('Find Blood Bank'),
+        actions: [
+          IconButton(
+            icon: Icon(_isMapView ? Icons.list : Icons.map),
+            onPressed: () => setState(() => _isMapView = !_isMapView),
+            tooltip: _isMapView ? 'Show List' : 'Show Map',
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
@@ -68,6 +83,12 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                       ),
                       const SizedBox(width: 8),
                       _buildFilterChip(
+                        label: _selectedRegion ?? 'Region',
+                        isSelected: _selectedRegion != null,
+                        onTap: () => _showLocationPicker(context, 'region'),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
                         label: _selectedCity ?? 'City',
                         isSelected: _selectedCity != null,
                         onTap: () => _showLocationPicker(context, 'city'),
@@ -88,6 +109,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
             child: StreamBuilder<List<HospitalModel>>(
               stream: _db.streamHospitals(
                 islandGroup: _selectedIsland,
+                region: _selectedRegion,
                 city: _selectedCity,
                 barangay: _selectedBarangay,
               ),
@@ -110,35 +132,46 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  itemCount: hospitals.length,
-                  itemBuilder: (context, index) {
-                    final h = hospitals[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          child: const Icon(
-                            Icons.local_hospital,
-                            color: Colors.white,
+                return IndexedStack(
+                  index: _isMapView ? 1 : 0,
+                  children: [
+                    ListView.builder(
+                      itemCount: hospitals.length,
+                      itemBuilder: (context, index) {
+                        final h = hospitals[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                        ),
-                        title: Text(
-                          h.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${h.city} | ${h.availableBloodTypes.join(", ")}',
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () => _showHospitalDetails(context, h),
-                      ),
-                    );
-                  },
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              child: const Icon(
+                                Icons.local_hospital,
+                                color: Colors.white,
+                              ),
+                            ),
+                            title: Text(
+                              h.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              '${h.city} | ${h.availableBloodTypes.join(", ")}',
+                            ),
+                            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                            onTap: () => _showHospitalDetails(context, h),
+                          ),
+                        );
+                      },
+                    ),
+                    HospitalMapView(
+                      hospitals: hospitals,
+                      initialCenter: _mapCenter,
+                      initialZoom: _mapZoom,
+                      onHospitalTap: (h) => _showHospitalDetails(context, h),
+                    ),
+                  ],
                 );
               },
             ),
@@ -175,19 +208,13 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () async {
-                  final url = Uri.parse(
-                    'https://www.google.com/maps/search/?api=1&query=${h.latitude},${h.longitude}',
-                  );
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url);
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Could not open map')),
-                      );
-                    }
-                  }
+                onPressed: () {
+                  setState(() {
+                    _mapCenter = LatLng(h.latitude, h.longitude);
+                    _mapZoom = 15;
+                    _isMapView = true;
+                  });
+                  Navigator.pop(context);
                 },
                 icon: const Icon(Icons.map),
                 label: const Text('Show on Map'),
@@ -273,21 +300,30 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
-  void _showLocationPicker(BuildContext context, String type) {
+  Future<void> _showLocationPicker(BuildContext context, String type) async {
     List<String> items = [];
     String title = '';
+    bool isLoading = true;
 
     if (type == 'island') {
-      items = PhLocationData.islandGroups;
+      items = ['Luzon', 'Visayas', 'Mindanao'];
       title = 'Select Island';
-    } else if (type == 'city') {
+      isLoading = false;
+    } else if (type == 'region') {
       if (_selectedIsland == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select an Island first')),
         );
         return;
       }
-      items = PhLocationData.getCitiesForIsland(_selectedIsland!);
+      title = 'Select Region';
+    } else if (type == 'city') {
+      if (_selectedRegion == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a Region first')),
+        );
+        return;
+      }
       title = 'Select City';
     } else if (type == 'barangay') {
       if (_selectedCity == null) {
@@ -296,9 +332,37 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
         );
         return;
       }
-      items = PhLocationData.getBarangaysForCity(_selectedCity!);
       title = 'Select Barangay';
     }
+
+    // Show loading dialog if data is not ready
+    if (isLoading) {
+      if (type == 'region') {
+        final fetched = await _locationSvc.getRegionsByIsland(_selectedIsland!);
+        items = fetched.map((e) => e['name'] as String).toList();
+      } else if (type == 'city') {
+        final islandRegions = await _locationSvc.getRegionsByIsland(_selectedIsland!);
+        final regMatch = islandRegions.firstWhere((r) => r['name'] == _selectedRegion, orElse: () => {});
+        if (regMatch.isNotEmpty) {
+          final fetched = await _locationSvc.getCitiesAndMunicipalities(regMatch['code']);
+          items = fetched.map((e) => e['name'] as String).toList();
+        }
+      } else if (type == 'barangay') {
+        final islandRegions = await _locationSvc.getRegionsByIsland(_selectedIsland!);
+        final regMatch = islandRegions.firstWhere((r) => r['name'] == _selectedRegion, orElse: () => {});
+        if (regMatch.isNotEmpty) {
+          final regionCities = await _locationSvc.getCitiesAndMunicipalities(regMatch['code']);
+          final cityMatch = regionCities.firstWhere((c) => c['name'] == _selectedCity, orElse: () => {});
+          if (cityMatch.isNotEmpty) {
+            final fetched = await _locationSvc.getBarangays(cityMatch['code']);
+            items = fetched.map((e) => e['name'] as String).toList();
+          }
+        }
+      }
+      isLoading = false;
+    }
+
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -328,6 +392,11 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                       setState(() {
                         if (type == 'island') {
                           _selectedIsland = null;
+                          _selectedRegion = null;
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        } else if (type == 'region') {
+                          _selectedRegion = null;
                           _selectedCity = null;
                           _selectedBarangay = null;
                         } else if (type == 'city') {
@@ -348,6 +417,11 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                     setState(() {
                       if (type == 'island') {
                         _selectedIsland = item;
+                        _selectedRegion = null;
+                        _selectedCity = null;
+                        _selectedBarangay = null;
+                      } else if (type == 'region') {
+                        _selectedRegion = item;
                         _selectedCity = null;
                         _selectedBarangay = null;
                       } else if (type == 'city') {

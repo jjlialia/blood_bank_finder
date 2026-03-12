@@ -11,7 +11,10 @@ def get_service(db=Depends(get_db)):
 
 @router.post("/", response_model=UserResponse)
 async def create_user(user: UserCreate, service: FirestoreService = Depends(get_service)):
-    return await service.create_or_update_user(user.uid, user.dict())
+    try:
+        return await service.create_or_update_user(user.uid, user.dict())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
 
 @router.get("/{uid}", response_model=UserResponse)
 async def get_user(uid: str, service: FirestoreService = Depends(get_service)):
@@ -22,12 +25,18 @@ async def get_user(uid: str, service: FirestoreService = Depends(get_service)):
 
 @router.get("/", response_model=List[UserResponse])
 async def list_users(service: FirestoreService = Depends(get_service)):
-    return await service.list_all_users()
+    try:
+        return await service.list_all_users()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list users: {str(e)}")
 
 @router.patch("/{uid}/ban")
 async def toggle_ban(uid: str, is_banned: bool, service: FirestoreService = Depends(get_service)):
-    await service.toggle_user_ban(uid, is_banned)
-    return {"message": "User ban status updated"}
+    try:
+        await service.toggle_user_ban(uid, is_banned)
+        return {"message": "User ban status updated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update ban status: {str(e)}")
 
 @router.patch("/{uid}/role")
 async def update_role(uid: str, role: str, hospital_id: str = None, service: FirestoreService = Depends(get_service)):

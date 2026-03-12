@@ -5,6 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def get_google_maps_key():
+    key = os.getenv("GOOGLE_MAPS_API_KEY")
+    if not key:
+        raise ValueError("GOOGLE_MAPS_API_KEY not found in environment variables")
+    return key
+
 def initialize_firebase():
     cred_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
     if not cred_path:

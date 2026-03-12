@@ -5,6 +5,7 @@ class HospitalModel {
   final String name;
   final String email;
   final String islandGroup;
+  final String region;
   final String city;
   final String barangay;
   final String address;
@@ -20,6 +21,7 @@ class HospitalModel {
     required this.name,
     required this.email,
     required this.islandGroup,
+    required this.region,
     required this.city,
     required this.barangay,
     required this.address,
@@ -37,6 +39,7 @@ class HospitalModel {
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       islandGroup: data['islandGroup'] ?? '',
+      region: data['region'] ?? '',
       city: data['city'] ?? '',
       barangay: data['barangay'] ?? '',
       address: data['address'] ?? '',
@@ -54,6 +57,7 @@ class HospitalModel {
       'name': name,
       'email': email,
       'islandGroup': islandGroup,
+      'region': region,
       'city': city,
       'barangay': barangay,
       'address': address,
@@ -63,6 +67,24 @@ class HospitalModel {
       'availableBloodTypes': availableBloodTypes,
       'isActive': isActive,
       'createdAt': Timestamp.fromDate(createdAt),
+    };
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'email': email,
+      'islandGroup': islandGroup,
+      'region': region,
+      'city': city,
+      'barangay': barangay,
+      'address': address,
+      'contactNumber': contactNumber,
+      'latitude': latitude,
+      'longitude': longitude,
+      'availableBloodTypes': availableBloodTypes,
+      'isActive': isActive,
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 }

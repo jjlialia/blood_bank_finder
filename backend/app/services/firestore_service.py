@@ -23,7 +23,11 @@ class FirestoreService:
         return [doc.to_dict() for doc in docs]
 
     async def toggle_user_ban(self, user_id: str, is_banned: bool):
-        self.db.collection('users').document(user_id).update({'isBanned': is_banned})
+        try:
+            self.db.collection('users').document(user_id).update({'isBanned': is_banned})
+        except Exception as e:
+            print(f"Error toggling user ban: {e}")
+            raise
 
     async def update_user_role(self, user_id: str, role: str, hospital_id: Optional[str]):
         self.db.collection('users').document(user_id).update({
@@ -42,24 +46,30 @@ class FirestoreService:
     async def update_hospital(self, hospital_id: str, hospital_data: dict):
         self.db.collection('hospitals').document(hospital_id).update(hospital_data)
 
-    async def list_hospitals(self, is_active: bool = True, island_group: str = None, city: str = None, barangay: str = None) -> List[dict]:
-        query = self.db.collection('hospitals')
-        if is_active is not None:
-            query = query.where('isActive', '==', is_active)
-        if island_group:
-            query = query.where('islandGroup', '==', island_group)
-        if city:
-            query = query.where('city', '==', city)
-        if barangay:
-            query = query.where('barangay', '==', barangay)
-        
-        docs = query.stream()
-        hospitals = []
-        for doc in docs:
-            data = doc.to_dict()
-            data['id'] = doc.id
-            hospitals.append(data)
-        return hospitals
+    async def list_hospitals(self, is_active: bool = True, island_group: str = None, region: str = None, city: str = None, barangay: str = None) -> List[dict]:
+        try:
+            query = self.db.collection('hospitals')
+            if is_active is not None:
+                query = query.where('isActive', '==', is_active)
+            if island_group:
+                query = query.where('islandGroup', '==', island_group)
+            if region:
+                query = query.where('region', '==', region)
+            if city:
+                query = query.where('city', '==', city)
+            if barangay:
+                query = query.where('barangay', '==', barangay)
+            
+            docs = query.stream()
+            hospitals = []
+            for doc in docs:
+                data = doc.to_dict()
+                data['id'] = doc.id
+                hospitals.append(data)
+            return hospitals
+        except Exception as e:
+            print(f"Error listing hospitals: {e}")
+            return []
 
     # --- Blood Requests ---
     async def create_blood_request(self, request_data: dict) -> str:
@@ -134,11 +144,15 @@ class FirestoreService:
 
     # --- Inventory ---
     async def update_inventory(self, hospital_id: str, blood_type: str, units: float):
-        self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type).set({
-            'blood_type': blood_type,
-            'units': units,
-            'last_updated': datetime.now()
-        })
+        try:
+            self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type).set({
+                'blood_type': blood_type,
+                'units': units,
+                'last_updated': datetime.now()
+            })
+        except Exception as e:
+            print(f"Error updating inventory: {e}")
+            raise
 
     async def get_inventory(self, hospital_id: str) -> List[dict]:
         docs = self.db.collection('hospitals').document(hospital_id).collection('inventory').stream()

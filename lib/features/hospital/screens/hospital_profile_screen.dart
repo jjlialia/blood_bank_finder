@@ -4,7 +4,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/models/hospital_model.dart';
 import '../../../core/services/database_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../../../core/utils/ph_locations.dart';
+import '../../../core/services/location_service.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
 
@@ -17,6 +17,7 @@ class HospitalProfileScreen extends StatefulWidget {
 
 class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   final DatabaseService _db = DatabaseService();
+  final LocationService _locationSvc = LocationService();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
   HospitalModel? _hospital;
@@ -26,9 +27,17 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   late TextEditingController _addressController;
   late TextEditingController _contactController;
   String? _selectedIsland;
+  String? _selectedRegion;
   String? _selectedCity;
   String? _selectedBarangay;
   bool _isActive = true;
+
+  List<Map<String, dynamic>> _regions = [];
+  List<Map<String, dynamic>> _cities = [];
+  List<Map<String, dynamic>> _barangays = [];
+  bool _isLoadingRegions = false;
+  bool _isLoadingCities = false;
+  bool _isLoadingBarangays = false;
 
   @override
   void initState() {
@@ -43,6 +52,28 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
     if (hospitalId != null && hospitalId.isNotEmpty) {
       final h = await _db.getHospital(hospitalId);
       if (h != null) {
+        // Pre-fetch locations for existing data
+        final regions = await _locationSvc.getRegionsByIsland(h.islandGroup);
+        final currentRegion = regions.firstWhere(
+          (r) => r['name'] == h.region,
+          orElse: () => {},
+        );
+
+        List<Map<String, dynamic>> cities = [];
+        if (currentRegion.isNotEmpty) {
+          cities = await _locationSvc.getCitiesAndMunicipalities(currentRegion['code']);
+        }
+
+        final cityMatch = cities.firstWhere(
+          (c) => c['name'] == h.city,
+          orElse: () => {},
+        );
+
+        List<Map<String, dynamic>> barangays = [];
+        if (cityMatch.isNotEmpty) {
+          barangays = await _locationSvc.getBarangays(cityMatch['code']);
+        }
+
         setState(() {
           _hospital = h;
           _nameController = TextEditingController(text: h.name);
@@ -50,8 +81,12 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
           _addressController = TextEditingController(text: h.address);
           _contactController = TextEditingController(text: h.contactNumber);
           _selectedIsland = h.islandGroup;
-          _selectedCity = h.city;
-          _selectedBarangay = h.barangay;
+          _selectedRegion = currentRegion['code'];
+          _selectedCity = cityMatch['code'];
+          _selectedBarangay = barangays.firstWhere((b) => b['name'] == h.barangay, orElse: () => {})['code'];
+          _regions = regions;
+          _cities = cities;
+          _barangays = barangays;
           _isActive = h.isActive;
           _isLoading = false;
         });
@@ -122,43 +157,103 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                initialValue: _selectedIsland,
+                value: _selectedIsland,
                 decoration: const InputDecoration(labelText: 'Island Group'),
-                items: PhLocationData.islandGroups
+                items: ['Luzon', 'Visayas', 'Mindanao']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
-                onChanged: (v) {
+                onChanged: (v) async {
                   setState(() {
                     _selectedIsland = v;
+                    _selectedRegion = null;
                     _selectedCity = null;
                     _selectedBarangay = null;
+                    _regions = [];
+                    _cities = [];
+                    _barangays = [];
+                    _isLoadingRegions = true;
                   });
+
+                  if (v != null) {
+                    final fetched = await _locationSvc.getRegionsByIsland(v);
+                    setState(() {
+                      _regions = fetched;
+                      _isLoadingRegions = false;
+                    });
+                  }
                 },
                 validator: (v) => v == null ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              if (_selectedIsland != null)
+              if (_isLoadingRegions)
+                const LinearProgressIndicator()
+              else if (_selectedIsland != null)
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCity,
-                  decoration: const InputDecoration(labelText: 'City'),
-                  items: PhLocationData.getCitiesForIsland(_selectedIsland!)
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  value: _selectedRegion,
+                  decoration: const InputDecoration(labelText: 'Region'),
+                  items: _regions
+                      .map((e) => DropdownMenuItem<String>(
+                          value: e['code'], child: Text(e['name'])))
                       .toList(),
-                  onChanged: (v) {
+                  onChanged: (v) async {
                     setState(() {
-                      _selectedCity = v;
+                      _selectedRegion = v;
+                      _selectedCity = null;
                       _selectedBarangay = null;
+                      _cities = [];
+                      _barangays = [];
+                      _isLoadingCities = true;
                     });
+
+                    if (v != null) {
+                      final fetched = await _locationSvc.getCitiesAndMunicipalities(v);
+                      setState(() {
+                        _cities = fetched;
+                        _isLoadingCities = false;
+                      });
+                    }
                   },
                   validator: (v) => v == null ? 'Required' : null,
                 ),
               const SizedBox(height: 16),
-              if (_selectedCity != null)
+              if (_isLoadingCities)
+                const LinearProgressIndicator()
+              else if (_selectedRegion != null)
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedBarangay,
+                  value: _selectedCity,
+                  decoration: const InputDecoration(labelText: 'City'),
+                  items: _cities
+                      .map((e) => DropdownMenuItem<String>(
+                          value: e['code'], child: Text(e['name'])))
+                      .toList(),
+                  onChanged: (v) async {
+                    setState(() {
+                      _selectedCity = v;
+                      _selectedBarangay = null;
+                      _barangays = [];
+                      _isLoadingBarangays = true;
+                    });
+
+                    if (v != null) {
+                      final fetched = await _locationSvc.getBarangays(v);
+                      setState(() {
+                        _barangays = fetched;
+                        _isLoadingBarangays = false;
+                      });
+                    }
+                  },
+                  validator: (v) => v == null ? 'Required' : null,
+                ),
+              const SizedBox(height: 16),
+              if (_isLoadingBarangays)
+                const LinearProgressIndicator()
+              else if (_selectedCity != null)
+                DropdownButtonFormField<String>(
+                  value: _selectedBarangay,
                   decoration: const InputDecoration(labelText: 'Barangay'),
-                  items: PhLocationData.getBarangaysForCity(_selectedCity!)
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  items: _barangays
+                      .map((e) => DropdownMenuItem<String>(
+                          value: e['code'], child: Text(e['name'])))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedBarangay = v),
                   validator: (v) => v == null ? 'Required' : null,
@@ -221,8 +316,9 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
       name: _nameController.text,
       email: _emailController.text,
       islandGroup: _selectedIsland!,
-      city: _selectedCity!,
-      barangay: _selectedBarangay!,
+      region: _regions.firstWhere((r) => r['code'] == _selectedRegion)['name'],
+      city: _cities.firstWhere((c) => c['code'] == _selectedCity)['name'],
+      barangay: _barangays.firstWhere((b) => b['code'] == _selectedBarangay)['name'],
       address: _addressController.text,
       contactNumber: _contactController.text,
       latitude: _hospital!.latitude,

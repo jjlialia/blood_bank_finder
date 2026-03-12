@@ -70,6 +70,7 @@ class DatabaseService {
 
   Stream<List<HospitalModel>> streamHospitals({
     String? islandGroup,
+    String? region,
     String? city,
     String? barangay,
     bool allowAll = false, // Added to show inactive hospitals to Super Admin
@@ -82,6 +83,10 @@ class DatabaseService {
 
     if (islandGroup != null && islandGroup.isNotEmpty) {
       query = query.where('islandGroup', isEqualTo: islandGroup);
+    }
+
+    if (region != null && region.isNotEmpty) {
+      query = query.where('region', isEqualTo: region);
     }
 
     if (city != null && city.isNotEmpty) {

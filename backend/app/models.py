@@ -13,6 +13,7 @@ class UserBase(BaseModel):
     gender: str
     bloodGroup: str
     islandGroup: str
+    region: str
     city: str
     barangay: str
     address: str
@@ -30,6 +31,7 @@ class HospitalBase(BaseModel):
     name: str
     email: str
     islandGroup: str
+    region: str
     city: str
     barangay: str
     address: str

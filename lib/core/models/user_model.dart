@@ -11,6 +11,7 @@ class UserModel {
   final String gender;
   final String bloodGroup;
   final String islandGroup;
+  final String region;
   final String city;
   final String barangay;
   final String address;
@@ -29,6 +30,7 @@ class UserModel {
     required this.gender,
     required this.bloodGroup,
     required this.islandGroup,
+    required this.region,
     required this.city,
     required this.barangay,
     required this.address,
@@ -49,6 +51,7 @@ class UserModel {
       gender: data['gender'] ?? '',
       bloodGroup: data['bloodGroup'] ?? '',
       islandGroup: data['islandGroup'] ?? '',
+      region: data['region'] ?? '',
       city: data['city'] ?? '',
       barangay: data['barangay'] ?? '',
       address: data['address'] ?? '',
@@ -70,12 +73,35 @@ class UserModel {
       'gender': gender,
       'bloodGroup': bloodGroup,
       'islandGroup': islandGroup,
+      'region': region,
       'city': city,
       'barangay': barangay,
       'address': address,
       'hospitalId': hospitalId,
       'isBanned': isBanned,
       'createdAt': Timestamp.fromDate(createdAt),
+    };
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,
+      'email': email,
+      'role': role,
+      'firstName': firstName,
+      'lastName': lastName,
+      'fatherName': fatherName,
+      'mobile': mobile,
+      'gender': gender,
+      'bloodGroup': bloodGroup,
+      'islandGroup': islandGroup,
+      'region': region,
+      'city': city,
+      'barangay': barangay,
+      'address': address,
+      'hospitalId': hospitalId,
+      'isBanned': isBanned,
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 }

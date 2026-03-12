@@ -64,4 +64,20 @@ class BloodRequestModel {
       'adminMessage': adminMessage,
     };
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'userName': userName,
+      'type': type,
+      'bloodType': bloodType,
+      'status': status,
+      'hospitalId': hospitalId,
+      'hospitalName': hospitalName,
+      'contactNumber': contactNumber,
+      'quantity': quantity,
+      'createdAt': createdAt.toIso8601String(),
+      'adminMessage': adminMessage,
+    };
+  }
 }

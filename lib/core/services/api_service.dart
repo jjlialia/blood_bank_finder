@@ -2,11 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/blood_request_model.dart';
 import '../models/hospital_model.dart';
+import 'package:flutter/foundation.dart';
+import 'package:geocoding/geocoding.dart';
 
 class ApiService {
   // Use http://10.0.2.2:8000 for Android Emulator
-  // Use http://localhost:8000 for iOS Simulator
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  // Use http://localhost:8000 for Web/Desktop
+  static String get baseUrl {
+    if (kIsWeb) return 'http://localhost:8000';
+    return 'http://10.0.2.2:8000';
+  }
 
   // --- Blood Requests ---
 
@@ -14,7 +19,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/blood-requests/'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(request.toMap()),
+      body: jsonEncode(request.toJson()),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -60,7 +65,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/hospitals/'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(hospital.toMap()),
+      body: jsonEncode(hospital.toJson()),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -72,7 +77,7 @@ class ApiService {
     final response = await http.put(
       Uri.parse('$baseUrl/hospitals/$id'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(hospital.toMap()),
+      body: jsonEncode(hospital.toJson()),
     );
 
     if (response.statusCode != 200) {
@@ -88,5 +93,40 @@ class ApiService {
     if (response.statusCode != 200) {
       throw Exception('Failed to delete hospital: ${response.body}');
     }
+  }
+
+  Future<Location?> getCoordinatesFromAddress(String address) async {
+    if (kIsWeb) {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/geocoding/?address=${Uri.encodeComponent(address)}'),
+          headers: {'Accept': 'application/json'},
+        );
+        
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          return Location(
+            latitude: data['latitude'],
+            longitude: data['longitude'],
+            timestamp: DateTime.now(),
+          );
+        } else {
+          print('Backend Geocoding Error: ${response.body}');
+        }
+      } catch (e) {
+        print('Web Geocoding Error: $e');
+      }
+      return null;
+    }
+
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        return locations.first;
+      }
+    } catch (e) {
+      print('Geocoding error: $e');
+    }
+    return null;
   }
 }

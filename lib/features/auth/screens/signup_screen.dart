@@ -19,6 +19,7 @@ class _SignupScreenState extends State<SignupScreen> {
     'gender': 'Male',
     'bloodGroup': 'A+',
     'islandGroup': null,
+    'region': null,
     'city': null,
     'barangay': null,
   };
@@ -105,8 +106,9 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 16),
               PhLocationPicker(
-                onLocationChanged: (island, city, barangay) {
+                onLocationChanged: (island, region, city, barangay) {
                   _formData['islandGroup'] = island;
+                  _formData['region'] = region;
                   _formData['city'] = city;
                   _formData['barangay'] = barangay;
                 },
@@ -160,7 +162,7 @@ class _SignupScreenState extends State<SignupScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
-        initialValue: _formData[key],
+        value: _formData[key],
         decoration: InputDecoration(labelText: label),
         items: items
             .map((e) => DropdownMenuItem(value: e, child: Text(e)))

@@ -21,13 +21,17 @@ async def update_hospital(hospital_id: str, hospital: HospitalCreate, service: F
     return {**hospital.dict(), "id": hospital_id}
 
 @router.delete("/{hospital_id}")
+async def delete_hospital(hospital_id: str, service: FirestoreService = Depends(get_service)):
+    await service.delete_hospital(hospital_id)
+    return {"message": "Hospital deleted successfully"}
 
 @router.get("/", response_model=List[HospitalResponse])
 async def list_hospitals(
     is_active: bool = True,
     island_group: Optional[str] = None,
+    region: Optional[str] = None,
     city: Optional[str] = None,
     barangay: Optional[str] = None,
     service: FirestoreService = Depends(get_service)
 ):
-    return await service.list_hospitals(is_active, island_group, city, barangay)
+    return await service.list_hospitals(is_active, island_group, region, city, barangay)

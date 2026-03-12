@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/models/hospital_model.dart';
 import '../../core/services/database_service.dart';
-import '../../core/utils/ph_locations.dart';
+import '../../core/services/location_service.dart';
 
 class HospitalPickerSheet extends StatefulWidget {
   final Function(HospitalModel) onHospitalSelected;
@@ -14,8 +14,10 @@ class HospitalPickerSheet extends StatefulWidget {
 
 class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
   final DatabaseService _db = DatabaseService();
+  final LocationService _locationSvc = LocationService();
   String _searchQuery = '';
   String? _selectedIsland;
+  String? _selectedRegion;
   String? _selectedCity;
   String? _selectedBarangay;
 
@@ -88,6 +90,12 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                       ),
                       const SizedBox(width: 8),
                       _buildFilterChip(
+                        label: _selectedRegion ?? 'Region',
+                        isSelected: _selectedRegion != null,
+                        onTap: () => _showLocationPicker(context, 'region'),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
                         label: _selectedCity ?? 'City',
                         isSelected: _selectedCity != null,
                         onTap: () => _showLocationPicker(context, 'city'),
@@ -108,6 +116,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
             child: StreamBuilder<List<HospitalModel>>(
               stream: _db.streamHospitals(
                 islandGroup: _selectedIsland,
+                region: _selectedRegion,
                 city: _selectedCity,
                 barangay: _selectedBarangay,
               ),
@@ -229,21 +238,30 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
     );
   }
 
-  void _showLocationPicker(BuildContext context, String type) {
+  Future<void> _showLocationPicker(BuildContext context, String type) async {
     List<String> items = [];
     String title = '';
+    bool isLoading = true;
 
     if (type == 'island') {
-      items = PhLocationData.islandGroups;
+      items = ['Luzon', 'Visayas', 'Mindanao'];
       title = 'Select Island Group';
-    } else if (type == 'city') {
+      isLoading = false;
+    } else if (type == 'region') {
       if (_selectedIsland == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select an Island Group first')),
         );
         return;
       }
-      items = PhLocationData.getCitiesForIsland(_selectedIsland!);
+      title = 'Select Region';
+    } else if (type == 'city') {
+      if (_selectedRegion == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a Region first')),
+        );
+        return;
+      }
       title = 'Select City';
     } else if (type == 'barangay') {
       if (_selectedCity == null) {
@@ -252,9 +270,36 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
         );
         return;
       }
-      items = PhLocationData.getBarangaysForCity(_selectedCity!);
       title = 'Select Barangay';
     }
+
+    if (isLoading) {
+      if (type == 'region') {
+        final fetched = await _locationSvc.getRegionsByIsland(_selectedIsland!);
+        items = fetched.map((e) => e['name'] as String).toList();
+      } else if (type == 'city') {
+        final islandRegions = await _locationSvc.getRegionsByIsland(_selectedIsland!);
+        final regMatch = islandRegions.firstWhere((r) => r['name'] == _selectedRegion, orElse: () => {});
+        if (regMatch.isNotEmpty) {
+          final fetched = await _locationSvc.getCitiesAndMunicipalities(regMatch['code']);
+          items = fetched.map((e) => e['name'] as String).toList();
+        }
+      } else if (type == 'barangay') {
+        final islandRegions = await _locationSvc.getRegionsByIsland(_selectedIsland!);
+        final regMatch = islandRegions.firstWhere((r) => r['name'] == _selectedRegion, orElse: () => {});
+        if (regMatch.isNotEmpty) {
+          final regionCities = await _locationSvc.getCitiesAndMunicipalities(regMatch['code']);
+          final cityMatch = regionCities.firstWhere((c) => c['name'] == _selectedCity, orElse: () => {});
+          if (cityMatch.isNotEmpty) {
+            final fetched = await _locationSvc.getBarangays(cityMatch['code']);
+            items = fetched.map((e) => e['name'] as String).toList();
+          }
+        }
+      }
+      isLoading = false;
+    }
+
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -288,6 +333,11 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                         setState(() {
                           if (type == 'island') {
                             _selectedIsland = null;
+                            _selectedRegion = null;
+                            _selectedCity = null;
+                            _selectedBarangay = null;
+                          } else if (type == 'region') {
+                            _selectedRegion = null;
                             _selectedCity = null;
                             _selectedBarangay = null;
                           } else if (type == 'city') {
@@ -308,6 +358,11 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                       setState(() {
                         if (type == 'island') {
                           _selectedIsland = item;
+                          _selectedRegion = null;
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        } else if (type == 'region') {
+                          _selectedRegion = item;
                           _selectedCity = null;
                           _selectedBarangay = null;
                         } else if (type == 'city') {

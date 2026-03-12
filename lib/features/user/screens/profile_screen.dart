@@ -61,6 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         gender: currentUser.gender,
         bloodGroup: currentUser.bloodGroup,
         islandGroup: currentUser.islandGroup,
+        region: currentUser.region,
         city: _cityCtrl.text.trim(),
         barangay: currentUser.barangay,
         address: _addressCtrl.text.trim(),

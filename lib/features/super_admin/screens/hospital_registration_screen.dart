@@ -29,7 +29,7 @@ class _HospitalRegistrationScreenState
             ),
             const SizedBox(height: 8),
             PhLocationPicker(
-              onLocationChanged: (island, city, barangay) {
+              onLocationChanged: (island, region, city, barangay) {
                 // Handle location data
               },
             ),
