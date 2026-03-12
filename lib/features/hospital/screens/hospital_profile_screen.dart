@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../models/hospital_model.dart';
-import '../../../services/database_service.dart';
+import '../../../core/models/hospital_model.dart';
+import '../../../core/services/database_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../core/utils/ph_locations.dart';
 import '../widgets/hospital_admin_drawer.dart';

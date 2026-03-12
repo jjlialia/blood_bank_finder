@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widgets/super_admin_drawer.dart';
-import '../../../services/database_service.dart';
-import '../../../models/user_model.dart';
-import '../../../models/hospital_model.dart';
-import '../../../models/blood_request_model.dart';
+import '../../../core/services/database_service.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/models/hospital_model.dart';
+import '../../../core/models/blood_request_model.dart';
 
 class SuperAdminDashboard extends StatelessWidget {
   const SuperAdminDashboard({super.key});

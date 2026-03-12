@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../services/database_service.dart';
-import '../../../models/blood_request_model.dart';
-import '../../../models/inventory_model.dart';
+import '../../../core/services/database_service.dart';
+import '../../../core/models/blood_request_model.dart';
+import '../../../core/models/inventory_model.dart';
 import '../widgets/no_hospital_assigned.dart';
 
 class HospitalAdminDashboard extends StatelessWidget {

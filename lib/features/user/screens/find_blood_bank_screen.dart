@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../models/hospital_model.dart';
+import '../../../core/models/hospital_model.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../services/database_service.dart';
+import '../../../core/services/database_service.dart';
 import '../../../core/utils/ph_locations.dart';
 
 class FindBloodBankScreen extends StatefulWidget {

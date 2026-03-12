@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../models/blood_request_model.dart';
-import '../../../models/hospital_model.dart';
-import '../../../services/api_service.dart';
+import '../../../core/models/blood_request_model.dart';
+import '../../../core/models/hospital_model.dart';
+import '../../../core/services/api_service.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/custom_button.dart';

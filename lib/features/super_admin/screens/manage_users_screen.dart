@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../models/user_model.dart';
-import '../../../models/hospital_model.dart';
-import '../../../services/database_service.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/models/hospital_model.dart';
+import '../../../core/services/database_service.dart';
 import '../widgets/super_admin_drawer.dart';
 
 class ManageUsersScreen extends StatefulWidget {
