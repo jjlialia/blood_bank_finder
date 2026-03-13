@@ -342,17 +342,31 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
               final navigator = Navigator.of(context);
               final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-              await api.updateRequestStatus(
-                req.id!,
-                selectedStatus,
-                adminMessage: messageController.text,
-              );
-
-              if (context.mounted) {
-                navigator.pop();
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(content: Text('Request updated successfully')),
+              try {
+                await api.updateRequestStatus(
+                  req.id!,
+                  selectedStatus,
+                  adminMessage: messageController.text,
                 );
+
+                if (context.mounted) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Request updated successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Update failed: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             style: ElevatedButton.styleFrom(

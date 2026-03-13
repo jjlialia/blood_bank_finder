@@ -76,17 +76,31 @@ class InventoryManagementScreen extends StatelessWidget {
                               isDense: true,
                               border: OutlineInputBorder(),
                             ),
-                            onSubmitted: (value) {
+                            onSubmitted: (value) async {
                               final newUnits = double.tryParse(value);
                               if (newUnits != null && newUnits >= 0) {
                                 final ApiService api = ApiService();
-                                api.updateInventory(hospitalId, type, newUnits);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Updated $type to $newUnits'),
-                                    duration: const Duration(seconds: 1),
-                                  ),
-                                );
+                                try {
+                                  await api.updateInventory(hospitalId, type, newUnits);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Updated $type to $newUnits'),
+                                        duration: const Duration(seconds: 1),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Failed: ${e.toString()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
                               }
                             },
                           ),

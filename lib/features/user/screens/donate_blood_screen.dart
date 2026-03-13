@@ -242,27 +242,43 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
 
   void _submitDonation(AuthProvider auth) async {
     if (!_isSworn || _selectedHospital == null || _selectedBloodType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all steps and sign the declaration')),
+      );
       return;
     }
 
-    final request = BloodRequestModel(
-      userId: auth.user!.uid,
-      userName: '${auth.user!.firstName} ${auth.user!.lastName}',
-      type: 'Donate',
-      bloodType: _selectedBloodType!,
-      status: 'pending',
-      hospitalId: _selectedHospital!.id!,
-      hospitalName: _selectedHospital!.name,
-      contactNumber: _contactController.text,
-      quantity: double.tryParse(_unitsController.text) ?? 1.0,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final request = BloodRequestModel(
+        userId: auth.user!.uid,
+        userName: '${auth.user!.firstName} ${auth.user!.lastName}',
+        type: 'Donate',
+        bloodType: _selectedBloodType!,
+        status: 'pending',
+        hospitalId: _selectedHospital!.id!,
+        hospitalName: _selectedHospital!.name,
+        contactNumber: _contactController.text,
+        quantity: double.tryParse(_unitsController.text) ?? 1.0,
+        createdAt: DateTime.now(),
+      );
 
-    await _api.createBloodRequest(request);
-    if (!mounted) return;
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Donation request submitted!')),
-    );
+      await _api.createBloodRequest(request);
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Donation request submitted!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

@@ -152,26 +152,44 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
   }
 
   void _submitRequest(AuthProvider auth) async {
-    if (_selectedHospital == null || _selectedBloodType == null) return;
+    if (_selectedHospital == null || _selectedBloodType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select hospital and blood type')),
+      );
+      return;
+    }
 
-    final request = BloodRequestModel(
-      userId: auth.user!.uid,
-      userName: '${auth.user!.firstName} ${auth.user!.lastName}',
-      type: 'Request',
-      bloodType: _selectedBloodType!,
-      status: 'pending',
-      hospitalId: _selectedHospital!.id!,
-      hospitalName: _selectedHospital!.name,
-      contactNumber: _contactController.text,
-      quantity: double.tryParse(_unitsController.text) ?? 1.0,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final request = BloodRequestModel(
+        userId: auth.user!.uid,
+        userName: '${auth.user!.firstName} ${auth.user!.lastName}',
+        type: 'Request',
+        bloodType: _selectedBloodType!,
+        status: 'pending',
+        hospitalId: _selectedHospital!.id!,
+        hospitalName: _selectedHospital!.name,
+        contactNumber: _contactController.text,
+        quantity: double.tryParse(_unitsController.text) ?? 1.0,
+        createdAt: DateTime.now(),
+      );
 
-    await _api.createBloodRequest(request);
-    if (!mounted) return;
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Blood request posted successfully!')),
-    );
+      await _api.createBloodRequest(request);
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Blood request posted successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

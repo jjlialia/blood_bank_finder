@@ -26,6 +26,8 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _addressController;
   late TextEditingController _contactController;
+  late TextEditingController _latController;
+  late TextEditingController _lonController;
   String? _selectedIsland;
   String? _selectedRegion;
   String? _selectedCity;
@@ -80,6 +82,8 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
           _emailController = TextEditingController(text: h.email);
           _addressController = TextEditingController(text: h.address);
           _contactController = TextEditingController(text: h.contactNumber);
+          _latController = TextEditingController(text: h.latitude.toString());
+          _lonController = TextEditingController(text: h.longitude.toString());
           _selectedIsland = h.islandGroup;
           _selectedRegion = currentRegion['code'];
           _selectedCity = cityMatch['code'];
@@ -102,6 +106,8 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
     _emailController.dispose();
     _addressController.dispose();
     _contactController.dispose();
+    _latController.dispose();
+    _lonController.dispose();
     super.dispose();
   }
 
@@ -275,6 +281,28 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Latitude',
+                      controller: _latController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      validator: (v) => v == null || v.isEmpty ? 'Required' : double.tryParse(v) == null ? 'Invalid' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Longitude',
+                      controller: _lonController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      validator: (v) => v == null || v.isEmpty ? 'Required' : double.tryParse(v) == null ? 'Invalid' : null,
+                    ),
+                  ),
+                ],
+              ),
               SwitchListTile(
                 title: const Text('Active Status'),
                 subtitle: Text(
@@ -321,8 +349,8 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
       barangay: _barangays.firstWhere((b) => b['code'] == _selectedBarangay)['name'],
       address: _addressController.text,
       contactNumber: _contactController.text,
-      latitude: _hospital!.latitude,
-      longitude: _hospital!.longitude,
+      latitude: double.tryParse(_latController.text) ?? 0.0,
+      longitude: double.tryParse(_lonController.text) ?? 0.0,
       availableBloodTypes: _hospital!.availableBloodTypes,
       isActive: _isActive,
       createdAt: _hospital!.createdAt,

@@ -89,7 +89,7 @@ class _HospitalMapViewState extends State<HospitalMapView> {
           initialCameraPosition: CameraPosition(
             target: widget.initialCenter ?? (_currentPosition != null
                 ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
-                : const LatLng(14.5995, 120.9842)), // Default to Manila
+                : const LatLng(14.5995, 120.9842)), // Manila City Center
             zoom: widget.initialZoom,
           ),
           onMapCreated: (controller) => _mapController = controller,

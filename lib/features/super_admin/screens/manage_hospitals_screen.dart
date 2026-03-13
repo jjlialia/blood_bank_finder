@@ -627,6 +627,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                                           content: Text(
                                             'Please enter address and city first',
                                           ),
+                                          backgroundColor: Colors.orange,
                                         ),
                                       );
                                       return;
@@ -636,6 +637,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                                     try {
                                       final query =
                                           '${addressController.text}, ${selectedBarangay ?? ""}, $selectedCity, Philippines';
+                                      print('Attempting to geocode: $query');
                                       final locations = await _api
                                           .getCoordinatesFromAddress(query);
                                       if (locations != null) {
@@ -643,25 +645,37 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                                             locations.latitude.toString();
                                         lonController.text =
                                             locations.longitude.toString();
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Coordinates fetched successfully!'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
                                       } else {
                                         if (mounted) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             const SnackBar(
                                               content: Text(
-                                                'Could not find coordinates for this address',
+                                                'Could not find coordinates for this address. Try being more specific.',
                                               ),
+                                              backgroundColor: Colors.red,
                                             ),
                                           );
                                         }
                                       }
                                     } catch (e) {
+                                      print('Geocoding error detail: $e');
                                       if (mounted) {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
                                             content:
-                                                Text('Error: ${e.toString()}'),
+                                                Text('Geocoding Error: ${e.toString()}'),
+                                            backgroundColor: Colors.red,
                                           ),
                                         );
                                       }
