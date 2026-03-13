@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../core/models/hospital_model.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/services/location_service.dart';
+import '../../../core/services/api_service.dart';
 import '../widgets/hospital_map_view.dart';
 
 class FindBloodBankScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class FindBloodBankScreen extends StatefulWidget {
 class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
   final DatabaseService _db = DatabaseService();
   final LocationService _locationSvc = LocationService();
+  final ApiService _api = ApiService();
   String _searchQuery = '';
   String? _selectedIsland;
   String? _selectedRegion;
@@ -127,6 +129,14 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                     .toList();
 
                 if (hospitals.isEmpty) {
+                  if (_isMapView) {
+                    return HospitalMapView(
+                      hospitals: const [],
+                      initialCenter: _mapCenter,
+                      initialZoom: _mapZoom,
+                      onHospitalTap: (_) {},
+                    );
+                  }
                   return const Center(
                     child: Text('No hospitals found matching criteria.'),
                   );
@@ -425,6 +435,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                       }
                     });
                     Navigator.pop(context);
+                    _updateMapLocation(type, item);
                   },
                 );
               },
@@ -434,5 +445,40 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _updateMapLocation(String type, String itemName) async {
+    String query = '';
+    double targetZoom = 12.0;
+
+    if (type == 'island') {
+      query = '$itemName Island, Philippines';
+      targetZoom = 6.0;
+    } else if (type == 'region') {
+      query = '$itemName, $_selectedIsland Island, Philippines';
+      targetZoom = 8.0;
+    } else if (type == 'city') {
+      query = '$itemName, $_selectedRegion, Philippines';
+      targetZoom = 12.0;
+    } else if (type == 'barangay') {
+      query = 'Barangay $itemName, $_selectedCity, Philippines';
+      targetZoom = 15.0;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Locating $_searchQuery...'), duration: const Duration(seconds: 1)),
+    );
+
+    final loc = await _api.getCoordinatesFromAddress(query);
+    if (loc != null && mounted) {
+      setState(() {
+        _mapCenter = LatLng(loc.latitude, loc.longitude);
+        _mapZoom = targetZoom;
+      });
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not find exact coordinates, map unchanged.')),
+      );
+    }
   }
 }
