@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../core/models/blood_request_model.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/services/api_service.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
 
@@ -16,6 +15,7 @@ class BloodRequestsListScreen extends StatefulWidget {
 }
 
 class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
+  final DatabaseService _db = DatabaseService();
   String _selectedFilter = 'All';
   final List<String> _filters = [
     'All',
@@ -29,7 +29,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
     final hospitalId = auth.user?.hospitalId;
-    final DatabaseService db = DatabaseService();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Hospital Requests')),
@@ -41,7 +40,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                 _buildFilterRow(),
                 Expanded(
                   child: StreamBuilder<List<BloodRequestModel>>(
-                    stream: db.streamHospitalRequests(hospitalId),
+                    stream: _db.streamHospitalRequests(hospitalId),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Center(
@@ -130,19 +129,17 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                             confirmDismiss: (direction) async {
                               if (direction == DismissDirection.startToEnd) {
                                 // Approve/Complete
-                                final ApiService api = ApiService();
-                                await api.updateRequestStatus(
-                                  req.id!,
-                                  'completed',
+                                await _db.updateRequestStatusWithNotification(
+                                  request: req,
+                                  newStatus: 'completed',
                                   adminMessage: 'Approved via quick action.',
                                 );
                                 return true;
                               } else {
                                 // Reject
-                                final ApiService api = ApiService();
-                                await api.updateRequestStatus(
-                                  req.id!,
-                                  'rejected',
+                                await _db.updateRequestStatusWithNotification(
+                                  request: req,
+                                  newStatus: 'rejected',
                                   adminMessage: 'Rejected via quick action.',
                                 );
                                 return true;
@@ -309,7 +306,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   ) {
     String selectedStatus = req.status;
     final messageController = TextEditingController();
-    final ApiService api = ApiService();
 
     return StatefulBuilder(
       builder: (context, setModalState) => Column(
@@ -343,9 +339,9 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
               final scaffoldMessenger = ScaffoldMessenger.of(context);
 
               try {
-                await api.updateRequestStatus(
-                  req.id!,
-                  selectedStatus,
+                await _db.updateRequestStatusWithNotification(
+                  request: req,
+                  newStatus: selectedStatus,
                   adminMessage: messageController.text,
                 );
 

@@ -156,9 +156,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                               h.name,
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            subtitle: Text(
-                              '${h.city} | ${h.availableBloodTypes.join(", ")}',
-                            ),
+                            subtitle: Text(h.city),
                             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                             onTap: () => _showHospitalDetails(context, h),
                           ),
@@ -199,11 +197,6 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
             _detailRow(Icons.location_on, 'Address', h.address),
             _detailRow(Icons.phone, 'Contact', h.contactNumber),
             _detailRow(Icons.email, 'Email', h.email),
-            _detailRow(
-              Icons.bloodtype,
-              'Available',
-              h.availableBloodTypes.join(", "),
-            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,

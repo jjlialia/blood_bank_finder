@@ -264,7 +264,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
             onPressed: () async {
               final navigator = Navigator.of(context);
               final scaffoldMessenger = ScaffoldMessenger.of(context);
-              await _api.deleteHospital(id);
+              await _db.deleteHospital(id);
               if (mounted) {
                 navigator.pop();
                 scaffoldMessenger.showSnackBar(
@@ -742,11 +742,11 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                         final navigator = Navigator.of(context);
                         final scaffoldMessenger = ScaffoldMessenger.of(context);
 
+                        final db = DatabaseService();
                         if (isEditing) {
-                          await _api.updateHospital(
-                              hospital.id!, updatedHospital);
+                          await db.updateHospital(hospital.id!, updatedHospital);
                         } else {
-                          await _api.addHospital(updatedHospital);
+                          await db.addHospital(updatedHospital);
                         }
 
                         if (mounted) {

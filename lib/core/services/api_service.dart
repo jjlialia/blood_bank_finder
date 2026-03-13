@@ -98,20 +98,25 @@ class ApiService {
   Future<Location?> getCoordinatesFromAddress(String address) async {
     if (kIsWeb) {
       try {
-        final response = await http.get(
-          Uri.parse('$baseUrl/geocoding/?address=${Uri.encodeComponent(address)}'),
-          headers: {'Accept': 'application/json'},
-        );
+        const String apiKey = 'AIzaSyATOwPz7vmqd5SgaCorsCLHCC4_yqeA7VQ';
+        final query = Uri.encodeComponent(address);
+        final url = 'https://maps.googleapis.com/maps/api/geocode/json?address=$query&key=$apiKey';
         
+        final response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          return Location(
-            latitude: data['latitude'],
-            longitude: data['longitude'],
-            timestamp: DateTime.now(),
-          );
+          if (data['status'] == 'OK') {
+            final loc = data['results'][0]['geometry']['location'];
+            return Location(
+              latitude: loc['lat'].toDouble(),
+              longitude: loc['lng'].toDouble(),
+              timestamp: DateTime.now(),
+            );
+          } else {
+            print('Google Geocoding API Error: ${data['status']}');
+          }
         } else {
-          print('Backend Geocoding Error: ${response.body}');
+          print('HTTP error fetching coordinates: ${response.statusCode}');
         }
       } catch (e) {
         print('Web Geocoding Error: $e');

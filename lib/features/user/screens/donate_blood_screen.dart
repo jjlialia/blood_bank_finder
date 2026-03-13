@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/blood_request_model.dart';
 import '../../../core/models/hospital_model.dart';
-import '../../../core/services/api_service.dart';
+import '../../../core/services/database_service.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/hospital_picker_sheet.dart';
@@ -15,7 +15,6 @@ class DonateBloodScreen extends StatefulWidget {
 }
 
 class _DonateBloodScreenState extends State<DonateBloodScreen> {
-  final ApiService _api = ApiService();
   int _currentStep = 0;
   String? _selectedBloodType;
   HospitalModel? _selectedHospital;
@@ -249,6 +248,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
     }
 
     try {
+      final db = DatabaseService();
       final request = BloodRequestModel(
         userId: auth.user!.uid,
         userName: '${auth.user!.firstName} ${auth.user!.lastName}',
@@ -262,7 +262,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         createdAt: DateTime.now(),
       );
 
-      await _api.createBloodRequest(request);
+      await db.createBloodRequest(request);
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
