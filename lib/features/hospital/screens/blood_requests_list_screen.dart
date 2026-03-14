@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/blood_request_model.dart';
 import '../../../core/services/database_service.dart';
+import '../../../core/services/api_service.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
@@ -16,6 +17,7 @@ class BloodRequestsListScreen extends StatefulWidget {
 
 class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   final DatabaseService _db = DatabaseService();
+  final ApiService _api = ApiService();
   String _selectedFilter = 'All';
   final List<String> _filters = [
     'All',
@@ -129,17 +131,17 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                             confirmDismiss: (direction) async {
                               if (direction == DismissDirection.startToEnd) {
                                 // Approve/Complete
-                                await _db.updateRequestStatusWithNotification(
-                                  request: req,
-                                  newStatus: 'completed',
+                                await _api.updateRequestStatus(
+                                  req.id!,
+                                  'completed',
                                   adminMessage: 'Approved via quick action.',
                                 );
                                 return true;
                               } else {
                                 // Reject
-                                await _db.updateRequestStatusWithNotification(
-                                  request: req,
-                                  newStatus: 'rejected',
+                                await _api.updateRequestStatus(
+                                  req.id!,
+                                  'rejected',
                                   adminMessage: 'Rejected via quick action.',
                                 );
                                 return true;
@@ -339,10 +341,10 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
               final scaffoldMessenger = ScaffoldMessenger.of(context);
 
               try {
-                await _db.updateRequestStatusWithNotification(
-                  request: req,
-                  newStatus: selectedStatus,
-                  adminMessage: messageController.text,
+                await _api.updateRequestStatus(
+                  req.id!,
+                  selectedStatus,
+                  adminMessage: messageController.text.isNotEmpty ? messageController.text : null,
                 );
 
                 if (context.mounted) {

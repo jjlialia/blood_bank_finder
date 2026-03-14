@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/models/hospital_model.dart';
 import '../../../core/services/database_service.dart';
+import '../../../core/services/api_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../core/services/location_service.dart';
 import '../widgets/hospital_admin_drawer.dart';
@@ -17,6 +18,7 @@ class HospitalProfileScreen extends StatefulWidget {
 
 class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
   final DatabaseService _db = DatabaseService();
+  final ApiService _api = ApiService();
   final LocationService _locationSvc = LocationService();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
@@ -356,7 +358,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
       createdAt: _hospital!.createdAt,
     );
 
-    await _db.updateHospital(_hospital!.id!, updated);
+    await _api.updateHospital(_hospital!.id!, updated);
     if (!mounted) return;
 
     ScaffoldMessenger.of(

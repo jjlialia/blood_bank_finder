@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/user_model.dart';
 import '../models/blood_request_model.dart';
 import '../models/hospital_model.dart';
 import 'package:flutter/foundation.dart';
@@ -56,6 +57,46 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to update inventory: ${response.body}');
+    }
+  }
+
+  // --- Users ---
+
+  Future<void> saveUser(UserModel user) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(user.toJson()),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to save user: ${response.body}');
+    }
+  }
+
+  Future<void> toggleUserBan(String uid, bool isBanned) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/users/$uid/ban?is_banned=$isBanned'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update ban status: ${response.body}');
+    }
+  }
+
+  Future<void> updateUserRole(String uid, String role, {String? hospitalId}) async {
+    final queryParams = hospitalId != null 
+      ? '?role=$role&hospital_id=$hospitalId'
+      : '?role=$role';
+      
+    final response = await http.patch(
+      Uri.parse('$baseUrl/users/$uid/role$queryParams'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update user role: ${response.body}');
     }
   }
 

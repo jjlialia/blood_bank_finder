@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/services/database_service.dart';
+import '../../../core/services/api_service.dart';
 import '../../../core/models/user_model.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -13,7 +13,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final DatabaseService _db = DatabaseService();
+  final ApiService _api = ApiService();
   bool _isEditing = false;
   bool _isLoading = false;
 
@@ -70,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         createdAt: currentUser.createdAt,
       );
 
-      await _db.updateUser(updatedUser);
+      await _api.saveUser(updatedUser);
 
       if (mounted) {
         setState(() => _isEditing = false);

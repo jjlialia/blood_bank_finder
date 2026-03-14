@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/models/hospital_model.dart';
 import '../../../core/services/database_service.dart';
+import '../../../core/services/api_service.dart';
 import '../widgets/super_admin_drawer.dart';
 
 class ManageUsersScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class ManageUsersScreen extends StatefulWidget {
 
 class _ManageUsersScreenState extends State<ManageUsersScreen> {
   final DatabaseService _db = DatabaseService();
+  final ApiService _api = ApiService();
   String _searchQuery = '';
 
   @override
@@ -82,7 +84,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                             value: !user.isBanned,
                             activeThumbColor: Colors.green,
                             onChanged: (active) async {
-                              await _db.toggleUserBan(user.uid, !active);
+                              await _api.toggleUserBan(user.uid, !active);
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -201,9 +203,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   return;
                 }
 
-                await _db.updateUserRoleAndHospital(
-                  uid: user.uid,
-                  role: selectedRole,
+                await _api.updateUserRole(
+                  user.uid,
+                  selectedRole,
                   hospitalId: selectedHospitalId,
                 );
 

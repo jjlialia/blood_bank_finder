@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List
+from typing import List, Optional
 from ..models import BloodRequestCreate, BloodRequestResponse
 from ..services.firestore_service import FirestoreService
 from ..config import get_db

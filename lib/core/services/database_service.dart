@@ -9,13 +9,6 @@ class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // --- Users Repository ---
-  Future<void> saveUser(UserModel user) async {
-    await _db.collection('users').doc(user.uid).set(user.toMap());
-  }
-
-  Future<void> updateUser(UserModel user) async {
-    await _db.collection('users').doc(user.uid).update(user.toMap());
-  }
 
   Future<UserModel?> getUser(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
@@ -40,33 +33,10 @@ class DatabaseService {
     });
   }
 
-  Future<void> toggleUserBan(String uid, bool isBanned) async {
-    await _db.collection('users').doc(uid).update({'isBanned': isBanned});
-  }
 
-  Future<void> updateUserRoleAndHospital({
-    required String uid,
-    required String role,
-    String? hospitalId,
-  }) async {
-    await _db.collection('users').doc(uid).update({
-      'role': role,
-      'hospitalId': hospitalId,
-    });
-  }
 
   // --- Hospitals Repository ---
-  Future<void> addHospital(HospitalModel hospital) async {
-    await _db.collection('hospitals').add(hospital.toMap());
-  }
 
-  Future<void> deleteHospital(String hospitalId) async {
-    await _db.collection('hospitals').doc(hospitalId).delete();
-  }
-
-  Future<void> updateHospital(String hospitalId, HospitalModel hospital) async {
-    await _db.collection('hospitals').doc(hospitalId).update(hospital.toMap());
-  }
 
   Stream<List<HospitalModel>> streamHospitals({
     String? islandGroup,
@@ -110,9 +80,6 @@ class DatabaseService {
   }
 
   // --- Blood Requests Repository ---
-  Future<void> createBloodRequest(BloodRequestModel request) async {
-    await _db.collection('blood_requests').add(request.toMap());
-  }
 
   Stream<List<BloodRequestModel>> streamAllBloodRequests() {
     return _db
@@ -139,81 +106,6 @@ class DatabaseService {
         });
   }
 
-  Future<void> updateRequestStatus(
-    String requestId,
-    String status, {
-    String? adminMessage,
-  }) async {
-    await _db.collection('blood_requests').doc(requestId).update({
-      'status': status,
-      'adminMessage': adminMessage,
-    });
-  }
-
-  Future<void> updateRequestStatusWithNotification({
-    required BloodRequestModel request,
-    required String newStatus,
-    String? adminMessage,
-  }) async {
-    // 1. Update the request status
-    await updateRequestStatus(
-      request.id!,
-      newStatus,
-      adminMessage: adminMessage,
-    );
-
-    // 2. Create a notification for the user
-    String title = '';
-    String body = '';
-    String type = '';
-
-    switch (newStatus) {
-      case 'approved':
-        title = 'Request Approved!';
-        body =
-            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} has been approved.';
-        type = 'request_approved';
-        break;
-      case 'on progress':
-        title = 'Request is now On Progress';
-        body =
-            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} is now being processed.';
-        type = 'request_on_progress';
-        break;
-      case 'completed':
-        title = 'Request Completed';
-        body =
-            'Your ${request.type} for ${request.bloodType} at ${request.hospitalName} is now complete. Thank you for using Blood Bank Finder!';
-        type = 'request_completed';
-        break;
-      case 'rejected':
-        title = 'Request Rejected';
-        body =
-            'Sorry, your ${request.type} for ${request.bloodType} at ${request.hospitalName} was rejected.';
-        type = 'request_rejected';
-        break;
-    }
-
-    if (adminMessage != null && adminMessage.isNotEmpty) {
-      body += '\n\nMessage from hospital: "$adminMessage"';
-    }
-
-    if (title.isNotEmpty) {
-      final notification = NotificationModel(
-        userId: request.userId,
-        message: body,
-        isRead: false,
-        createdAt: DateTime.now(),
-      );
-
-      final data = notification.toMap();
-      data['type'] = type;
-      data['title'] = title;
-      data['body'] = body;
-
-      await _db.collection('notifications').add(data);
-    }
-  }
 
   Future<HospitalModel?> getHospital(String id) async {
     final doc = await _db.collection('hospitals').doc(id).get();
@@ -224,22 +116,7 @@ class DatabaseService {
   }
 
   // --- Inventory Repository ---
-  Future<void> updateInventory(
-    String hospitalId,
-    String bloodType,
-    double units,
-  ) async {
-    await _db
-        .collection('hospitals')
-        .doc(hospitalId)
-        .collection('inventory')
-        .doc(bloodType)
-        .set({
-          'blood_type': bloodType,
-          'units': units,
-          'last_updated': FieldValue.serverTimestamp(),
-        });
-  }
+
 
   Stream<List<InventoryModel>> streamInventory(String hospitalId) {
     return _db
@@ -255,9 +132,6 @@ class DatabaseService {
   }
 
   // --- Notifications Repository ---
-  Future<void> sendNotification(NotificationModel notification) async {
-    await _db.collection('notifications').add(notification.toMap());
-  }
 
   Stream<List<NotificationModel>> streamUserNotifications(String userId) {
     return _db

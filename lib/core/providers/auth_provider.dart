@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/database_service.dart';
+import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 
 class AuthProvider with ChangeNotifier {
   final DatabaseService _db = DatabaseService();
+  final ApiService _api = ApiService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   UserModel? _user;
@@ -145,7 +147,7 @@ class AuthProvider with ChangeNotifier {
         createdAt: DateTime.now(),
       );
 
-      await _db.saveUser(newUser);
+      await _api.saveUser(newUser);
       _user = newUser;
       _startUserListener(newUser.uid);
 

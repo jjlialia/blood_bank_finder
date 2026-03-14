@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/blood_request_model.dart';
 import '../../../core/models/hospital_model.dart';
-import '../../../core/services/database_service.dart';
+import '../../../core/services/api_service.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -159,7 +159,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     }
 
     try {
-      final db = DatabaseService();
+      final api = ApiService();
       final request = BloodRequestModel(
         userId: auth.user!.uid,
         userName: '${auth.user!.firstName} ${auth.user!.lastName}',
@@ -173,7 +173,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
         createdAt: DateTime.now(),
       );
 
-      await db.createBloodRequest(request);
+      await api.createBloodRequest(request);
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
