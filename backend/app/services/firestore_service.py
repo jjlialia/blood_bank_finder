@@ -145,11 +145,20 @@ class FirestoreService:
     # --- Inventory ---
     async def update_inventory(self, hospital_id: str, blood_type: str, units: float):
         try:
-            self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type).set({
-                'blood_type': blood_type,
-                'units': units,
-                'last_updated': datetime.now()
-            })
+            doc_ref = self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type)
+            
+            @firestore.transactional
+            def update_in_transaction(transaction, doc_ref, blood_type, units):
+                # Using a transaction ensures that the inventory is updated safely,
+                # avoiding race conditions.
+                transaction.set(doc_ref, {
+                    'blood_type': blood_type,
+                    'units': units,
+                    'last_updated': datetime.now()
+                })
+
+            transaction = self.db.transaction()
+            update_in_transaction(transaction, doc_ref, blood_type, units)
         except Exception as e:
             print(f"Error updating inventory: {e}")
             raise

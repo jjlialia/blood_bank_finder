@@ -9,7 +9,7 @@ class ApiService {
   // Use http://10.0.2.2:8000 for Android Emulator
   // Use http://localhost:8000 for Web/Desktop
   static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8000';
+    if (kIsWeb) return 'http://127.0.0.1:8000';
     return 'http://10.0.2.2:8000';
   }
 
