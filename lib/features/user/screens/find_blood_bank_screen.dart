@@ -1,3 +1,27 @@
+/**
+ * FILE: find_blood_bank_screen.dart
+ * 
+ * DESCRIPTION:
+ * This screen is the main interface for users to locate blood banks and hospitals.
+ * It provides both a List View and a Map View, with advanced filtering by 
+ * geographical location (Island, Region, City, Barangay) and name search.
+ * 
+ * DATA FLOW OVERVIEW:
+ * 1. RECEIVES DATA FROM: 
+ *    - 'DatabaseService.streamHospitals': A real-time stream of all active hospitals.
+ *    - 'LocationService': Provides the lists of Islands, Regions, Cities, etc., for the filter chips.
+ *    - 'ApiService.getCoordinatesFromAddress': Fetches Lat/Lng to move the map when a location is selected.
+ * 2. PROCESSING:
+ *    - Local State Management: Tracks search queries, selected filters, and Map/List toggle.
+ *    - Filtering Logic: Client-side filtering of the hospital stream based on the 'searchQuery'.
+ *    - Coordinate Conversion: When a user selects a City, it asks the API for coordinates to center the map there.
+ * 3. SENDS DATA TO:
+ *    - 'HospitalMapView': Passes the filtered list of hospitals and map center to the custom map widget.
+ *    - Hospital Detail Modal: Displays specific hospital data when a user taps a card or marker.
+ * 4. OUTPUTS/GUI:
+ *    - A searchable, filterable list of cards or interactive map pins.
+ */
+
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/models/hospital_model.dart';
@@ -14,15 +38,18 @@ class FindBloodBankScreen extends StatefulWidget {
 }
 
 class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
+  // SERVICE TOOLS: Our links to the backend and data sources.
   final DatabaseService _db = DatabaseService();
   final LocationService _locationSvc = LocationService();
   final ApiService _api = ApiService();
+
+  // LOCAL STATE: Things that change as the user interacts with the GUI.
   String _searchQuery = '';
   String? _selectedIsland;
   String? _selectedRegion;
   String? _selectedCity;
   String? _selectedBarangay;
-  bool _isMapView = false;
+  bool _isMapView = false; // Toggles between the list and the map.
   LatLng? _mapCenter;
   double _mapZoom = 12;
 
@@ -32,6 +59,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       appBar: AppBar(
         title: const Text('Find Blood Bank'),
         actions: [
+          // STEP: User taps this to switch between visual Map and text List.
           IconButton(
             icon: Icon(_isMapView ? Icons.list : Icons.map),
             onPressed: () => setState(() => _isMapView = !_isMapView),
@@ -41,11 +69,14 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       ),
       body: Column(
         children: [
+          // --- TOP SECTION: SEARCH & FILTERS ---
+          // Here, the user provides INPUT that determines what data we see.
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // SEARCH BAR: Receives text input from the user.
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -74,6 +105,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // FILTER CHIPS: Trigger location pickers for hierarchical selection.
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -107,8 +139,11 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
               ],
             ),
           ),
+          // --- MAIN SECTION: DATA DISPLAY ---
+          // This uses StreamBuilder to reactively show data from Firestore.
           Expanded(
             child: StreamBuilder<List<HospitalModel>>(
+              // STEP: We send our location filters to the Database Service.
               stream: _db.streamHospitals(
                 islandGroup: _selectedIsland,
                 region: _selectedRegion,
@@ -120,6 +155,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
+                // STEP: We further filter the database results based on the Search Text.
                 final hospitals = (snapshot.data ?? [])
                     .where(
                       (h) => h.name.toLowerCase().contains(
@@ -129,6 +165,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                     .toList();
 
                 if (hospitals.isEmpty) {
+                  // Even if empty, we might show an empty Map.
                   if (_isMapView) {
                     return HospitalMapView(
                       hospitals: const [],
@@ -142,9 +179,11 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   );
                 }
 
+                // GUI STEP: Use IndexedStack to keep both Map and List alive but only show one.
                 return IndexedStack(
                   index: _isMapView ? 1 : 0,
                   children: [
+                    // --- LIST VIEW ---
                     ListView.builder(
                       itemCount: hospitals.length,
                       itemBuilder: (context, index) {
@@ -173,6 +212,8 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                         );
                       },
                     ),
+                    // --- MAP VIEW ---
+                    // Passes the data to the interactive Map Widget.
                     HospitalMapView(
                       hospitals: hospitals,
                       initialCenter: _mapCenter,
@@ -189,6 +230,10 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
+  /**
+   * GUI STEP: Shows a bottom sheet with detailed hospital info when selected.
+   * Receives a 'HospitalModel' to display its properties (address, email, etc.).
+   */
   void _showHospitalDetails(BuildContext context, HospitalModel h) {
     showModalBottomSheet(
       context: context,
@@ -208,6 +253,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
             _detailRow(Icons.phone, 'Contact', h.contactNumber),
             _detailRow(Icons.email, 'Email', h.email),
             const SizedBox(height: 24),
+            // OPTION: User can jump from the details directly to the Map location.
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -242,6 +288,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
+  // --- UI HELPER: Reusable row for details ---
   Widget _detailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -256,6 +303,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
+  // --- UI HELPER: The Filter Chip visual widget ---
   Widget _buildFilterChip({
     required String label,
     required bool isSelected,
@@ -303,11 +351,18 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
+  /**
+   * STEP 1: Receives the 'type' of location to pick (e.g., 'region').
+   * STEP 2: Asks 'LocationService' for the specific list of places.
+   * STEP 3: Displays a selectable list to the user.
+   * STEP 4: When picked, updates local state and tells the Map to fly to that place.
+   */
   Future<void> _showLocationPicker(BuildContext context, String type) async {
     List<String> items = [];
     String title = '';
     bool isLoading = true;
 
+    // Logic to determine which list to fetch based on previous selections.
     if (type == 'island') {
       items = ['Luzon', 'Visayas', 'Mindanao'];
       title = 'Select Island';
@@ -338,7 +393,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       title = 'Select Barangay';
     }
 
-    // Show loading dialog if data is not ready
+    // DATA FLOW: Calling external services to populate the selection list.
     if (isLoading) {
       if (type == 'region') {
         final fetched = await _locationSvc.getRegionsByIsland(_selectedIsland!);
@@ -367,6 +422,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
 
     if (!mounted) return;
 
+    // GUI: Present the choices to the user.
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -388,6 +444,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
               shrinkWrap: true,
               itemCount: items.length + 1,
               itemBuilder: (context, index) {
+                // Option to Clear filters.
                 if (index == 0) {
                   return ListTile(
                     title: const Text('All / Clear'),
@@ -417,6 +474,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                 return ListTile(
                   title: Text(item),
                   onTap: () {
+                    // STEP: Update the local state with the user's choice.
                     setState(() {
                       if (type == 'island') {
                         _selectedIsland = item;
@@ -435,6 +493,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                       }
                     });
                     Navigator.pop(context);
+                    // STEP: Immediately move the map to this new area.
                     _updateMapLocation(type, item);
                   },
                 );
@@ -447,6 +506,14 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
+  /**
+   * DATA FLOW: Converting a text location into Map coordinates.
+   * 1. Receives the area name (e.g., "Cebu City").
+   * 2. Formats it into a searchable address string.
+   * 3. Sends it to 'ApiService.getCoordinatesFromAddress'.
+   * 4. Receives back a Lat/Lng.
+   * 5. Updates state to move the Map camera.
+   */
   Future<void> _updateMapLocation(String type, String itemName) async {
     String query = '';
     double targetZoom = 12.0;
@@ -466,7 +533,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Locating $_searchQuery...'), duration: const Duration(seconds: 1)),
+      SnackBar(content: Text('Locating $itemName...'), duration: const Duration(seconds: 1)),
     );
 
     final loc = await _api.getCoordinatesFromAddress(query);
