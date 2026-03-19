@@ -38,8 +38,22 @@ class FirestoreService:
     # Handled by routers/users.py
 
     async def create_or_update_user(self, user_id: str, user_data: dict):
-        """Saves or updates a user profile. DATA SOURCE: SignupForm or ProfileScreen."""
-        self.db.collection('users').document(user_id).set(user_data)
+        """
+        Saves or updates a user profile. 
+        SECURITY: This method merges new data with existing 'role' and 'isBanned' 
+        status to prevent accidental demotions by the client.
+        """
+        doc_ref = self.db.collection('users').document(user_id)
+        doc = doc_ref.get()
+        
+        if doc.exists:
+            existing_data = doc.to_dict()
+            # PRESERVE: Do not let the client overwrite these administrative fields.
+            user_data['role'] = existing_data.get('role', 'user')
+            user_data['isBanned'] = existing_data.get('isBanned', False)
+            user_data['hospitalId'] = existing_data.get('hospitalId')
+            
+        doc_ref.set(user_data)
         return user_data
 
     async def get_user(self, user_id: str) -> Optional[dict]:
@@ -85,8 +99,8 @@ class FirestoreService:
         """Updates metadata (contact, address)."""
         self.db.collection('hospitals').document(hospital_id).update(hospital_data)
 
-    async def list_hospitals(self, is_active: bool = True, island_group: str = None, 
-                             region: str = None, city: str = None, barangay: str = None) -> List[dict]:
+    async def list_hospitals(self, is_active: Optional[bool] = True, island_group: Optional[str] = None, 
+                             region: Optional[str] = None, city: Optional[str] = None, barangay: Optional[str] = None) -> List[dict]:
         """
         Advanced Querying: Filters hospitals based on geographical hierarchies.
         DATA DESTINATION: FindBloodBankScreen (GUI).
@@ -214,15 +228,16 @@ class FirestoreService:
             doc_ref = self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type)
             
             @firestore.transactional
-            def update_in_transaction(transaction, doc_ref, blood_type, units):
+            def update_in_transaction(transaction):
+                # DATA FLOW: Read-Modify-Write (Safe from concurrent updates).
                 transaction.set(doc_ref, {
                     'blood_type': blood_type,
                     'units': units,
                     'last_updated': datetime.now()
-                })
+                }, merge=True)
 
             transaction = self.db.transaction()
-            update_in_transaction(transaction, doc_ref, blood_type, units)
+            update_in_transaction(transaction)
         except Exception as e:
             print(f"Error updating inventory: {e}")
             raise

@@ -98,6 +98,7 @@ class BloodRequestBase(BaseModel):
     hospitalName: str
     contactNumber: str
     quantity: float
+    adminMessage: Optional[str] = None # Added to store feedback from Hospital Admins.
     createdAt: datetime = Field(default_factory=datetime.now)
 
 class BloodRequestCreate(BloodRequestBase):

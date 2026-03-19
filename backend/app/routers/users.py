@@ -18,8 +18,8 @@ DATA FLOW OVERVIEW:
    - 'UserResponse': JSON data representing the user's current status and profile.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List, Optional
 from ..models import UserCreate, UserResponse
 from ..services.firestore_service import FirestoreService
 from ..config import get_db
@@ -64,7 +64,7 @@ async def list_users(service: FirestoreService = Depends(get_service)):
         raise HTTPException(status_code=500, detail=f"Failed to list users: {str(e)}")
 
 @router.patch("/{uid}/ban")
-async def toggle_ban(uid: str, is_banned: bool, service: FirestoreService = Depends(get_service)):
+async def toggle_ban(uid: str, is_banned: bool = Query(...), service: FirestoreService = Depends(get_service)):
     """
     USER INPUT: Admin clicks 'Ban' button.
     DATA FLOW: UI -> This Handler -> Updates 'isBanned' field in Firestore.
@@ -76,7 +76,7 @@ async def toggle_ban(uid: str, is_banned: bool, service: FirestoreService = Depe
         raise HTTPException(status_code=500, detail=f"Failed to update ban status: {str(e)}")
 
 @router.patch("/{uid}/role")
-async def update_role(uid: str, role: str, hospital_id: str = None, service: FirestoreService = Depends(get_service)):
+async def update_role(uid: str, role: str = Query(...), hospital_id: Optional[str] = Query(None), service: FirestoreService = Depends(get_service)):
     """
     USER INPUT: Admin promotes user to 'hospital_admin' and selects a site.
     DATA FLOW: UI -> This Handler -> Updates 'role' and 'hospitalId' in Firestore.

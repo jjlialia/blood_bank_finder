@@ -23,7 +23,7 @@ from ..models import NotificationCreate, NotificationResponse
 from ..services.firestore_service import FirestoreService
 from ..config import get_db
 
-router = APIRouter(tags=["notifications"])
+router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 def get_service(db=Depends(get_db)):
     """Injects the database service."""
