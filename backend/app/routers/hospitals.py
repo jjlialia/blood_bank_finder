@@ -28,9 +28,9 @@ ENDPOINTS:
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Optional
-from ..models import HospitalCreate, HospitalResponse
-from ..services.firestore_service import FirestoreService
-from ..config import get_db
+from app.models import HospitalCreate, HospitalResponse
+from app.services.firestore_service import FirestoreService
+from app.config import get_db
 
 # STEP: Create the router with a prefix so all URLs start with /hospitals.
 router = APIRouter(prefix="/hospitals", tags=["hospitals"])
@@ -40,20 +40,29 @@ def get_service(db=Depends(get_db)):
     return FirestoreService(db)
 
 @router.post("/", response_model=HospitalResponse)
-async def add_hospital(hospital: HospitalCreate, service: FirestoreService = Depends(get_service)):
-    # DATA FLOW: Flutter (POST) -> This Handler -> FirestoreService -> FIRESTORE.
-    doc_id = await service.add_hospital(hospital.dict())
-    return {**hospital.dict(), "id": doc_id}
-
-@router.put("/{hospital_id}", response_model=HospitalResponse)
-async def update_hospital(hospital_id: str, hospital: HospitalCreate, service: FirestoreService = Depends(get_service)):
-    # DATA FLOW: Flutter (PUT) -> This Handler -> Updates specific hospital document.
-    await service.update_hospital(hospital_id, hospital.dict())
+async def create_hospital(hospital: HospitalCreate, service: FirestoreService = Depends(get_service)):
+    """
+    RECEIVED FROM: ManageHospitalsScreen (Registration Form).
+    SENT TO: `FirestoreService.add_hospital` -> 'hospitals' collection.
+    """
+    hospital_id = await service.add_hospital(hospital.dict())
     return {**hospital.dict(), "id": hospital_id}
+
+@router.put("/{hospital_id}")
+async def update_hospital(hospital_id: str, hospital: HospitalCreate, service: FirestoreService = Depends(get_service)):
+    """
+    RECEIVED FROM: ManageHospitalsScreen (Edit Mode).
+    SENT TO: `FirestoreService.update_hospital`.
+    """
+    await service.update_hospital(hospital_id, hospital.dict())
+    return {"message": "Hospital updated successfully"}
 
 @router.delete("/{hospital_id}")
 async def delete_hospital(hospital_id: str, service: FirestoreService = Depends(get_service)):
-    # DATA FLOW: Admin selects Delete -> This Handler -> Removes document from Firestore.
+    """
+    RECEIVED FROM: ManageHospitalsScreen (Delete Action).
+    SENT TO: `FirestoreService.delete_hospital`.
+    """
     await service.delete_hospital(hospital_id)
     return {"message": "Hospital deleted successfully"}
 

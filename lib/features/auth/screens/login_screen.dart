@@ -1,25 +1,24 @@
-/**
- * FILE: login_screen.dart
- * 
- * DESCRIPTION:
- * This is the gateway for existing users to access the application.
- * It provides a secure form for entering credentials and handles the 
- * redirect logic based on the user's assigned role.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - User Input: 'Email' and 'Password' text fields.
- *    - 'AuthProvider': Provides the status of the login attempt and the final 'UserModel'.
- * 2. PROCESSING:
- *    - Validation: Ensures email format and password length are correct before sending.
- *    - Role-Based Navigation: After a successful login, it checks 'auth.user?.role' 
- *      to decide whether to show the User Home, Hospital Admin, or Super Admin dashboard.
- * 3. SENDS DATA TO:
- *    - 'AuthProvider.login': Passes credentials to the provider, which calls the FastAPI backend.
- * 4. OUTPUTS/GUI:
- *    - Interactive form with validation feedback.
- *    - Navigation to the appropriate dashboard upon success.
- */
+/// FILE: login_screen.dart
+///
+/// DESCRIPTION:
+/// This is the gateway for existing users to access the application.
+/// It provides a secure form for entering credentials and handles the
+/// redirect logic based on the user's assigned role.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - User Input: 'Email' and 'Password' text fields.
+///    - 'AuthProvider': Provides the status of the login attempt and the final 'UserModel'.
+/// 2. PROCESSING:
+///    - Validation: Ensures email format and password length are correct before sending.
+///    - Role-Based Navigation: After a successful login, it checks 'auth.user?.role'
+///      to decide whether to show the User Home, Hospital Admin, or Super Admin dashboard.
+/// 3. SENDS DATA TO:
+///    - 'AuthProvider.login': Passes credentials to the provider, which calls the FastAPI backend.
+/// 4. OUTPUTS/GUI:
+///    - Interactive form with validation feedback.
+///    - Navigation to the appropriate dashboard upon success.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -45,17 +44,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  /**
-   * CORE LOGIC: The Login Data Flow.
-   * 1. Validates the text fields.
-   * 2. Calls 'auth.login' which sends data: App -> FastAPI -> Firebase Auth.
-   * 3. RECEIVES: Error message (if any) or a 'UserModel'.
-   * 4. DECIDES: Where to go next based on the user's Role.
-   */
+  /// CORE LOGIC: The Login Data Flow.
+  /// 1. Validates the text fields.
+  /// 2. Calls 'auth.login' which sends data: App -> FastAPI -> Firebase Auth.
+  /// 3. RECEIVES: Error message (if any) or a 'UserModel'.
+  /// 4. DECIDES: Where to go next based on the user's Role.
   void _login() async {
     if (_formKey.currentState!.validate()) {
       final auth = context.read<AuthProvider>();
-      
+
       // STEP: Initiate the network request via the AuthProvider.
       final error = await auth.login(
         _emailController.text,

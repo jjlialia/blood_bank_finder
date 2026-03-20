@@ -21,9 +21,9 @@ DATA FLOW OVERVIEW:
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Optional
-from ..models import BloodRequestCreate, BloodRequestResponse
-from ..services.firestore_service import FirestoreService
-from ..config import get_db
+from app.models import BloodRequestCreate, BloodRequestResponse
+from app.services.firestore_service import FirestoreService
+from app.config import get_db
 
 router = APIRouter(prefix="/blood-requests", tags=["blood-requests"])
 
@@ -34,34 +34,37 @@ def get_service(db=Depends(get_db)):
 @router.post("/", response_model=BloodRequestResponse)
 async def create_request(request: BloodRequestCreate, service: FirestoreService = Depends(get_service)):
     """
-    DATA FLOW: Submit Button (Form) -> This Handler -> Adds to 'blood_requests' collection.
-    Initializes a new request with 'status: pending'.
+    RECEIVED FROM: RequestBloodScreen / DonateBloodScreen.
+    SENT TO: `FirestoreService.create_blood_request` -> 'blood_requests' collection.
     """
-    doc_id = await service.create_blood_request(request.dict())
-    return {**request.dict(), "id": doc_id}
+    request_id = await service.create_blood_request(request.dict())
+    return {**request.dict(), "id": request_id}
 
 @router.get("/", response_model=List[BloodRequestResponse])
-async def list_requests(service: FirestoreService = Depends(get_service)):
+async def list_requests(hospital_id: Optional[str] = None, service: FirestoreService = Depends(get_service)):
+    # This endpoint is dual-purpose: Super Admin (all) or Hospital Admin (one site).
+    if hospital_id:
+        """
+        RECEIVED FROM: HospitalAdmin Dashboard (Provider).
+        SENT TO: `FirestoreService.list_hospital_requests`.
+        """
+        return await service.list_hospital_requests(hospital_id)
     """
-    DATA DESTINATION: Super Admin Dashboard.
-    Fetches every single request regardless of hospital.
+    RECEIVED FROM: Super Admin History Screen.
+    SENT TO: `FirestoreService.list_all_requests`.
     """
     return await service.list_all_requests()
 
-@router.get("/hospital/{hospital_id}", response_model=List[BloodRequestResponse])
-async def list_hospital_requests(hospital_id: str, service: FirestoreService = Depends(get_service)):
-    """
-    DATA DESTINATION: Hospital Admin Requests Screen.
-    Filters transactions to only show those relevant to one specific site.
-    """
-    return await service.list_hospital_requests(hospital_id)
-
 @router.patch("/{request_id}/status")
-async def update_status(request_id: str, status: str, admin_message: Optional[str] = None, 
-                        service: FirestoreService = Depends(get_service)):
+async def update_status(
+    request_id: str, 
+    status: str, 
+    admin_message: Optional[str] = None, 
+    service: FirestoreService = Depends(get_service)
+):
     """
-    USER INPUT: Hospital Admin selects a new status from a dropdown.
-    DATA FLOW: UI -> This Handler -> Updates Doc -> Automatically Notifies User via Service.
+    RECEIVED FROM: HospitalAdmin Dashboard (Action Button).
+    SENT TO: `FirestoreService.update_request_status` -> Firestore & Notifications.
     """
     await service.update_request_status(request_id, status, admin_message)
-    return {"message": f"Request status updated to {status}"}
+    return {"message": "Request status updated"}

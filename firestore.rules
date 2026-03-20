@@ -8,15 +8,19 @@ service cloud.firestore {
     }
     
     function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      // Use exists() to avoid reading a non-existent document
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(userPath) ? get(userPath).data : null;
     }
     
     function isSuperAdmin() {
-      return isAuthenticated() && getUserData().role == 'superadmin';
+      let data = getUserData();
+      return isAuthenticated() && data != null && data.role == 'superadmin';
     }
     
     function isHospitalAdmin() {
-      return isAuthenticated() && getUserData().role == 'admin';
+      let data = getUserData();
+      return isAuthenticated() && data != null && data.role == 'admin';
     }
 
     // Users Collection

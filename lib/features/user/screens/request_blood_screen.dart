@@ -1,26 +1,25 @@
-/**
- * FILE: request_blood_screen.dart
- * 
- * DESCRIPTION:
- * This screen allows users to post an emergency request for blood. 
- * It collects technical details (blood type, quantity) and integrates 
- * a hospital directory for site selection.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'AuthProvider': For the requester's ID and Name.
- *    - 'HospitalPickerSheet': For selecting the destination facility.
- *    - User Input: Blood type dropdown and unit quantity.
- * 2. PROCESSING:
- *    - Request Assembly: Creates a 'BloodRequestModel' object with 'status: pending'.
- *    - Validation: Ensures a hospital is selected and quantity is a valid number.
- * 3. SENDS DATA TO:
- *    - 'ApiService.createBloodRequest': Transmits the request data to the 
- *      FastAPI backend, which persists it in Firestore.
- * 4. OUTPUTS/GUI:
- *    - Multi-input form with a 'Sworn Statement' checkbox for medical urgency.
- *    - Success/Error snackbars based on the API response.
- */
+/// FILE: request_blood_screen.dart
+///
+/// DESCRIPTION:
+/// This screen allows users to post an emergency request for blood.
+/// It collects technical details (blood type, quantity) and integrates
+/// a hospital directory for site selection.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': For the requester's ID and Name.
+///    - 'HospitalPickerSheet': For selecting the destination facility.
+///    - User Input: Blood type dropdown and unit quantity.
+/// 2. PROCESSING:
+///    - Request Assembly: Creates a 'BloodRequestModel' object with 'status: pending'.
+///    - Validation: Ensures a hospital is selected and quantity is a valid number.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.createBloodRequest': Transmits the request data to the
+///      FastAPI backend, which persists it in Firestore.
+/// 4. OUTPUTS/GUI:
+///    - Multi-input form with a 'Sworn Statement' checkbox for medical urgency.
+///    - Success/Error snackbars based on the API response.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -54,13 +53,11 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     super.initState();
   }
 
-  /**
-   * CORE LOGIC: The Emergency Request Data Flow.
-   * 1. PRE-CHECK: Ensures a Hospital and Blood Type are selected.
-   * 2. ASSEMBLY: Gathers Data from: Auth (User) + GUI (Inputs) + Picker (Hospital).
-   * 3. DATA JOURNEY: App -> ApiService -> FastAPI Backend -> Firestore.
-   * 4. UI UPDATE: Closes the screen and shows a green success snackbar.
-   */
+  /// CORE LOGIC: The Emergency Request Data Flow.
+  /// 1. PRE-CHECK: Ensures a Hospital and Blood Type are selected.
+  /// 2. ASSEMBLY: Gathers Data from: Auth (User) + GUI (Inputs) + Picker (Hospital).
+  /// 3. DATA JOURNEY: App -> ApiService -> FastAPI Backend -> Firestore.
+  /// 4. UI UPDATE: Closes the screen and shows a green success snackbar.
   void _submitRequest(AuthProvider auth) async {
     // STEP: Validate that the picker was used.
     if (_selectedHospital == null || _selectedBloodType == null) {
@@ -72,7 +69,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
 
     try {
       final api = ApiService();
-      
+
       // STEP: Create the data structure for the backend.
       final request = BloodRequestModel(
         userId: auth.user!.uid,
@@ -89,9 +86,9 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
 
       // STEP: Send the package over the network.
       await api.createBloodRequest(request);
-      
+
       if (!mounted) return;
-      
+
       // STEP: GUI cleanup and feedback.
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(

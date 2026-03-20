@@ -1,27 +1,26 @@
-/**
- * FILE: donate_blood_screen.dart
- * 
- * DESCRIPTION:
- * This screen provides a guided, multi-step process (Stepper) for users who 
- * wish to donate blood. It includes an eligibility quiz, location selection, 
- * and final data submission.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'AuthProvider': To get the currently logged-in user's UID and profile info.
- *    - 'HospitalPickerSheet': A custom widget that lets the user select a 
- *      target hospital from a list fetched from Firestore.
- * 2. PROCESSING:
- *    - Validation: Checks if the user meets all 5 health criteria in Step 1.
- *    - Model Construction: Combines user input (blood type, quantity, contact) 
- *      with fixed data (Status = 'pending', Type = 'Donate') into a 'BloodRequestModel'.
- * 3. SENDS DATA TO:
- *    - 'ApiService.createBloodRequest': Sends the final JSON object to the 
- *      FastAPI backend, which then writes it to Firestore.
- * 4. OUTPUTS/GUI:
- *    - A vertical Stepper UI that validates each step before allowing progression.
- *    - Visual feedback (SnackBars) for success or failure of the submission.
- */
+/// FILE: donate_blood_screen.dart
+///
+/// DESCRIPTION:
+/// This screen provides a guided, multi-step process (Stepper) for users who
+/// wish to donate blood. It includes an eligibility quiz, location selection,
+/// and final data submission.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': To get the currently logged-in user's UID and profile info.
+///    - 'HospitalPickerSheet': A custom widget that lets the user select a
+///      target hospital from a list fetched from Firestore.
+/// 2. PROCESSING:
+///    - Validation: Checks if the user meets all 5 health criteria in Step 1.
+///    - Model Construction: Combines user input (blood type, quantity, contact)
+///      with fixed data (Status = 'pending', Type = 'Donate') into a 'BloodRequestModel'.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.createBloodRequest': Sends the final JSON object to the
+///      FastAPI backend, which then writes it to Firestore.
+/// 4. OUTPUTS/GUI:
+///    - A vertical Stepper UI that validates each step before allowing progression.
+///    - Visual feedback (SnackBars) for success or failure of the submission.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -47,7 +46,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   final _unitsController = TextEditingController(text: '1.0');
   final _contactController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   // ELIGIBILITY STATE: These must all be TRUE to proceed.
   bool _isSworn = false;
   bool _ageOk = false;
@@ -111,7 +110,9 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                   onChanged: (v) => setState(() => _weightOk = v ?? false),
                 ),
                 CheckboxListTile(
-                  title: const Text('No recent international travel (6 months)?'),
+                  title: const Text(
+                    'No recent international travel (6 months)?',
+                  ),
                   value: _travelOk,
                   onChanged: (v) => setState(() => _travelOk = v ?? false),
                 ),
@@ -133,10 +134,17 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
             title: const Text('Select Blood Type'),
             isActive: _currentStep >= 1,
             content: DropdownButtonFormField<String>(
-              value: _selectedBloodType,
-              items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+              initialValue: _selectedBloodType,
+              items: [
+                'A+',
+                'A-',
+                'B+',
+                'B-',
+                'O+',
+                'O-',
+                'AB+',
+                'AB-',
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
               onChanged: (v) => setState(() => _selectedBloodType = v),
               decoration: const InputDecoration(labelText: 'Your Blood Type'),
             ),
@@ -163,7 +171,10 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -171,13 +182,18 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.local_hospital, color: Theme.of(context).primaryColor),
+                        Icon(
+                          Icons.local_hospital,
+                          color: Theme.of(context).primaryColor,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             _selectedHospital?.name ?? 'Where to donate?',
                             style: TextStyle(
-                              color: _selectedHospital == null ? Colors.grey.shade600 : Colors.black,
+                              color: _selectedHospital == null
+                                  ? Colors.grey.shade600
+                                  : Colors.black,
                               fontSize: 16,
                             ),
                           ),
@@ -193,7 +209,10 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                     padding: const EdgeInsets.only(left: 4),
                     child: Text(
                       'Location: ${_selectedHospital!.barangay}, ${_selectedHospital!.city}',
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -211,7 +230,9 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                   CustomTextField(
                     label: 'Quantity (Units)',
                     controller: _unitsController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Required';
                       final n = double.tryParse(v);
@@ -224,7 +245,8 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                     controller: _contactController,
                     prefixIcon: Icons.phone,
                     keyboardType: TextInputType.phone,
-                    validator: (v) => v == null || v.isEmpty ? 'Contact required' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Contact required' : null,
                   ),
                 ],
               ),
@@ -235,7 +257,9 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
             title: const Text('Declaration'),
             isActive: _currentStep >= 4,
             content: CheckboxListTile(
-              title: const Text('I swear that the information provided is true.'),
+              title: const Text(
+                'I swear that the information provided is true.',
+              ),
               value: _isSworn,
               onChanged: (v) => setState(() => _isSworn = v ?? false),
             ),
@@ -245,17 +269,17 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
     );
   }
 
-  /**
-   * CORE LOGIC: Final Data Flow Submission.
-   * 1. Consolidates all state variables into a 'BloodRequestModel'.
-   * 2. Calls the 'api.createBloodRequest' method.
-   * 3. DATA DESTINATION: FastAPI backend -> Firestore 'blood_requests' collection.
-   * 4. If successful, closes the screen and shows a green success banner.
-   */
+  /// CORE LOGIC: Final Data Flow Submission.
+  /// 1. Consolidates all state variables into a 'BloodRequestModel'.
+  /// 2. Calls the 'api.createBloodRequest' method.
+  /// 3. DATA DESTINATION: FastAPI backend -> Firestore 'blood_requests' collection.
+  /// 4. If successful, closes the screen and shows a green success banner.
   void _submitDonation(AuthProvider auth) async {
     if (!_isSworn || _selectedHospital == null || _selectedBloodType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all steps and sign the declaration')),
+        const SnackBar(
+          content: Text('Please complete all steps and sign the declaration'),
+        ),
       );
       return;
     }

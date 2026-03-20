@@ -1,28 +1,27 @@
-/**
- * FILE: blood_requests_list_screen.dart
- * 
- * DESCRIPTION:
- * This screen is the command center for Hospital Admins managing patient 
- * requests and donor pledges. It allows for advanced filtering and 
- * provides a workflow for updating the status of individual requests.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'AuthProvider': Identifies the hospital context.
- *    - 'DatabaseService': Streams all requests where 'hospitalId' matches.
- * 2. PROCESSING:
- *    - Local Filtering: Sorts requests by status (Pending, On Progress, etc.) 
- *      in the GUI without a new database call.
- *    - Status Lifecycle: Defines the path of a request: Pending -> Progress -> Completed/Rejected.
- * 3. SENDS DATA TO:
- *    - 'ApiService.updateRequestStatus': Sends the chosen status and an optional 
- *      admin note to the backend.
- *    - Automated Triggers: Note that updating status here automatically triggers 
- *      a notification sent to the user (handled by the backend service).
- * 4. OUTPUTS/GUI:
- *    - Filterable list with status Chips and swipe actions.
- *    - A comprehensive "Detailed View" bottom sheet with transaction history.
- */
+/// FILE: blood_requests_list_screen.dart
+///
+/// DESCRIPTION:
+/// This screen is the command center for Hospital Admins managing patient
+/// requests and donor pledges. It allows for advanced filtering and
+/// provides a workflow for updating the status of individual requests.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Identifies the hospital context.
+///    - 'DatabaseService': Streams all requests where 'hospitalId' matches.
+/// 2. PROCESSING:
+///    - Local Filtering: Sorts requests by status (Pending, On Progress, etc.)
+///      in the GUI without a new database call.
+///    - Status Lifecycle: Defines the path of a request: Pending -> Progress -> Completed/Rejected.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.updateRequestStatus': Sends the chosen status and an optional
+///      admin note to the backend.
+///    - Automated Triggers: Note that updating status here automatically triggers
+///      a notification sent to the user (handled by the backend service).
+/// 4. OUTPUTS/GUI:
+///    - Filterable list with status Chips and swipe actions.
+///    - A comprehensive "Detailed View" bottom sheet with transaction history.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -44,11 +43,15 @@ class BloodRequestsListScreen extends StatefulWidget {
 class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   final DatabaseService _db = DatabaseService();
   final ApiService _api = ApiService();
-  
+
   // STATE: Controls which requests are visible in the GUI.
   String _selectedFilter = 'All';
   final List<String> _filters = [
-    'All', 'Pending', 'On Progress', 'Completed', 'Rejected',
+    'All',
+    'Pending',
+    'On Progress',
+    'Completed',
+    'Rejected',
   ];
 
   @override
@@ -81,10 +84,20 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                       final allRequests = snapshot.data ?? [];
                       final filteredRequests = _selectedFilter == 'All'
                           ? allRequests
-                          : allRequests.where((req) => req.status.toLowerCase() == _selectedFilter.toLowerCase()).toList();
+                          : allRequests
+                                .where(
+                                  (req) =>
+                                      req.status.toLowerCase() ==
+                                      _selectedFilter.toLowerCase(),
+                                )
+                                .toList();
 
                       if (filteredRequests.isEmpty) {
-                        return Center(child: Text('No ${_selectedFilter.toLowerCase()} requests.'));
+                        return Center(
+                          child: Text(
+                            'No ${_selectedFilter.toLowerCase()} requests.',
+                          ),
+                        );
                       }
 
                       return ListView.builder(
@@ -95,23 +108,55 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                           // GUI ACTION: Quick Swipe to Approve/Reject.
                           return Dismissible(
                             key: Key(req.id ?? index.toString()),
-                            background: _swipeBg(Colors.green, Icons.check, Alignment.centerLeft),
-                            secondaryBackground: _swipeBg(Colors.red, Icons.close, Alignment.centerRight),
+                            background: _swipeBg(
+                              Colors.green,
+                              Icons.check,
+                              Alignment.centerLeft,
+                            ),
+                            secondaryBackground: _swipeBg(
+                              Colors.red,
+                              Icons.close,
+                              Alignment.centerRight,
+                            ),
                             confirmDismiss: (direction) async {
-                              final newStatus = direction == DismissDirection.startToEnd ? 'completed' : 'rejected';
-                              await _api.updateRequestStatus(req.id!, newStatus, adminMessage: 'Status updated via swipe.');
+                              final newStatus =
+                                  direction == DismissDirection.startToEnd
+                                  ? 'completed'
+                                  : 'rejected';
+                              await _api.updateRequestStatus(
+                                req.id!,
+                                newStatus,
+                                adminMessage: 'Status updated via swipe.',
+                              );
                               return true;
                             },
                             child: Card(
-                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               child: ListTile(
-                                title: Text('${req.userName} (${req.bloodType})', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                subtitle: Text('Type: ${req.type} | Units: ${req.quantity}'),
+                                title: Text(
+                                  '${req.userName} (${req.bloodType})',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Type: ${req.type} | Units: ${req.quantity}',
+                                ),
                                 trailing: Chip(
-                                  label: Text(req.status.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                  label: Text(
+                                    req.status.toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                   backgroundColor: _getStatusColor(req.status),
                                 ),
-                                onTap: () => _showDetailedRequestView(context, req),
+                                onTap: () =>
+                                    _showDetailedRequestView(context, req),
                               ),
                             ),
                           );
@@ -138,7 +183,8 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
             child: FilterChip(
               label: Text(filter),
               selected: isSelected,
-              onSelected: (selected) => setState(() => _selectedFilter = filter),
+              onSelected: (selected) =>
+                  setState(() => _selectedFilter = filter),
               selectedColor: Colors.red[50],
             ),
           );
@@ -147,16 +193,16 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  /**
-   * UI COMPONENT: Detailed Request View.
-   * Logic: Displays full data for a request and provides a form to update status.
-   * DATA SOURCE: 'req' object passed from the list builder.
-   */
+  /// UI COMPONENT: Detailed Request View.
+  /// Logic: Displays full data for a request and provides a form to update status.
+  /// DATA SOURCE: 'req' object passed from the list builder.
   void _showDetailedRequestView(BuildContext context, BloodRequestModel req) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.6,
         maxChildSize: 0.9,
@@ -168,12 +214,20 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
             controller: scrollController,
             children: [
               _detailRow(Icons.person, 'Patient Name', req.userName),
-              _detailRow(Icons.bloodtype, 'Blood Type', req.bloodType, color: Colors.red),
+              _detailRow(
+                Icons.bloodtype,
+                'Blood Type',
+                req.bloodType,
+                color: Colors.red,
+              ),
               _detailRow(Icons.category, 'Request Type', req.type),
               _detailRow(Icons.water_drop, 'Units Needed', '${req.quantity}'),
               _detailRow(Icons.phone, 'Contact Number', req.contactNumber),
               const Divider(height: 32),
-              const Text('Update Status & Notify User', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Update Status & Notify User',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 16),
               _buildUpdateStatusSection(context, req),
             ],
@@ -184,7 +238,10 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   }
 
   // --- UI COMPONENT: Status Update Form ---
-  Widget _buildUpdateStatusSection(BuildContext context, BloodRequestModel req) {
+  Widget _buildUpdateStatusSection(
+    BuildContext context,
+    BloodRequestModel req,
+  ) {
     String selectedStatus = req.status;
     final messageController = TextEditingController();
 
@@ -196,7 +253,11 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
             initialValue: selectedStatus,
             decoration: const InputDecoration(labelText: 'New Status'),
             items: ['pending', 'on progress', 'completed', 'rejected']
-                .map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
+                .map(
+                  (s) =>
+                      DropdownMenuItem(value: s, child: Text(s.toUpperCase())),
+                )
+                .toList(),
             onChanged: (v) => setModalState(() => selectedStatus = v!),
           ),
           const SizedBox(height: 16),
@@ -213,12 +274,22 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
             onPressed: () async {
               try {
                 // CORE LOGIC: Saves the status and triggers a push alert to the user.
-                await _api.updateRequestStatus(req.id!, selectedStatus, 
-                    adminMessage: messageController.text.isNotEmpty ? messageController.text : null);
+                await _api.updateRequestStatus(
+                  req.id!,
+                  selectedStatus,
+                  adminMessage: messageController.text.isNotEmpty
+                      ? messageController.text
+                      : null,
+                );
                 if (context.mounted) Navigator.pop(context);
-              } catch (e) { /* Error handeled by ApiService logic */ }
+              } catch (e) {
+                /* Error handeled by ApiService logic */
+              }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Confirm Changes'),
           ),
         ],
@@ -228,34 +299,56 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
 
   // --- UI HELPERS ---
   Widget _swipeBg(Color color, IconData icon, Alignment align) {
-    return Container(color: color, alignment: align, padding: const EdgeInsets.symmetric(horizontal: 24), 
-        child: Icon(icon, color: Colors.white));
+    return Container(
+      color: color,
+      alignment: align,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Icon(icon, color: Colors.white),
+    );
   }
 
   Widget _detailRow(IconData icon, String label, String value, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(children: [
-        Icon(icon, size: 20, color: color ?? Colors.grey[700]),
-        const SizedBox(width: 16),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
-          Text(value, style: const TextStyle(fontSize: 16)),
-        ]),
-      ]),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color ?? Colors.grey[700]),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(value, style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return Colors.green[100]!;
-      case 'rejected': return Colors.red[100]!;
-      case 'on progress': return Colors.blue[100]!;
-      default: return Colors.orange[100]!;
+      case 'completed':
+        return Colors.green[100]!;
+      case 'rejected':
+        return Colors.red[100]!;
+      case 'on progress':
+        return Colors.blue[100]!;
+      default:
+        return Colors.orange[100]!;
     }
   }
 
   Widget _buildErrorView(Object? error) {
-    return Center(child: Text('Error: $error', style: const TextStyle(color: Colors.red)));
+    return Center(
+      child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+    );
   }
 }

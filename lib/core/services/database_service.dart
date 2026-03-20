@@ -1,29 +1,28 @@
-/**
- * FILE: database_service.dart
- * 
- * DESCRIPTION:
- * This file is responsible for all DIRECT read operations from Firebase Firestore.
- * While 'api_service.dart' handles writing data through the FastAPI backend, this service 
- * focuses on retrieving that data in real-time using Streams and one-time Gets.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - Firebase Firestore (Cloud Database) via the 'cloud_firestore' package.
- * 2. PROCESSING:
- *    - Listens to document/collection snapshots (real-time updates).
- *    - Maps raw Firestore Map data into structured Flutter models (UserModel, HospitalModel, etc.).
- *    - Filters hospital data based on geographical location (Island Group, Region, etc.).
- * 3. SENDS DATA TO:
- *    - UI Screens (e.g., FindBloodBankScreen, HistoryScreen, Dashboard) via Streams and Futures.
- * 4. OUTPUTS/RESPONSES:
- *    - Returns structured 'Model' objects or 'List<Model>' for the UI to display.
- * 
- * KEY COMPONENTS:
- * - streamUser: Provides real-time profile updates for the currently logged-in user.
- * - streamHospitals: Fetches and filters hospitals for the map and list views.
- * - streamAllBloodRequests: Allows admins to monitor all donation/request activity.
- * - streamInventory: Shows current blood supply levels for specific hospitals.
- */
+/// FILE: database_service.dart
+///
+/// DESCRIPTION:
+/// This file is responsible for all DIRECT read operations from Firebase Firestore.
+/// While 'api_service.dart' handles writing data through the FastAPI backend, this service
+/// focuses on retrieving that data in real-time using Streams and one-time Gets.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - Firebase Firestore (Cloud Database) via the 'cloud_firestore' package.
+/// 2. PROCESSING:
+///    - Listens to document/collection snapshots (real-time updates).
+///    - Maps raw Firestore Map data into structured Flutter models (UserModel, HospitalModel, etc.).
+///    - Filters hospital data based on geographical location (Island Group, Region, etc.).
+/// 3. SENDS DATA TO:
+///    - UI Screens (e.g., FindBloodBankScreen, HistoryScreen, Dashboard) via Streams and Futures.
+/// 4. OUTPUTS/RESPONSES:
+///    - Returns structured 'Model' objects or 'List<Model>' for the UI to display.
+///
+/// KEY COMPONENTS:
+/// - streamUser: Provides real-time profile updates for the currently logged-in user.
+/// - streamHospitals: Fetches and filters hospitals for the map and list views.
+/// - streamAllBloodRequests: Allows admins to monitor all donation/request activity.
+/// - streamInventory: Shows current blood supply levels for specific hospitals.
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
@@ -37,12 +36,10 @@ class DatabaseService {
 
   // --- Users Repository ---
 
-  /**
-   * STEP 1: Receives a 'uid'.
-   * STEP 2: Fetches the user document from the 'users' collection once.
-   * STEP 3: Converts the raw Firestore data into a 'UserModel'.
-   * OUTPUT: A 'UserModel' object for one-time profile checks.
-   */
+  /// DATA SOURCE: 'users' collection (Firestore).
+  /// DATA DESTINATION: AuthProvider (for one-time profile checks).
+  /// STEP 1: Receives a 'uid'.
+  /// STEP 2: Fetches the user document from Firestore once.
   Future<UserModel?> getUser(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (doc.exists && doc.data() != null) {
@@ -51,12 +48,10 @@ class DatabaseService {
     return null;
   }
 
-  /**
-   * STEP 1: Receives a 'uid'.
-   * STEP 2: Opens a persistent connection (Stream) to the user's document.
-   * STEP 3: Every time the user's data changes in Firestore (e.g., name update), this sends the new data.
-   * OUTPUT: A Stream of 'UserModel' that keeps the UI updated automatically.
-   */
+  /// DATA SOURCE: 'users' collection (Firestore Stream).
+  /// DATA DESTINATION: AuthProvider (keeps memory model synced).
+  /// STEP 1: Receives a 'uid'.
+  /// STEP 2: Opens a persistent connection (Stream) to the user's document.
   Stream<UserModel?> streamUser(String uid) {
     return _db.collection('users').doc(uid).snapshots().map((doc) {
       if (doc.exists && doc.data() != null) {
@@ -66,9 +61,8 @@ class DatabaseService {
     });
   }
 
-  /**
-   * STEP: For Super Admins to see a list of every user registered in the system.
-   */
+  /// DATA SOURCE: 'users' collection (Firestore).
+  /// DATA DESTINATION: ManageUsersScreen (Super Admin List).
   Stream<List<UserModel>> streamAllUsers() {
     return _db.collection('users').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
@@ -77,19 +71,16 @@ class DatabaseService {
 
   // --- Hospitals Repository ---
 
-  /**
-   * STEP 1: Receives optional filters (Island, Region, City, etc.).
-   * STEP 2: Builds a Firestore Query based on these filters.
-   * STEP 3: Fetches hospitals that match the criteria.
-   * STEP 4: Converts each document into a 'HospitalModel'.
-   * OUTPUT: A Stream of hospitals to be displayed on the map or in search results.
-   */
+  /// DATA SOURCE: 'hospitals' collection (Firestore).
+  /// DATA DESTINATION: FindBloodBankScreen / ManageHospitalsScreen.
+  /// STEP 1: Receives optional filters (Island, Region, City, etc.).
+  /// STEP 2: Builds and executes a Firestore Query.
   Stream<List<HospitalModel>> streamHospitals({
     String? islandGroup,
     String? region,
     String? city,
     String? barangay,
-    bool allowAll = false, // Added to show inactive hospitals to Super Admin
+    bool allowAll = false,
   }) {
     Query query = _db.collection('hospitals');
 
@@ -127,10 +118,8 @@ class DatabaseService {
 
   // --- Blood Requests Repository ---
 
-  /**
-   * STEP: Retrieves every blood request ever made, sorted by date (newest first).
-   * Used primarily by Super Admins for global monitoring.
-   */
+  /// DATA SOURCE: 'blood_requests' collection (Firestore).
+  /// DATA DESTINATION: Super Admin Dashboard / HistoryScreen.
   Stream<List<BloodRequestModel>> streamAllBloodRequests() {
     return _db
         .collection('blood_requests')
@@ -143,9 +132,8 @@ class DatabaseService {
         });
   }
 
-  /**
-   * STEP: For Hospital Admins to see only the requests assigned to THEIR hospital.
-   */
+  /// DATA SOURCE: 'blood_requests' collection (Firestore Filtered).
+  /// DATA DESTINATION: HospitalAdminDashboard.
   Stream<List<BloodRequestModel>> streamHospitalRequests(String hospitalId) {
     return _db
         .collection('blood_requests')
@@ -159,9 +147,8 @@ class DatabaseService {
         });
   }
 
-  /**
-   * STEP: One-time fetch of a single hospital's details by its ID.
-   */
+  /// DATA SOURCE: 'hospitals' collection (Firestore).
+  /// DATA DESTINATION: ProfileScreen / HospitalDetails.
   Future<HospitalModel?> getHospital(String id) async {
     final doc = await _db.collection('hospitals').doc(id).get();
     if (doc.exists && doc.data() != null) {
@@ -172,11 +159,8 @@ class DatabaseService {
 
   // --- Inventory Repository ---
 
-  /**
-   * STEP 1: Receives 'hospitalId'.
-   * STEP 2: Monitors the 'inventory' sub-collection inside that hospital's document.
-   * OUTPUT: Real-time list of blood units available (A+, B-, etc.) for that specific hospital.
-   */
+  /// DATA SOURCE: 'hospitals/{id}/inventory' collection (Firestore).
+  /// DATA DESTINATION: InventoryManagementScreen.
   Stream<List<InventoryModel>> streamInventory(String hospitalId) {
     return _db
         .collection('hospitals')
@@ -192,11 +176,8 @@ class DatabaseService {
 
   // --- Notifications Repository ---
 
-  /**
-   * STEP 1: Receives 'userId'.
-   * STEP 2: Listens for any notifications where 'userId' matches the current user.
-   * OUTPUT: A list of alerts (e.g., "Your blood request was approved") delivered to the user's phone.
-   */
+  /// DATA SOURCE: 'notifications' collection (Firestore).
+  /// DATA DESTINATION: NotificationsScreen.
   Stream<List<NotificationModel>> streamUserNotifications(String userId) {
     return _db
         .collection('notifications')

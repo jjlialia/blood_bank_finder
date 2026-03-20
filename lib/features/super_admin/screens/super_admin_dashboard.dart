@@ -1,28 +1,27 @@
-/**
- * FILE: super_admin_dashboard.dart
- * 
- * DESCRIPTION:
- * The primary system command center. It provides the Super Admin with a 
- * macro-level view of the entire platform's health, aggregating data 
- * across all users and all hospital facilities.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'DatabaseService.streamAllUsers': For total population count.
- *    - 'DatabaseService.streamHospitals': For facility infrastructure count.
- *    - 'DatabaseService.streamAllBloodRequests': For system-wide request and 
- *       donation metrics.
- * 2. PROCESSING:
- *    - Data Aggregation: Counts objects in the streamed lists.
- *    - Specific Filtering: Separates 'Requests' from 'Donations' using 
- *      the 'type' field in the shared request stream.
- * 3. SENDS DATA TO:
- *    - GUI: Updates the four primary stat cards in real-time as the 
- *      database changes.
- * 4. OUTPUTS/GUI:
- *    - A high-contrast grid of "Executive Stat Cards" (Users, Hospitals, 
- *      Pending Requests, Total Donations).
- */
+/// FILE: super_admin_dashboard.dart
+///
+/// DESCRIPTION:
+/// The primary system command center. It provides the Super Admin with a
+/// macro-level view of the entire platform's health, aggregating data
+/// across all users and all hospital facilities.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamAllUsers': For total population count.
+///    - 'DatabaseService.streamHospitals': For facility infrastructure count.
+///    - 'DatabaseService.streamAllBloodRequests': For system-wide request and
+///       donation metrics.
+/// 2. PROCESSING:
+///    - Data Aggregation: Counts objects in the streamed lists.
+///    - Specific Filtering: Separates 'Requests' from 'Donations' using
+///      the 'type' field in the shared request stream.
+/// 3. SENDS DATA TO:
+///    - GUI: Updates the four primary stat cards in real-time as the
+///      database changes.
+/// 4. OUTPUTS/GUI:
+///    - A high-contrast grid of "Executive Stat Cards" (Users, Hospitals,
+///      Pending Requests, Total Donations).
+library;
 
 import 'package:flutter/material.dart';
 import '../widgets/super_admin_drawer.dart';
@@ -74,7 +73,8 @@ class SuperAdminDashboard extends StatelessWidget {
                   title: 'Hospitals',
                   icon: Icons.local_hospital,
                   color: Colors.green,
-                  getValue: (List<HospitalModel> data) => data.length.toString(),
+                  getValue: (List<HospitalModel> data) =>
+                      data.length.toString(),
                 ),
                 // DATA FLOW: Firestore (requests) -> Client Filter (Status=Pending && Type=Request) -> UI.
                 _buildStatCard(
@@ -83,7 +83,11 @@ class SuperAdminDashboard extends StatelessWidget {
                   icon: Icons.emergency,
                   color: Colors.red,
                   getValue: (List<BloodRequestModel> data) => data
-                      .where((r) => r.status == 'pending' && r.type == 'Request').length.toString(),
+                      .where(
+                        (r) => r.status == 'pending' && r.type == 'Request',
+                      )
+                      .length
+                      .toString(),
                 ),
                 // DATA FLOW: Firestore (requests) -> Client Filter (Type=Donate) -> UI.
                 _buildStatCard(
@@ -119,14 +123,26 @@ class SuperAdminDashboard extends StatelessWidget {
         }
         return Card(
           elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 40, color: color),
               const SizedBox(height: 12),
-              Text(count, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+              Text(
+                count,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
             ],
           ),
         );

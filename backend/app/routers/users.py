@@ -18,11 +18,11 @@ DATA FLOW OVERVIEW:
    - 'UserResponse': JSON data representing the user's current status and profile.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Optional
-from ..models import UserCreate, UserResponse
-from ..services.firestore_service import FirestoreService
-from ..config import get_db
+from app.models import UserCreate, UserResponse
+from app.services.firestore_service import FirestoreService
+from app.config import get_db
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -35,19 +35,18 @@ async def create_user(user: UserCreate, service: FirestoreService = Depends(get_
     """
     DATA FLOW: Signup Screen (Flutter) -> This Handler -> create_or_update_user in Service.
     Authenticates and saves a new user profile.
+    RECEIVED FROM: SignupScreen (Flutter).
+    SENT TO: `FirestoreService.create_or_update_user` -> 'users' collection.
     """
-    try:
-        return await service.create_or_update_user(user.uid, user.dict())
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+    return await service.create_or_update_user(user.uid, user.dict())
 
-@router.get("/{uid}", response_model=UserResponse)
-async def get_user(uid: str, service: FirestoreService = Depends(get_service)):
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(user_id: str, service: FirestoreService = Depends(get_service)):
     """
-    DATA FLOW: App Startup -> This Handler -> Firestore -> UI.
-    Fetches the profile for the currently logged-in user.
+    RECEIVED FROM: AuthProvider (Flutter).
+    SENT TO: `FirestoreService.get_user`.
     """
-    user = await service.get_user(uid)
+    user = await service.get_user(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -55,31 +54,25 @@ async def get_user(uid: str, service: FirestoreService = Depends(get_service)):
 @router.get("/", response_model=List[UserResponse])
 async def list_users(service: FirestoreService = Depends(get_service)):
     """
-    DATA FLOW: Manage Users Screen (Admin) -> This Handler -> List of all accounts.
-    Allows Super Admins to see everyone registered in the system.
+    RECEIVED FROM: ManageUsersScreen (Super Admin).
+    SENT TO: `FirestoreService.list_all_users`.
     """
-    try:
-        return await service.list_all_users()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list users: {str(e)}")
+    return await service.list_all_users()
 
-@router.patch("/{uid}/ban")
-async def toggle_ban(uid: str, is_banned: bool = Query(...), service: FirestoreService = Depends(get_service)):
+@router.patch("/{user_id}/ban")
+async def toggle_ban(user_id: str, is_banned: bool, service: FirestoreService = Depends(get_service)):
     """
-    USER INPUT: Admin clicks 'Ban' button.
-    DATA FLOW: UI -> This Handler -> Updates 'isBanned' field in Firestore.
+    RECEIVED FROM: ManageUsersScreen (Admin Action).
+    SENT TO: `FirestoreService.toggle_user_ban`.
     """
-    try:
-        await service.toggle_user_ban(uid, is_banned)
-        return {"message": "User ban status updated"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update ban status: {str(e)}")
+    await service.toggle_user_ban(user_id, is_banned)
+    return {"message": "User ban status updated"}
 
-@router.patch("/{uid}/role")
-async def update_role(uid: str, role: str = Query(...), hospital_id: Optional[str] = Query(None), service: FirestoreService = Depends(get_service)):
+@router.patch("/{user_id}/role")
+async def update_role(user_id: str, role: str, hospital_id: Optional[str] = None, service: FirestoreService = Depends(get_service)):
     """
-    USER INPUT: Admin promotes user to 'hospital_admin' and selects a site.
-    DATA FLOW: UI -> This Handler -> Updates 'role' and 'hospitalId' in Firestore.
+    RECEIVED FROM: UserRolesScreen (Admin Action).
+    SENT TO: `FirestoreService.update_user_role`.
     """
-    await service.update_user_role(uid, role, hospital_id)
+    await service.update_user_role(user_id, role, hospital_id)
     return {"message": "User role updated"}

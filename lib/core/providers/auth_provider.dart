@@ -82,12 +82,29 @@ class AuthProvider with ChangeNotifier {
         password: password,
       );
 
-      // 3. Check Firestore for additional details and ban status
-      final userData = await _db.getUser(credential.user!.uid);
+      // 3. SECURE CHECK: Fetch Firestore details.
+      // NOTE: On Web, we add a tiny delay to ensure the Auth state has fully 
+      // propagated to the Firestore instance before requesting the document.
+      if (identical(0, 0.0)) { // Simple check for web (Dart2JS)
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      UserModel? userData;
+      try {
+        userData = await _db.getUser(credential.user!.uid);
+      } catch (e) {
+        // If we still get a permission error, it's a structural rule issue.
+        print('Firestore getUser error: $e');
+        if (e.toString().contains('permission-denied')) {
+          return 'Access Denied: Your account exists in Auth but could not be verified in the database. Please contact an administrator.';
+        }
+        rethrow;
+      }
+
       if (userData == null) {
         await logout();
         _isLoading = false;
-        return 'User data not found.';
+        return 'User profile not found. Please complete your registration.';
       }
 
       if (userData.isBanned) {

@@ -1,26 +1,25 @@
-/**
- * FILE: notifications_screen.dart
- * 
- * DESCRIPTION:
- * This screen displays the user's Inbox for all system alerts. 
- * It primarily notifies users when their blood requests or donations 
- * are approved, rejected, or updated by hospital admins.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'FirebaseFirestore': Streams data in real-time from the 'notifications' collection.
- *    - 'AuthProvider': Provides the 'userId' used to filter the stream.
- * 2. PROCESSING:
- *    - Real-time Streaming: Uses 'StreamBuilder' to update the UI the second a 
- *      backend admin approves a request.
- *    - Mark-as-Read Logic: Updates the Firestore document field 'isRead' to true 
- *      when the user taps an item.
- * 3. SENDS DATA TO:
- *    - 'FirebaseFirestore': To update the 'isRead' status.
- * 4. OUTPUTS/GUI:
- *    - A vertical list of alert cards with status-specific icons.
- *    - A bottom sheet 'Details' view for long messages or admin instructions.
- */
+/// FILE: notifications_screen.dart
+///
+/// DESCRIPTION:
+/// This screen displays the user's Inbox for all system alerts.
+/// It primarily notifies users when their blood requests or donations
+/// are approved, rejected, or updated by hospital admins.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'FirebaseFirestore': Streams data in real-time from the 'notifications' collection.
+///    - 'AuthProvider': Provides the 'userId' used to filter the stream.
+/// 2. PROCESSING:
+///    - Real-time Streaming: Uses 'StreamBuilder' to update the UI the second a
+///      backend admin approves a request.
+///    - Mark-as-Read Logic: Updates the Firestore document field 'isRead' to true
+///      when the user taps an item.
+/// 3. SENDS DATA TO:
+///    - 'FirebaseFirestore': To update the 'isRead' status.
+/// 4. OUTPUTS/GUI:
+///    - A vertical list of alert cards with status-specific icons.
+///    - A bottom sheet 'Details' view for long messages or admin instructions.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -58,7 +57,11 @@ class NotificationsScreen extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Colors.red,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'Error: ${snapshot.error}',
@@ -70,7 +73,7 @@ class NotificationsScreen extends StatelessWidget {
                     ),
                   );
                 }
-                
+
                 // UI: Loading state.
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -82,9 +85,16 @@ class NotificationsScreen extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.notifications_off_outlined, size: 64, color: Colors.grey),
+                        Icon(
+                          Icons.notifications_off_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         SizedBox(height: 16),
-                        Text('No notifications yet', style: TextStyle(color: Colors.grey)),
+                        Text(
+                          'No notifications yet',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   );
@@ -94,13 +104,18 @@ class NotificationsScreen extends StatelessWidget {
                 return ListView.builder(
                   itemCount: snapshot.data!.docs.length,
                   itemBuilder: (context, index) {
-                    final data = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                    final data =
+                        snapshot.data!.docs[index].data()
+                            as Map<String, dynamic>;
                     final bool isRead = data['isRead'] ?? false;
 
                     return Card(
                       // GUI: Visual cue for unread vs read notifications.
                       color: isRead ? Colors.white : Colors.red[50],
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: ListTile(
                         leading: Icon(
                           _getIconForType(data['type']),
@@ -109,7 +124,9 @@ class NotificationsScreen extends StatelessWidget {
                         title: Text(
                           data['title'] ?? 'Notification',
                           style: TextStyle(
-                            fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                            fontWeight: isRead
+                                ? FontWeight.normal
+                                : FontWeight.bold,
                           ),
                         ),
                         subtitle: Text(data['body'] ?? ''),
@@ -136,11 +153,12 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  /**
-   * UI COMPONENT: Details Popup.
-   * Logic: Receives the map of notification data and renders it in a clean bottom sheet.
-   */
-  void _showNotificationDetails(BuildContext context, Map<String, dynamic> data) {
+  /// UI COMPONENT: Details Popup.
+  /// Logic: Receives the map of notification data and renders it in a clean bottom sheet.
+  void _showNotificationDetails(
+    BuildContext context,
+    Map<String, dynamic> data,
+  ) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -164,7 +182,10 @@ class NotificationsScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       data['title'] ?? 'Notification Details',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -176,7 +197,11 @@ class NotificationsScreen extends StatelessWidget {
               const Divider(height: 32),
               Text(
                 'Date Received: ${_formatDate(data['createdAt'])}',
-                style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               // DATA DISPLAY: The core message from the Admin/System.

@@ -1,30 +1,29 @@
-/**
- * FILE: manage_users_screen.dart
- * 
- * DESCRIPTION:
- * A directory and management console for Super Admins to oversee all users. 
- * Supports searching, banning/unbanning accounts, and promoting users 
- * to Hospital Admin roles with specific site assignments.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'DatabaseService.streamAllUsers': Fetches a live list of every 
- *      registered account in the system.
- *    - 'DatabaseService.streamHospitals': Populates the "Assign Hospital" 
- *      dropdown for admins.
- * 2. PROCESSING:
- *    - Search Filtering: Re-renders the list based on name or email matches 
- *      in the text controller.
- *    - Security Logic: Explicitly hides other 'superadmin' accounts from 
- *      the list to prevent self-deletion or unauthorized changes.
- * 3. SENDS DATA TO:
- *    - 'ApiService.toggleUserBan': Communicates with FastAPI to lock/unlock accounts.
- *    - 'ApiService.updateUserRole': Promotes or demotes users and links them 
- *      to a hospital ID.
- * 4. OUTPUTS/GUI:
- *    - Searchable list with ban switches and edit dialogs.
- *    - Dynamic role-editing modal that adjusts fields based on selected role.
- */
+/// FILE: manage_users_screen.dart
+///
+/// DESCRIPTION:
+/// A directory and management console for Super Admins to oversee all users.
+/// Supports searching, banning/unbanning accounts, and promoting users
+/// to Hospital Admin roles with specific site assignments.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamAllUsers': Fetches a live list of every
+///      registered account in the system.
+///    - 'DatabaseService.streamHospitals': Populates the "Assign Hospital"
+///      dropdown for admins.
+/// 2. PROCESSING:
+///    - Search Filtering: Re-renders the list based on name or email matches
+///      in the text controller.
+///    - Security Logic: Explicitly hides other 'superadmin' accounts from
+///      the list to prevent self-deletion or unauthorized changes.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.toggleUserBan': Communicates with FastAPI to lock/unlock accounts.
+///    - 'ApiService.updateUserRole': Promotes or demotes users and links them
+///      to a hospital ID.
+/// 4. OUTPUTS/GUI:
+///    - Searchable list with ban switches and edit dialogs.
+///    - Dynamic role-editing modal that adjusts fields based on selected role.
+library;
 
 import 'package:flutter/material.dart';
 import '../../../core/models/user_model.dart';
@@ -43,7 +42,7 @@ class ManageUsersScreen extends StatefulWidget {
 class _ManageUsersScreenState extends State<ManageUsersScreen> {
   final DatabaseService _db = DatabaseService();
   final ApiService _api = ApiService();
-  
+
   // STATE: Query string for real-time list filtering.
   String _searchQuery = '';
 
@@ -61,9 +60,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               decoration: InputDecoration(
                 hintText: 'Search by name or email...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+              onChanged: (value) =>
+                  setState(() => _searchQuery = value.toLowerCase()),
             ),
           ),
           Expanded(
@@ -81,7 +83,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 // DATA PROCESSING: Filtering the list locally in the GUI logic.
                 final users = snapshot.data!.where((u) {
                   final fullName = '${u.firstName} ${u.lastName}'.toLowerCase();
-                  return fullName.contains(_searchQuery) || u.email.toLowerCase().contains(_searchQuery);
+                  return fullName.contains(_searchQuery) ||
+                      u.email.toLowerCase().contains(_searchQuery);
                 }).toList();
 
                 return ListView.builder(
@@ -89,11 +92,14 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   itemBuilder: (context, index) {
                     final user = users[index];
                     // SECURITY: Prevent Super Admins from editing each other here.
-                    if (user.role == 'superadmin') return const SizedBox.shrink();
+                    if (user.role == 'superadmin')
+                      return const SizedBox.shrink();
 
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: user.isBanned ? Colors.grey : Theme.of(context).primaryColor,
+                        backgroundColor: user.isBanned
+                            ? Colors.grey
+                            : Theme.of(context).primaryColor,
                         child: const Icon(Icons.person, color: Colors.white),
                       ),
                       title: Text('${user.firstName} ${user.lastName}'),
@@ -114,7 +120,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                               await _api.toggleUserBan(user.uid, !active);
                               if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(active ? 'User Unbanned' : 'User Banned')),
+                                SnackBar(
+                                  content: Text(
+                                    active ? 'User Unbanned' : 'User Banned',
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -131,11 +141,9 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  /**
-   * UI COMPONENT: Role & Hospital Assignment Dialog.
-   * Logic: Receives a 'user' object and allows modifying their core roles.
-   * DATA SOURCE: 'DatabaseService.streamHospitals' for the dropdown list.
-   */
+  /// UI COMPONENT: Role & Hospital Assignment Dialog.
+  /// Logic: Receives a 'user' object and allows modifying their core roles.
+  /// DATA SOURCE: 'DatabaseService.streamHospitals' for the dropdown list.
   void _showEditRoleDialog(UserModel user) {
     String selectedRole = user.role;
     String? selectedHospitalId = user.hospitalId;
@@ -154,7 +162,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 decoration: const InputDecoration(labelText: 'User Role'),
                 items: const [
                   DropdownMenuItem(value: 'user', child: Text('Standard User')),
-                  DropdownMenuItem(value: 'admin', child: Text('Hospital Admin')),
+                  DropdownMenuItem(
+                    value: 'admin',
+                    child: Text('Hospital Admin'),
+                  ),
                 ],
                 onChanged: (v) {
                   if (v != null) {
@@ -171,12 +182,26 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 StreamBuilder<List<HospitalModel>>(
                   stream: hospitalsStream,
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const LinearProgressIndicator();
+                    if (!snapshot.hasData)
+                      return const LinearProgressIndicator();
                     return DropdownButtonFormField<String>(
-                      initialValue: snapshot.data!.any((h) => h.id == selectedHospitalId) ? selectedHospitalId : null,
-                      decoration: const InputDecoration(labelText: 'Assign Hospital'),
-                      items: snapshot.data!.map((h) => DropdownMenuItem(value: h.id, child: Text(h.name))).toList(),
-                      onChanged: (v) => setModalState(() => selectedHospitalId = v),
+                      initialValue:
+                          snapshot.data!.any((h) => h.id == selectedHospitalId)
+                          ? selectedHospitalId
+                          : null,
+                      decoration: const InputDecoration(
+                        labelText: 'Assign Hospital',
+                      ),
+                      items: snapshot.data!
+                          .map(
+                            (h) => DropdownMenuItem(
+                              value: h.id,
+                              child: Text(h.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) =>
+                          setModalState(() => selectedHospitalId = v),
                     );
                   },
                 ),
@@ -184,14 +209,23 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 // ACTION: Dispatch promotion to the Backend API.
-                await _api.updateUserRole(user.uid, selectedRole, hospitalId: selectedHospitalId);
+                await _api.updateUserRole(
+                  user.uid,
+                  selectedRole,
+                  hospitalId: selectedHospitalId,
+                );
                 if (!mounted) return;
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User updated!')));
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('User updated!')));
               },
               child: const Text('Save'),
             ),

@@ -20,9 +20,9 @@ DATA FLOW OVERVIEW:
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-from ..models import InventoryCreate, InventoryResponse
-from ..services.firestore_service import FirestoreService
-from ..config import get_db
+from app.models import InventoryCreate, InventoryResponse
+from app.services.firestore_service import FirestoreService
+from app.config import get_db
 from datetime import datetime
 
 router = APIRouter(prefix="/hospitals", tags=["inventory"])
@@ -31,20 +31,29 @@ def get_service(db=Depends(get_db)):
     """Injects the database service."""
     return FirestoreService(db)
 
+@router.post("/{hospital_id}", response_model=InventoryResponse)
+async def add_inventory(hospital_id: str, inventory: InventoryCreate, service: FirestoreService = Depends(get_service)):
+    """
+    RECEIVED FROM: (Legacy) Initial Setup.
+    SENT TO: `FirestoreService.update_inventory`.
+    """
+    await service.update_inventory(hospital_id, inventory.blood_type, inventory.units)
+    return {**inventory.dict(), "hospital_id": hospital_id}
+
 @router.put("/{hospital_id}/inventory/{blood_type}", response_model=InventoryResponse)
 async def update_inventory(hospital_id: str, blood_type: str, units: float, 
                            service: FirestoreService = Depends(get_service)):
     """
-    USER INPUT: Admin types new units on the Inventory Screen.
-    DATA FLOW: UI -> This Handler -> Firestore Transaction (Safe update).
+    RECEIVED FROM: InventoryManagementScreen.
+    SENT TO: `FirestoreService.update_inventory`.
     """
     await service.update_inventory(hospital_id, blood_type, units)
     return {"blood_type": blood_type, "units": units, "last_updated": datetime.now()}
 
-@router.get("/{hospital_id}/inventory/", response_model=List[InventoryResponse])
+@router.get("/{hospital_id}", response_model=List[InventoryResponse])
 async def get_inventory(hospital_id: str, service: FirestoreService = Depends(get_service)):
     """
-    DATA DESTINATION: Inventory List in Flutter.
-    Returns the current stock levels for all blood groups at one site.
+    RECEIVED FROM: InventoryManagementScreen.
+    SENT TO: `FirestoreService.get_inventory`.
     """
     return await service.get_inventory(hospital_id)

@@ -1,22 +1,21 @@
-/**
- * FILE: custom_text_field.dart (Shared Utility)
- * 
- * DESCRIPTION:
- * A standardized input component for the entire app. It wraps the 
- * standard 'TextFormField' with project-specific styling and convenience 
- * properties (prefix icons, validation hooks).
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'controller': External state management from screens.
- *    - 'validator': Logic blocks from screens to ensure data integrity.
- * 2. SENDS DATA TO:
- *    - Parent State: Via the 'onSaved' or 'onChanged' callbacks when 
- *      the user interacts with the keyboard.
- * 3. OUTPUTS:
- *    - A visually consistent form field with automated padding and 
- *      standard focus behaviors.
- */
+/// FILE: custom_text_field.dart (Shared Utility)
+///
+/// DESCRIPTION:
+/// A standardized input component for the entire app. It wraps the
+/// standard 'TextFormField' with project-specific styling and convenience
+/// properties (prefix icons, validation hooks).
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'controller': External state management from screens.
+///    - 'validator': Logic blocks from screens to ensure data integrity.
+/// 2. SENDS DATA TO:
+///    - Parent State: Via the 'onSaved' or 'onChanged' callbacks when
+///      the user interacts with the keyboard.
+/// 3. OUTPUTS:
+///    - A visually consistent form field with automated padding and
+///      standard focus behaviors.
+library;
 
 import 'package:flutter/material.dart';
 

@@ -1,24 +1,23 @@
-/**
- * FILE: splash_screen.dart
- * 
- * DESCRIPTION:
- * The entry point of the application UI. It performs background 
- * authentication checks while displaying a branded animation to the user.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'AuthProvider': Checks 'isAuthenticated' to see if a session exists.
- *    - 'UserModel': Retrieves the 'role' to decide where to send the user.
- * 2. PROCESSING:
- *    - Persistence Check: As soon as the app opens, it asks the AuthProvider 
- *      if a user was previously logged in.
- *    - Animation Lifecycle: Runs a 2-second fade-in visual.
- * 3. SENDS DATA TO:
- *    - Navigation: Switches the GUI to either 'LoginScreen' or a specific Dashboard.
- * 4. OUTPUTS/GUI:
- *    - Animated logo and "Blood Bank Finder" title.
- *    - "Proceed to Login" button for manual navigation.
- */
+/// FILE: splash_screen.dart
+///
+/// DESCRIPTION:
+/// The entry point of the application UI. It performs background
+/// authentication checks while displaying a branded animation to the user.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Checks 'isAuthenticated' to see if a session exists.
+///    - 'UserModel': Retrieves the 'role' to decide where to send the user.
+/// 2. PROCESSING:
+///    - Persistence Check: As soon as the app opens, it asks the AuthProvider
+///      if a user was previously logged in.
+///    - Animation Lifecycle: Runs a 2-second fade-in visual.
+/// 3. SENDS DATA TO:
+///    - Navigation: Switches the GUI to either 'LoginScreen' or a specific Dashboard.
+/// 4. OUTPUTS/GUI:
+///    - Animated logo and "Blood Bank Finder" title.
+///    - "Proceed to Login" button for manual navigation.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -51,30 +50,28 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
-    
+
     // STEP: Start the hidden data flow check.
     _checkAuthAndNavigate();
   }
 
-  /**
-   * CORE LOGIC: The Startup Data Flow.
-   * 1. Waits for 3 seconds (to ensure the splash is seen).
-   * 2. DATA CHECK: Asks 'AuthProvider' if someone is already logged in.
-   * 3. DECISION:
-   *    - If NO: Stays on this screen or goes to Login.
-   *    - If YES: Evaluates the Role (SuperAdmin, Admin, User) and jumps to their dashboard.
-   */
+  /// CORE LOGIC: The Startup Data Flow.
+  /// 1. Waits for 3 seconds (to ensure the splash is seen).
+  /// 2. DATA CHECK: Asks 'AuthProvider' if someone is already logged in.
+  /// 3. DECISION:
+  ///    - If NO: Stays on this screen or goes to Login.
+  ///    - If YES: Evaluates the Role (SuperAdmin, Admin, User) and jumps to their dashboard.
   void _checkAuthAndNavigate() async {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
     final auth = context.read<AuthProvider>();
-    
+
     // STEP: If we have an existing session, skip the login screen entirely.
     if (auth.isAuthenticated) {
       Widget nextScreen;
       final role = auth.user?.role;
-      
+
       // ROLE GATE: Routing users based on their data profile.
       if (role == 'superadmin') {
         nextScreen = const SuperAdminDashboard();

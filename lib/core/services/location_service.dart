@@ -1,29 +1,28 @@
-/**
- * FILE: location_service.dart
- * 
- * DESCRIPTION:
- * This file handles the retrieval of administrative geographical data (Regions, Cities, Barangays)
- * specifically for the Philippines using the PSGC (Philippine Standard Geographic Code) API.
- * It is used for filtering hospitals and donors by location.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - The PSGC Cloud API (https://psgc.cloud/api/v2).
- * 2. PROCESSING:
- *    - Fetches raw JSON data for regions, cities, and municipalities.
- *    - Filters regions based on Island Group (Luzon, Visayas, Mindanao) using hardcoded PSGC codes.
- *    - Caches results in-memory ('_cache') to avoid redundant network calls and speed up the UI.
- *    - Sorts all lists alphabetically by name for a better user experience in dropdowns.
- * 3. SENDS DATA TO:
- *    - UI Screens with location dropdowns (e.g., FindBloodBankScreen, ProfileScreen, ManageHospitalsScreen).
- * 4. OUTPUTS/RESPONSES:
- *    - Returns 'List<Map<String, dynamic>>' containing geographic details (name, code, etc.).
- * 
- * KEY COMPONENTS:
- * - islandGroupMapping: A dictionary that links major islands (Luzon/Visayas/Mindanao) to their respective region PSGC codes.
- * - _cache: A simple in-memory map to store previous API responses.
- * - getBarangays: The most granular level of location filtering in the app.
- */
+/// FILE: location_service.dart
+///
+/// DESCRIPTION:
+/// This file handles the retrieval of administrative geographical data (Regions, Cities, Barangays)
+/// specifically for the Philippines using the PSGC (Philippine Standard Geographic Code) API.
+/// It is used for filtering hospitals and donors by location.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - The PSGC Cloud API (https://psgc.cloud/api/v2).
+/// 2. PROCESSING:
+///    - Fetches raw JSON data for regions, cities, and municipalities.
+///    - Filters regions based on Island Group (Luzon, Visayas, Mindanao) using hardcoded PSGC codes.
+///    - Caches results in-memory ('_cache') to avoid redundant network calls and speed up the UI.
+///    - Sorts all lists alphabetically by name for a better user experience in dropdowns.
+/// 3. SENDS DATA TO:
+///    - UI Screens with location dropdowns (e.g., FindBloodBankScreen, ProfileScreen, ManageHospitalsScreen).
+/// 4. OUTPUTS/RESPONSES:
+///    - Returns 'List<Map<String, dynamic>>' containing geographic details (name, code, etc.).
+///
+/// KEY COMPONENTS:
+/// - islandGroupMapping: A dictionary that links major islands (Luzon/Visayas/Mindanao) to their respective region PSGC codes.
+/// - _cache: A simple in-memory map to store previous API responses.
+/// - getBarangays: The most granular level of location filtering in the app.
+library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -63,63 +62,63 @@ class LocationService {
     ],
   };
 
-  /**
-   * STEP: Fetches all 17 regions of the Philippines from the API.
-   */
+  /// DATA SOURCE: PSGC Cloud API (/regions).
+  /// DATA DESTINATION: Internal Cache / `getRegionsByIsland`.
+  /// STEP: Fetches all 17 regions of the Philippines.
   Future<List<Map<String, dynamic>>> getRegions() async {
     return _fetchData('/regions');
   }
 
-  /**
-   * STEP 1: Receives the island name (Luzon, Visayas, or Mindanao).
-   * STEP 2: Fetches ALL regions and filters them using the 'islandGroupMapping'.
-   */
+  /// DATA SOURCE: `getRegions` / `islandGroupMapping`.
+  /// DATA DESTINATION: UI Dropdowns (Signup/Hospitals).
+  /// STEP 1: Receives the island name (Luzon, Visayas, or Mindanao).
+  /// STEP 2: Fetches ALL regions and filters them.
   Future<List<Map<String, dynamic>>> getRegionsByIsland(String island) async {
     final allRegions = await getRegions();
     final allowedCodes = islandGroupMapping[island] ?? [];
     return allRegions.where((r) => allowedCodes.contains(r['code'])).toList();
   }
 
-  /**
-   * STEP: A helper method that finds all cities belonging to a specific island.
-   * This is used for broader searches or initializing the app state.
-   */
+  /// DATA SOURCE: PSGC Cloud API (/cities-municipalities).
+  /// DATA DESTINATION: UI Dropdowns / `BackfillService`.
+  /// STEP: A helper method that finds all cities belonging to a specific island.
   Future<List<Map<String, dynamic>>> getCitiesByIsland(String island) async {
-    // Note: psgc.cloud doesn't have a direct 'cities by island' endpoint.
-    // We'll fetch all cities and filter them by the regions in that island.
     final regions = await getRegionsByIsland(island);
     final regionCodes = regions.map((r) => r['code']).toList();
-    
-    // Fetch all cities (this is expensive but needed for legacy initialization)
-    // We'll use a large per_page to get all common cities
+
     final allCities = await _fetchData('/cities-municipalities?per_page=1700');
-    return allCities.where((c) => regionCodes.contains(c['code']?.substring(0, 2) + '00000000')).toList();
+    return allCities
+        .where(
+          (c) => regionCodes.contains(c['code']?.substring(0, 2) + '00000000'),
+        )
+        .toList();
   }
 
-  /**
-   * STEP 1: Receives a 'regionCode'.
-   * STEP 2: Fetches only the cities/municipalities within that specific region.
-   */
-  Future<List<Map<String, dynamic>>> getCitiesAndMunicipalities(String regionCode) async {
-    return _fetchData('/regions/$regionCode/cities-municipalities?per_page=100');
+  /// DATA SOURCE: PSGC Cloud API (/regions/{code}/cities-municipalities).
+  /// DATA DESTINATION: UI Dropdowns (Cascading Logic).
+  /// STEP 1: Receives a 'regionCode'.
+  /// STEP 2: Fetches only the cities within that region.
+  Future<List<Map<String, dynamic>>> getCitiesAndMunicipalities(
+    String regionCode,
+  ) async {
+    return _fetchData(
+      '/regions/$regionCode/cities-municipalities?per_page=100',
+    );
   }
 
-  /**
-   * STEP 1: Receives a 'cityCode'.
-   * STEP 2: Fetches the most specific location data: the Barangays.
-   */
+  /// DATA SOURCE: PSGC Cloud API (/cities-municipalities/{code}/barangays).
+  /// DATA DESTINATION: UI Dropdowns (Cascading Logic).
+  /// STEP 1: Receives a 'cityCode'.
+  /// STEP 2: Fetches the most granular location data: the Barangays.
   Future<List<Map<String, dynamic>>> getBarangays(String cityCode) async {
-    return _fetchData('/cities-municipalities/$cityCode/barangays?per_page=500');
+    return _fetchData(
+      '/cities-municipalities/$cityCode/barangays?per_page=500',
+    );
   }
 
-  /**
-   * CORE LOGIC: The private worker method for all API calls.
-   * 1. Checks if we already have the data in '_cache'.
-   * 2. If not, sends an HTTP GET request to PSGC Cloud.
-   * 3. Parses the response, extracts the 'data' list.
-   * 4. Sorts the names alphabetically (A-Z).
-   * 5. Saves the result in cache and returns it to the caller.
-   */
+  /// CORE LOGIC: The private worker method for all API calls.
+  /// 1. DATA SOURCE: `_cache` (In-memory) OR PSGC Cloud API.
+  /// 2. DATA DESTINATION: `_cache` (Persistence) and the requesting Method.
   Future<List<Map<String, dynamic>>> _fetchData(String endpoint) async {
     if (_cache.containsKey(endpoint)) {
       return _cache[endpoint]!;
@@ -130,15 +129,20 @@ class LocationService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> body = jsonDecode(response.body);
         final List<dynamic> data = body['data'] ?? [];
-        final List<Map<String, dynamic>> results = data.cast<Map<String, dynamic>>();
-        
+        final List<Map<String, dynamic>> results = data
+            .cast<Map<String, dynamic>>();
+
         // Sort alphabetically by name
-        results.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
-        
+        results.sort(
+          (a, b) => (a['name'] as String).compareTo(b['name'] as String),
+        );
+
         _cache[endpoint] = results;
         return results;
       } else {
-        throw Exception('Failed to load location data (Status: ${response.statusCode})');
+        throw Exception(
+          'Failed to load location data (Status: ${response.statusCode})',
+        );
       }
     } catch (e) {
       print('LocationService Error: $e');

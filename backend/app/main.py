@@ -27,7 +27,7 @@ KEY COMPONENTS:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import users, hospitals, requests, inventory, notifications, geocoding
+from app.routers import users, hospitals, requests, inventory, notifications, geocoding
 
 # INITIALIZATION: Creating the core server instance.
 app = FastAPI(title="Blood Bank Finder API")

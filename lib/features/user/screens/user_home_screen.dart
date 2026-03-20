@@ -1,27 +1,26 @@
-/**
- * FILE: user_home_screen.dart
- * 
- * DESCRIPTION:
- * The primary dashboard for regular users. It serves as a central hub 
- * for the app's main functionalities, providing high-level summaries 
- * and quick access to critical features like donating or requesting blood.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'AuthProvider': Fetches the current user's name for the personalized greeting.
- *    - 'Notifications': (Future proofing) Previews the latest alerts.
- * 2. PROCESSING:
- *    - UI State Management: Uses 'context.watch<AuthProvider>()' to rebuild 
- *      instantly if user details change.
- *    - Layout Construction: Combines a promotional banner, a donation CTA card, 
- *      and a grid of quick actions.
- * 3. SENDS DATA TO:
- *    - Navigation: Sub-screens like 'FindBloodBankScreen', 'DonateBloodScreen', 
- *      and 'RequestBloodScreen'.
- * 4. OUTPUTS/GUI:
- *    - A rich, scrollable dashboard with visual status indicators.
- *    - Handlers for deep-linking into specific app features.
- */
+/// FILE: user_home_screen.dart
+///
+/// DESCRIPTION:
+/// The primary dashboard for regular users. It serves as a central hub
+/// for the app's main functionalities, providing high-level summaries
+/// and quick access to critical features like donating or requesting blood.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Fetches the current user's name for the personalized greeting.
+///    - 'Notifications': (Future proofing) Previews the latest alerts.
+/// 2. PROCESSING:
+///    - UI State Management: Uses 'context.watch<AuthProvider>()' to rebuild
+///      instantly if user details change.
+///    - Layout Construction: Combines a promotional banner, a donation CTA card,
+///      and a grid of quick actions.
+/// 3. SENDS DATA TO:
+///    - Navigation: Sub-screens like 'FindBloodBankScreen', 'DonateBloodScreen',
+///      and 'RequestBloodScreen'.
+/// 4. OUTPUTS/GUI:
+///    - A rich, scrollable dashboard with visual status indicators.
+///    - Handlers for deep-linking into specific app features.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

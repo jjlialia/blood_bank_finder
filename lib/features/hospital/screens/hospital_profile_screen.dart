@@ -65,7 +65,9 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
 
         List<Map<String, dynamic>> cities = [];
         if (currentRegion.isNotEmpty) {
-          cities = await _locationSvc.getCitiesAndMunicipalities(currentRegion['code']);
+          cities = await _locationSvc.getCitiesAndMunicipalities(
+            currentRegion['code'],
+          );
         }
 
         final cityMatch = cities.firstWhere(
@@ -89,7 +91,10 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
           _selectedIsland = h.islandGroup;
           _selectedRegion = currentRegion['code'];
           _selectedCity = cityMatch['code'];
-          _selectedBarangay = barangays.firstWhere((b) => b['name'] == h.barangay, orElse: () => {})['code'];
+          _selectedBarangay = barangays.firstWhere(
+            (b) => b['name'] == h.barangay,
+            orElse: () => {},
+          )['code'];
           _regions = regions;
           _cities = cities;
           _barangays = barangays;
@@ -165,7 +170,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                value: _selectedIsland,
+                initialValue: _selectedIsland,
                 decoration: const InputDecoration(labelText: 'Island Group'),
                 items: ['Luzon', 'Visayas', 'Mindanao']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
@@ -197,11 +202,15 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 const LinearProgressIndicator()
               else if (_selectedIsland != null)
                 DropdownButtonFormField<String>(
-                  value: _selectedRegion,
+                  initialValue: _selectedRegion,
                   decoration: const InputDecoration(labelText: 'Region'),
                   items: _regions
-                      .map((e) => DropdownMenuItem<String>(
-                          value: e['code'], child: Text(e['name'])))
+                      .map(
+                        (e) => DropdownMenuItem<String>(
+                          value: e['code'],
+                          child: Text(e['name']),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) async {
                     setState(() {
@@ -214,7 +223,8 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                     });
 
                     if (v != null) {
-                      final fetched = await _locationSvc.getCitiesAndMunicipalities(v);
+                      final fetched = await _locationSvc
+                          .getCitiesAndMunicipalities(v);
                       setState(() {
                         _cities = fetched;
                         _isLoadingCities = false;
@@ -228,11 +238,15 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 const LinearProgressIndicator()
               else if (_selectedRegion != null)
                 DropdownButtonFormField<String>(
-                  value: _selectedCity,
+                  initialValue: _selectedCity,
                   decoration: const InputDecoration(labelText: 'City'),
                   items: _cities
-                      .map((e) => DropdownMenuItem<String>(
-                          value: e['code'], child: Text(e['name'])))
+                      .map(
+                        (e) => DropdownMenuItem<String>(
+                          value: e['code'],
+                          child: Text(e['name']),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) async {
                     setState(() {
@@ -257,11 +271,15 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 const LinearProgressIndicator()
               else if (_selectedCity != null)
                 DropdownButtonFormField<String>(
-                  value: _selectedBarangay,
+                  initialValue: _selectedBarangay,
                   decoration: const InputDecoration(labelText: 'Barangay'),
                   items: _barangays
-                      .map((e) => DropdownMenuItem<String>(
-                          value: e['code'], child: Text(e['name'])))
+                      .map(
+                        (e) => DropdownMenuItem<String>(
+                          value: e['code'],
+                          child: Text(e['name']),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setState(() => _selectedBarangay = v),
                   validator: (v) => v == null ? 'Required' : null,
@@ -290,8 +308,14 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                     child: CustomTextField(
                       label: 'Latitude',
                       controller: _latController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : double.tryParse(v) == null ? 'Invalid' : null,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'Required'
+                          : double.tryParse(v) == null
+                          ? 'Invalid'
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -299,8 +323,14 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                     child: CustomTextField(
                       label: 'Longitude',
                       controller: _lonController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : double.tryParse(v) == null ? 'Invalid' : null,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'Required'
+                          : double.tryParse(v) == null
+                          ? 'Invalid'
+                          : null,
                     ),
                   ),
                 ],
@@ -348,7 +378,9 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
       islandGroup: _selectedIsland!,
       region: _regions.firstWhere((r) => r['code'] == _selectedRegion)['name'],
       city: _cities.firstWhere((c) => c['code'] == _selectedCity)['name'],
-      barangay: _barangays.firstWhere((b) => b['code'] == _selectedBarangay)['name'],
+      barangay: _barangays.firstWhere(
+        (b) => b['code'] == _selectedBarangay,
+      )['name'],
       address: _addressController.text,
       contactNumber: _contactController.text,
       latitude: double.tryParse(_latController.text) ?? 0.0,

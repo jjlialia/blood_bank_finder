@@ -1,33 +1,32 @@
-/**
- * FILE: manage_hospitals_screen.dart
- * 
- * DESCRIPTION:
- * This screen is the exclusive control panel for Super Admins to manage the 
- * directory of hospitals and blood banks in the system. It supports full 
- * CRUD (Create, Read, Update, Delete) operations and data synchronization.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'DatabaseService.streamHospitals(allowAll: true)': A stream of ALL hospitals, 
- *       including those marked as inactive.
- *    - 'LocationService': Populates the cascading dropdowns (Island -> Region -> City) 
- *       in the registration form.
- *    - 'ApiService.getCoordinatesFromAddress': Automatically finds Lat/Lng for a hospital 
- *       based on its typed address.
- * 2. PROCESSING:
- *    - Form Handling: Manages a complex, multi-field form for hospital details.
- *    - Cascading Dropdowns: Dynamically loads Regions when an Island is picked, and 
- *      Cities when a Region is picked.
- *    - Geocoding: Converts user-entered addresses into map coordinates before saving.
- * 3. SENDS DATA TO:
- *    - 'ApiService.addHospital' / 'updateHospital': Sends the validated data to the 
- *      FastAPI backend for Firestore persistence.
- *    - 'ApiService.deleteHospital': Removes a hospital record from the system.
- *    - 'BackfillService.syncAllHospitals': Triggers a global data verification/sync.
- * 4. OUTPUTS/GUI:
- *    - A list of hospital cards with inline Edit/Delete actions.
- *    - A bottom-sheet modal for adding or modifying hospital records.
- */
+/// FILE: manage_hospitals_screen.dart
+///
+/// DESCRIPTION:
+/// This screen is the exclusive control panel for Super Admins to manage the
+/// directory of hospitals and blood banks in the system. It supports full
+/// CRUD (Create, Read, Update, Delete) operations and data synchronization.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamHospitals(allowAll: true)': A stream of ALL hospitals,
+///       including those marked as inactive.
+///    - 'LocationService': Populates the cascading dropdowns (Island -> Region -> City)
+///       in the registration form.
+///    - 'ApiService.getCoordinatesFromAddress': Automatically finds Lat/Lng for a hospital
+///       based on its typed address.
+/// 2. PROCESSING:
+///    - Form Handling: Manages a complex, multi-field form for hospital details.
+///    - Cascading Dropdowns: Dynamically loads Regions when an Island is picked, and
+///      Cities when a Region is picked.
+///    - Geocoding: Converts user-entered addresses into map coordinates before saving.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.addHospital' / 'updateHospital': Sends the validated data to the
+///      FastAPI backend for Firestore persistence.
+///    - 'ApiService.deleteHospital': Removes a hospital record from the system.
+///    - 'BackfillService.syncAllHospitals': Triggers a global data verification/sync.
+/// 4. OUTPUTS/GUI:
+///    - A list of hospital cards with inline Edit/Delete actions.
+///    - A bottom-sheet modal for adding or modifying hospital records.
+library;
 
 import 'package:flutter/material.dart';
 import '../../../core/models/hospital_model.dart';
@@ -51,7 +50,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
   final ApiService _api = ApiService();
   final LocationService _locationSvc = LocationService();
   final BackfillService _backfillSvc = BackfillService();
-  
+
   bool _isSyncing = false; // Tracks if the global data sync is running.
   final _formKey = GlobalKey<FormState>();
 
@@ -63,7 +62,19 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
         actions: [
           // STEP: Sync button to update any hospitals that might have missing location metadata.
           if (_isSyncing)
-            const Center(child: Padding(padding: EdgeInsets.only(right: 16), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))))
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            )
           else
             IconButton(
               icon: const Icon(Icons.sync),
@@ -73,7 +84,12 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                 final count = await _backfillSvc.syncAllHospitals();
                 setState(() => _isSyncing = false);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Successfully synced $count hospitals.'), backgroundColor: Colors.green));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Successfully synced $count hospitals.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
                 }
               },
             ),
@@ -101,16 +117,29 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                 elevation: 2,
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  title: Text(hospital.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('${hospital.city} | ${hospital.contactNumber}'),
+                  title: Text(
+                    hospital.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '${hospital.city} | ${hospital.contactNumber}',
+                  ),
                   onTap: () => _showHospitalDetails(hospital),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // GUI: User clicks Edit to open the form with existing data.
-                      IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _showHospitalDialog(hospital: hospital)),
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () =>
+                            _showHospitalDialog(hospital: hospital),
+                      ),
                       // GUI: User clicks Delete to permanently remove the record.
-                      IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _confirmDelete(hospital.id!, hospital.name)),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () =>
+                            _confirmDelete(hospital.id!, hospital.name),
+                      ),
                     ],
                   ),
                 ),
@@ -128,14 +157,14 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  /**
-   * GUI STEP: Shows a detailed read-only view of a hospital.
-   */
+  /// GUI STEP: Shows a detailed read-only view of a hospital.
   void _showHospitalDetails(HospitalModel hospital) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -146,20 +175,58 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(child: Text(hospital.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold))),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                  Expanded(
+                    child: Text(
+                      hospital.name,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
                 ],
               ),
               const Divider(height: 32),
               _detailRow(Icons.email, 'Email', hospital.email),
-              _detailRow(Icons.location_on, 'Location', '${hospital.barangay}, ${hospital.city}, ${hospital.islandGroup}'),
+              _detailRow(
+                Icons.location_on,
+                'Location',
+                '${hospital.barangay}, ${hospital.city}, ${hospital.islandGroup}',
+              ),
               _detailRow(Icons.map, 'Address', hospital.address),
               _detailRow(Icons.phone, 'Contact', hospital.contactNumber),
-              _detailRow(Icons.bloodtype, 'Available Blood Types', hospital.availableBloodTypes.isEmpty ? 'None' : hospital.availableBloodTypes.join(', ')),
-              _detailRow(hospital.isActive ? Icons.check_circle : Icons.cancel, 'Status', hospital.isActive ? 'Active' : 'Inactive', color: hospital.isActive ? Colors.green : Colors.red),
-              _detailRow(Icons.calendar_today, 'Registered On', hospital.createdAt.toString().split(' ')[0]),
+              _detailRow(
+                Icons.bloodtype,
+                'Available Blood Types',
+                hospital.availableBloodTypes.isEmpty
+                    ? 'None'
+                    : hospital.availableBloodTypes.join(', '),
+              ),
+              _detailRow(
+                hospital.isActive ? Icons.check_circle : Icons.cancel,
+                'Status',
+                hospital.isActive ? 'Active' : 'Inactive',
+                color: hospital.isActive ? Colors.green : Colors.red,
+              ),
+              _detailRow(
+                Icons.calendar_today,
+                'Registered On',
+                hospital.createdAt.toString().split(' ')[0],
+              ),
               const SizedBox(height: 24),
-              SizedBox(width: double.infinity, child: ElevatedButton.icon(onPressed: () { Navigator.pop(context); _showHospitalDialog(hospital: hospital); }, icon: const Icon(Icons.edit), label: const Text('Edit Hospital Info'))),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showHospitalDialog(hospital: hospital);
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Edit Hospital Info'),
+                ),
+              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -176,18 +243,31 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
         children: [
           Icon(icon, size: 22, color: color ?? Theme.of(context).primaryColor),
           const SizedBox(width: 16),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)), Text(value, style: const TextStyle(fontSize: 16))])),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(value, style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  /**
-   * DATA FLOW: Removal of a hospital.
-   * 1. Admin confirms deletion.
-   * 2. Calls 'api.deleteHospital(id)'.
-   * 3. FASTAPI -> Firestore: Deletes the document.
-   */
+  /// DATA FLOW: Removal of a hospital.
+  /// 1. Admin confirms deletion.
+  /// 2. Calls 'api.deleteHospital(id)'.
+  /// 3. FASTAPI -> Firestore: Deletes the document.
   void _confirmDelete(String id, String name) {
     showDialog(
       context: context,
@@ -195,7 +275,10 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
         title: const Text('Delete Hospital'),
         content: Text('Are you sure you want to remove "$name"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () async {
               final navigator = Navigator.of(context);
@@ -203,7 +286,9 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
               await _api.deleteHospital(id);
               if (mounted) {
                 navigator.pop();
-                scaffoldMessenger.showSnackBar(SnackBar(content: Text('$name removed successfully')));
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(content: Text('$name removed successfully')),
+                );
               }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -213,16 +298,14 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  /**
-   * CORE LOGIC: The Hospital Registration/Edit Form.
-   * This is where the most complex data flow happens:
-   * 1. INPUT: User types name, email, address.
-   * 2. INPUT: User selects location (Island -> Region -> City -> Barangay).
-   * 3. DATA FETCH: Each dropdown selection calls 'LocationService' to get the next list (e.g., Cities in a Region).
-   * 4. AUTO-FETCH: "Fetch Coordinates" button calls 'ApiService.getCoordinatesFromAddress' 
-   *    to transform the text address into Lat/Lng for the map.
-   * 5. SUBMIT: Aggregates all data into a 'HospitalModel' and sends it to FastAPI.
-   */
+  /// CORE LOGIC: The Hospital Registration/Edit Form.
+  /// This is where the most complex data flow happens:
+  /// 1. INPUT: User types name, email, address.
+  /// 2. INPUT: User selects location (Island -> Region -> City -> Barangay).
+  /// 3. DATA FETCH: Each dropdown selection calls 'LocationService' to get the next list (e.g., Cities in a Region).
+  /// 4. AUTO-FETCH: "Fetch Coordinates" button calls 'ApiService.getCoordinatesFromAddress'
+  ///    to transform the text address into Lat/Lng for the map.
+  /// 5. SUBMIT: Aggregates all data into a 'HospitalModel' and sends it to FastAPI.
   void _showHospitalDialog({HospitalModel? hospital}) {
     final isEditing = hospital != null;
     final nameController = TextEditingController(text: hospital?.name);
@@ -232,9 +315,15 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     String? selectedCity = hospital?.city;
     String? selectedBarangay = hospital?.barangay;
     final addressController = TextEditingController(text: hospital?.address);
-    final contactController = TextEditingController(text: hospital?.contactNumber);
-    final latController = TextEditingController(text: hospital?.latitude.toString() ?? '0.0');
-    final lonController = TextEditingController(text: hospital?.longitude.toString() ?? '0.0');
+    final contactController = TextEditingController(
+      text: hospital?.contactNumber,
+    );
+    final latController = TextEditingController(
+      text: hospital?.latitude.toString() ?? '0.0',
+    );
+    final lonController = TextEditingController(
+      text: hospital?.longitude.toString() ?? '0.0',
+    );
     bool isGeocoding = false;
     bool isActive = hospital?.isActive ?? true;
 
@@ -252,21 +341,51 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          // STEP: Initializing data if editing an existing hospital.
+          /**
+           * STEP: Initialization logic for the cascading location dropdowns.
+           * If we are editing an existing hospital, we must pre-load the Regions, 
+           * Cities, and Barangays that match its current location so the 
+           * dropdowns show the correct selected values immediately.
+           */
           if (!initialized) {
             initialized = true;
             if (isEditing && selectedIsland != null) {
               Future.microtask(() async {
-                setModalState(() { isLoadingRegions = true; isLoadingCities = true; });
-                final fetchedRegions = await _locationSvc.getRegionsByIsland(selectedIsland!);
-                final fetchedCities = await _locationSvc.getCitiesByIsland(selectedIsland!);
-                setModalState(() { regions = fetchedRegions; cities = fetchedCities; isLoadingRegions = false; isLoadingCities = false; });
+                setModalState(() {
+                  isLoadingRegions = true;
+                  isLoadingCities = true;
+                });
+
+                // DATA FETCH: Get all regions and cities for the selected Island Group.
+                final fetchedRegions = await _locationSvc.getRegionsByIsland(
+                  selectedIsland!,
+                );
+                final fetchedCities = await _locationSvc.getCitiesByIsland(
+                  selectedIsland!,
+                );
+
+                setModalState(() {
+                  regions = fetchedRegions;
+                  cities = fetchedCities;
+                  isLoadingRegions = false;
+                  isLoadingCities = false;
+                });
+
+                // DATA FETCH: If a city is already selected, fetch its specific Barangays.
                 if (selectedCity != null) {
-                  final cityMatch = fetchedCities.firstWhere((c) => c['name'] == selectedCity, orElse: () => {});
+                  final cityMatch = fetchedCities.firstWhere(
+                    (c) => c['name'] == selectedCity,
+                    orElse: () => {},
+                  );
                   if (cityMatch.isNotEmpty) {
                     setModalState(() => isLoadingBarangays = true);
-                    final fetchedBarangays = await _locationSvc.getBarangays(cityMatch['code']);
-                    setModalState(() { barangays = fetchedBarangays; isLoadingBarangays = false; });
+                    final fetchedBarangays = await _locationSvc.getBarangays(
+                      cityMatch['code'],
+                    );
+                    setModalState(() {
+                      barangays = fetchedBarangays;
+                      isLoadingBarangays = false;
+                    });
                   }
                 }
               });
@@ -274,141 +393,384 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
           }
 
           return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(isEditing ? 'Edit Hospital' : 'Register New Hospital', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    isEditing ? 'Edit Hospital' : 'Register New Hospital',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   Form(
                     key: _formKey,
                     child: Column(
                       children: [
-                        CustomTextField(label: 'Hospital Name', controller: nameController, validator: (v) => v == null || v.isEmpty ? 'Name is required' : null),
-                        CustomTextField(label: 'Email', controller: emailController, keyboardType: TextInputType.emailAddress, validator: (v) { if (v == null || v.isEmpty) return 'Email is required'; if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return 'Enter a valid email'; return null; }),
-                        
+                        CustomTextField(
+                          label: 'Hospital Name',
+                          controller: nameController,
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Name is required'
+                              : null,
+                        ),
+                        CustomTextField(
+                          label: 'Email',
+                          controller: emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Email is required';
+                            }
+                            if (!RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            ).hasMatch(v)) {
+                              return 'Enter a valid email';
+                            }
+                            return null;
+                          },
+                        ),
+
                         // ISLAND DROPDOWN: The starting point for location selection.
                         DropdownButtonFormField<String>(
-                          value: selectedIsland,
-                          decoration: const InputDecoration(labelText: 'Island Group'),
-                          items: ['Luzon', 'Visayas', 'Mindanao'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                          initialValue: selectedIsland,
+                          decoration: const InputDecoration(
+                            labelText: 'Island Group',
+                          ),
+                          items: ['Luzon', 'Visayas', 'Mindanao']
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList(),
                           onChanged: (v) async {
-                            setModalState(() { selectedIsland = v; selectedRegionName = null; selectedCity = null; selectedBarangay = null; regions = []; cities = []; barangays = []; isLoadingRegions = true; });
+                            setModalState(() {
+                              selectedIsland = v;
+                              selectedRegionName = null;
+                              selectedCity = null;
+                              selectedBarangay = null;
+                              regions = [];
+                              cities = [];
+                              barangays = [];
+                              isLoadingRegions = true;
+                            });
                             if (v != null) {
-                              final fetchedRegions = await _locationSvc.getRegionsByIsland(v);
-                              setModalState(() { regions = fetchedRegions; isLoadingRegions = false; });
+                              final fetchedRegions = await _locationSvc
+                                  .getRegionsByIsland(v);
+                              setModalState(() {
+                                regions = fetchedRegions;
+                                isLoadingRegions = false;
+                              });
                             }
                           },
                           validator: (v) => v == null ? 'Required' : null,
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // REGION DROPDOWN: Populated after Island selection.
                         if (selectedIsland != null)
-                          Column(children: [
-                            if (isLoadingRegions) const LinearProgressIndicator()
-                            else DropdownButtonFormField<String>(
-                              value: regions.any((r) => r['name'] == selectedRegionName) ? regions.firstWhere((r) => r['name'] == selectedRegionName)['code'] : null,
-                              decoration: const InputDecoration(labelText: 'Region'),
-                              items: regions.map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(value: e['code'], child: Text(e['name']))).toList(),
-                              onChanged: (v) async {
-                                final regName = regions.firstWhere((r) => r['code'] == v)['name'];
-                                setModalState(() { selectedRegionName = regName; selectedCity = null; selectedBarangay = null; cities = []; barangays = []; isLoadingCities = true; });
-                                if (v != null) {
-                                  final fetchedCities = await _locationSvc.getCitiesAndMunicipalities(v);
-                                  setModalState(() { cities = fetchedCities; isLoadingCities = false; });
-                                }
-                              },
-                              validator: (v) => v == null ? 'Required' : null,
-                            ),
-                            const SizedBox(height: 16),
-                          ]),
+                          Column(
+                            children: [
+                              if (isLoadingRegions)
+                                const LinearProgressIndicator()
+                              else
+                                DropdownButtonFormField<String>(
+                                  initialValue:
+                                      regions.any(
+                                        (r) => r['name'] == selectedRegionName,
+                                      )
+                                      ? regions.firstWhere(
+                                          (r) =>
+                                              r['name'] == selectedRegionName,
+                                        )['code']
+                                      : null,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Region',
+                                  ),
+                                  items: regions
+                                      .map<DropdownMenuItem<String>>(
+                                        (e) => DropdownMenuItem<String>(
+                                          value: e['code'],
+                                          child: Text(e['name']),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) async {
+                                    final regName = regions.firstWhere(
+                                      (r) => r['code'] == v,
+                                    )['name'];
+                                    setModalState(() {
+                                      selectedRegionName = regName;
+                                      selectedCity = null;
+                                      selectedBarangay = null;
+                                      cities = [];
+                                      barangays = [];
+                                      isLoadingCities = true;
+                                    });
+                                    if (v != null) {
+                                      final fetchedCities = await _locationSvc
+                                          .getCitiesAndMunicipalities(v);
+                                      setModalState(() {
+                                        cities = fetchedCities;
+                                        isLoadingCities = false;
+                                      });
+                                    }
+                                  },
+                                  validator: (v) =>
+                                      v == null ? 'Required' : null,
+                                ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
 
                         // CITY DROPDOWN: Populated after Region selection.
                         if (cities.isNotEmpty || isLoadingCities)
-                          Column(children: [
-                            if (isLoadingCities) const LinearProgressIndicator()
-                            else DropdownButtonFormField<String>(
-                              value: cities.any((c) => c['name'] == selectedCity) ? cities.firstWhere((c) => c['name'] == selectedCity)['code'] : null,
-                              decoration: const InputDecoration(labelText: 'City'),
-                              items: cities.map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(value: e['code'], child: Text(e['name']))).toList(),
-                              onChanged: (v) async {
-                                final cityName = cities.firstWhere((c) => c['code'] == v)['name'];
-                                setModalState(() { selectedCity = cityName; selectedBarangay = null; barangays = []; isLoadingBarangays = true; });
-                                if (v != null) {
-                                  final fetchedBarangays = await _locationSvc.getBarangays(v);
-                                  setModalState(() { barangays = fetchedBarangays; isLoadingBarangays = false; });
-                                }
-                              },
-                              validator: (v) => v == null ? 'Required' : null,
-                            ),
-                            const SizedBox(height: 16),
-                          ]),
+                          Column(
+                            children: [
+                              if (isLoadingCities)
+                                const LinearProgressIndicator()
+                              else
+                                DropdownButtonFormField<String>(
+                                  initialValue:
+                                      cities.any(
+                                        (c) => c['name'] == selectedCity,
+                                      )
+                                      ? cities.firstWhere(
+                                          (c) => c['name'] == selectedCity,
+                                        )['code']
+                                      : null,
+                                  decoration: const InputDecoration(
+                                    labelText: 'City',
+                                  ),
+                                  items: cities
+                                      .map<DropdownMenuItem<String>>(
+                                        (e) => DropdownMenuItem<String>(
+                                          value: e['code'],
+                                          child: Text(e['name']),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) async {
+                                    final cityName = cities.firstWhere(
+                                      (c) => c['code'] == v,
+                                    )['name'];
+                                    setModalState(() {
+                                      selectedCity = cityName;
+                                      selectedBarangay = null;
+                                      barangays = [];
+                                      isLoadingBarangays = true;
+                                    });
+                                    if (v != null) {
+                                      final fetchedBarangays =
+                                          await _locationSvc.getBarangays(v);
+                                      setModalState(() {
+                                        barangays = fetchedBarangays;
+                                        isLoadingBarangays = false;
+                                      });
+                                    }
+                                  },
+                                  validator: (v) =>
+                                      v == null ? 'Required' : null,
+                                ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
 
                         // BARANGAY DROPDOWN: The most granular selection.
                         if (barangays.isNotEmpty || isLoadingBarangays)
-                          Column(children: [
-                            if (isLoadingBarangays) const LinearProgressIndicator()
-                            else DropdownButtonFormField<String>(
-                              value: barangays.any((b) => b['name'] == selectedBarangay) ? barangays.firstWhere((b) => b['name'] == selectedBarangay)['code'] : null,
-                              decoration: const InputDecoration(labelText: 'Barangay'),
-                              items: barangays.map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(value: e['code'], child: Text(e['name']))).toList(),
-                              onChanged: (v) {
-                                final bName = barangays.firstWhere((b) => b['code'] == v)['name'];
-                                setModalState(() => selectedBarangay = bName);
-                              },
-                              validator: (v) => v == null ? 'Required' : null,
-                            ),
-                            const SizedBox(height: 16),
-                          ]),
+                          Column(
+                            children: [
+                              if (isLoadingBarangays)
+                                const LinearProgressIndicator()
+                              else
+                                DropdownButtonFormField<String>(
+                                  initialValue:
+                                      barangays.any(
+                                        (b) => b['name'] == selectedBarangay,
+                                      )
+                                      ? barangays.firstWhere(
+                                          (b) => b['name'] == selectedBarangay,
+                                        )['code']
+                                      : null,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Barangay',
+                                  ),
+                                  items: barangays
+                                      .map<DropdownMenuItem<String>>(
+                                        (e) => DropdownMenuItem<String>(
+                                          value: e['code'],
+                                          child: Text(e['name']),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) {
+                                    final bName = barangays.firstWhere(
+                                      (b) => b['code'] == v,
+                                    )['name'];
+                                    setModalState(
+                                      () => selectedBarangay = bName,
+                                    );
+                                  },
+                                  validator: (v) =>
+                                      v == null ? 'Required' : null,
+                                ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
 
-                        CustomTextField(label: 'Street Address', controller: addressController, validator: (v) => v == null || v.isEmpty ? 'Address is required' : null),
-                        CustomTextField(label: 'Contact Number', controller: contactController, keyboardType: TextInputType.phone, validator: (v) { if (v == null || v.isEmpty) return 'Contact is required'; if (v.length < 7) return 'Invalid contact number'; return null; }),
+                        CustomTextField(
+                          label: 'Street Address',
+                          controller: addressController,
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Address is required'
+                              : null,
+                        ),
+                        CustomTextField(
+                          label: 'Contact Number',
+                          controller: contactController,
+                          keyboardType: TextInputType.phone,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Contact is required';
+                            }
+                            if (v.length < 7) return 'Invalid contact number';
+                            return null;
+                          },
+                        ),
                         const SizedBox(height: 16),
 
                         // COORDINATES: Manual entry or auto-fetched via the 'Search' button.
-                        Row(children: [
-                          Expanded(child: CustomTextField(label: 'Latitude', controller: latController, keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) => v == null || v.isEmpty ? 'Required' : double.tryParse(v) == null ? 'Invalid' : null)),
-                          const SizedBox(width: 16),
-                          Expanded(child: CustomTextField(label: 'Longitude', controller: lonController, keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) => v == null || v.isEmpty ? 'Required' : double.tryParse(v) == null ? 'Invalid' : null)),
-                        ]),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: CustomTextField(
+                                label: 'Latitude',
+                                controller: latController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                validator: (v) => v == null || v.isEmpty
+                                    ? 'Required'
+                                    : double.tryParse(v) == null
+                                    ? 'Invalid'
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: CustomTextField(
+                                label: 'Longitude',
+                                controller: lonController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                validator: (v) => v == null || v.isEmpty
+                                    ? 'Required'
+                                    : double.tryParse(v) == null
+                                    ? 'Invalid'
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 8),
 
                         // GEOCREATION ACTION: Calls 'ApiService.getCoordinatesFromAddress' with the formatted address.
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: isGeocoding ? null : () async {
-                              if (selectedCity == null || addressController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter address and city first'), backgroundColor: Colors.orange));
-                                return;
-                              }
-                              setModalState(() => isGeocoding = true);
-                              try {
-                                final query = '${addressController.text}, ${selectedBarangay ?? ""}, $selectedCity, Philippines';
-                                final locations = await _api.getCoordinatesFromAddress(query);
-                                if (locations != null) {
-                                  latController.text = locations.latitude.toString();
-                                  lonController.text = locations.longitude.toString();
-                                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Coordinates fetched successfully!'), backgroundColor: Colors.green));
-                                }
-                              } finally { setModalState(() => isGeocoding = false); }
-                            },
-                            icon: isGeocoding ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.location_searching),
-                            label: Text(isGeocoding ? 'Fetching...' : 'Fetch Coordinates from Address'),
+                            onPressed: isGeocoding
+                                ? null
+                                : () async {
+                                    if (selectedCity == null ||
+                                        addressController.text.isEmpty) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Please enter address and city first',
+                                          ),
+                                          backgroundColor: Colors.orange,
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    setModalState(() => isGeocoding = true);
+                                    try {
+                                      final query =
+                                          '${addressController.text}, ${selectedBarangay ?? ""}, $selectedCity, Philippines';
+                                      final locations = await _api
+                                          .getCoordinatesFromAddress(query);
+                                      if (locations != null) {
+                                        latController.text = locations.latitude
+                                            .toString();
+                                        lonController.text = locations.longitude
+                                            .toString();
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Coordinates fetched successfully!',
+                                              ),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    } finally {
+                                      setModalState(() => isGeocoding = false);
+                                    }
+                                  },
+                            icon: isGeocoding
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.location_searching),
+                            label: Text(
+                              isGeocoding
+                                  ? 'Fetching...'
+                                  : 'Fetch Coordinates from Address',
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        SwitchListTile(title: const Text('Active Status'), subtitle: Text(isActive ? 'Hospital is searchable' : 'Hospital is hidden'), value: isActive, onChanged: (v) => setModalState(() => isActive = v)),
+                        SwitchListTile(
+                          title: const Text('Active Status'),
+                          subtitle: Text(
+                            isActive
+                                ? 'Hospital is searchable'
+                                : 'Hospital is hidden',
+                          ),
+                          value: isActive,
+                          onChanged: (v) => setModalState(() => isActive = v),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // FINAL SUBMIT: Sends the completed 'HospitalModel' to the backend.
+                  /**
+                   * ACTION: Submit the form.
+                   * RECEIVED FROM: User inputs in text fields and dropdowns.
+                   * SENT TO: `ApiService.addHospital` or `ApiService.updateHospital`.
+                   */
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -427,15 +789,33 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                           contactNumber: contactController.text,
                           latitude: double.tryParse(latController.text) ?? 0.0,
                           longitude: double.tryParse(lonController.text) ?? 0.0,
-                          availableBloodTypes: hospital?.availableBloodTypes ?? [],
+                          availableBloodTypes:
+                              hospital?.availableBloodTypes ?? [],
                           isActive: isActive,
                           createdAt: hospital?.createdAt ?? DateTime.now(),
                         );
                         final navigator = Navigator.of(context);
                         final scaffoldMessenger = ScaffoldMessenger.of(context);
-                        if (isEditing) await _api.updateHospital(hospital.id!, updatedHospital);
-                        else await _api.addHospital(updatedHospital);
-                        if (mounted) { navigator.pop(); scaffoldMessenger.showSnackBar(SnackBar(content: Text(isEditing ? 'Hospital updated successfully' : 'Hospital registered successfully'))); }
+                        if (isEditing) {
+                          await _api.updateHospital(
+                            hospital.id!,
+                            updatedHospital,
+                          );
+                        } else {
+                          await _api.addHospital(updatedHospital);
+                        }
+                        if (mounted) {
+                          navigator.pop();
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isEditing
+                                    ? 'Hospital updated successfully'
+                                    : 'Hospital registered successfully',
+                              ),
+                            ),
+                          );
+                        }
                       },
                       child: Text(isEditing ? 'Save Changes' : 'Register'),
                     ),

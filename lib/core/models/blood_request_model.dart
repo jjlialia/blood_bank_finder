@@ -1,23 +1,22 @@
-/**
- * FILE: blood_request_model.dart
- * 
- * DESCRIPTION:
- * This file defines the 'BloodRequestModel', which tracks a single event of 
- * requesting or donating blood. It connects a User to a Hospital.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - Request/Donate UI: Users fill out forms to create these requests.
- *    - Firestore: Fetched for history views and admin dashboards.
- * 2. PROCESSING:
- *    - Categorizes the action as either 'Request' (needing blood) or 'Donate' (giving blood).
- *    - Tracks the 'status' (pending -> approved -> completed/rejected).
- *    - Stores administrative feedback via 'adminMessage'.
- * 3. SENDS DATA TO:
- *    - FastAPI (via 'toJson'): ALL new requests are sent through the API for security.
- *    - Firestore: For updates (status changes) or historical record keeping.
- *    - Notifications: When a status changes, this data is used to alert the user.
- */
+/// FILE: blood_request_model.dart
+///
+/// DESCRIPTION:
+/// This file defines the 'BloodRequestModel', which tracks a single event of
+/// requesting or donating blood. It connects a User to a Hospital.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - Request/Donate UI: Users fill out forms to create these requests.
+///    - Firestore: Fetched for history views and admin dashboards.
+/// 2. PROCESSING:
+///    - Categorizes the action as either 'Request' (needing blood) or 'Donate' (giving blood).
+///    - Tracks the 'status' (pending -> approved -> completed/rejected).
+///    - Stores administrative feedback via 'adminMessage'.
+/// 3. SENDS DATA TO:
+///    - FastAPI (via 'toJson'): ALL new requests are sent through the API for security.
+///    - Firestore: For updates (status changes) or historical record keeping.
+///    - Notifications: When a status changes, this data is used to alert the user.
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -27,22 +26,22 @@ class BloodRequestModel {
   // The person making the request/donation.
   final String userId;
   final String userName;
-  
+
   // The action type: 'Request' (Patient Needs) vs 'Donate' (Donor Gives).
-  final String type; 
+  final String type;
   final String bloodType;
-  
+
   // Current state: 'pending', 'approved', 'completed', or 'rejected'.
-  final String status; 
-  
+  final String status;
+
   // The hospital where the request is handled.
   final String hospitalId;
   final String hospitalName;
-  
+
   final String contactNumber;
   final double quantity; // E.g., 500ml or 1 unit.
   final DateTime createdAt;
-  
+
   // Optional feedback from an admin (e.g., "Bring your ID").
   final String? adminMessage;
 
@@ -61,9 +60,7 @@ class BloodRequestModel {
     this.adminMessage,
   });
 
-  /**
-   * STEP: Reconstructs a 'BloodRequestModel' from Firestore data.
-   */
+  /// STEP: Reconstructs a 'BloodRequestModel' from Firestore data.
   factory BloodRequestModel.fromMap(
     Map<String, dynamic> data,
     String documentId,
@@ -84,9 +81,7 @@ class BloodRequestModel {
     );
   }
 
-  /**
-   * STEP: Prepares data for Firestore database updates.
-   */
+  /// STEP: Prepares data for Firestore database updates.
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
@@ -103,10 +98,8 @@ class BloodRequestModel {
     };
   }
 
-  /**
-   * STEP: Prepares data for the FastAPI backend.
-   * This is the primary way NEW requests are saved to the system.
-   */
+  /// STEP: Prepares data for the FastAPI backend.
+  /// This is the primary way NEW requests are saved to the system.
   Map<String, dynamic> toJson() {
     return {
       'userId': userId,

@@ -24,7 +24,7 @@ DATA FLOW OVERVIEW:
 from google.cloud import firestore
 from datetime import datetime
 from typing import List, Optional
-from ..models import (
+from app.models import (
     UserCreate, UserResponse, HospitalCreate, HospitalResponse, 
     BloodRequestCreate, BloodRequestResponse, InventoryCreate, 
     InventoryResponse, NotificationCreate, NotificationResponse

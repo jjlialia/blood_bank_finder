@@ -24,19 +24,24 @@ from fastapi import APIRouter, HTTPException, Query
 import urllib.request
 import urllib.parse
 import json
-from ..config import get_google_maps_key
+from app.config import get_google_maps_key
 
 router = APIRouter(prefix="/geocoding", tags=["geocoding"])
 
 @router.get("/")
 async def get_coordinates(address: str = Query(..., description="The address to geocode")):
     """
-    USER INPUT: Admin clicks "Fetch Coordinates from Address".
-    DATA FLOW: Flutter -> This Backend Handler -> Google Maps API -> Coordinates returned to Flutter.
+    RECEIVED FROM: ApiService.getCoordinatesFromAddress (Flutter Web).
+    SENT TO: Google Maps Geocoding API (External).
     """
     api_key = get_google_maps_key()
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Google Maps API key not configured")
+    
     # Ensure the address is URL-safe (converts spaces to %20, etc.)
     encoded_address = urllib.parse.quote(address)
+    
+    # STEP: Forward request to Google Maps.
     url = f"https://maps.googleapis.com/maps/api/geocode/json?address={encoded_address}&key={api_key}"
     
     try:
@@ -47,10 +52,8 @@ async def get_coordinates(address: str = Query(..., description="The address to 
             # STEP: Validate Google's response status.
             if data["status"] == "OK":
                 location = data["results"][0]["geometry"]["location"]
-                return {
-                    "latitude": location["lat"],
-                    "longitude": location["lng"]
-                }
+                # OUTPUT: Forward results back to Flutter.
+                return {"latitude": location["lat"], "longitude": location["lng"]}
             elif data["status"] == "ZERO_RESULTS":
                 raise HTTPException(status_code=404, detail="No coordinates found for this address")
             else:

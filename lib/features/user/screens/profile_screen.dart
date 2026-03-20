@@ -1,26 +1,25 @@
-/**
- * FILE: profile_screen.dart
- * 
- * DESCRIPTION:
- * This screen allows users to view and manage their personal profile.
- * It toggles between a read-only display mode and an interactive edit mode.
- * 
- * DATA FLOW OVERVIEW:
- * 1. RECEIVES DATA FROM: 
- *    - 'AuthProvider': Provides the 'UserModel' for the currently logged-in user.
- * 2. PROCESSING:
- *    - Initialization: Populates text controllers with the current user's data on startup.
- *    - Edit/Cancel Logic: Manages state to show/hide input fields and reset them if the user cancels.
- *    - Profile Update Construction: Creates a new 'UserModel' mapping the original 
- *      immutable fields (ID, role, email) with the new values from the text fields.
- * 3. SENDS DATA TO: 
- *    - 'ApiService.saveUser': Sends the updated profile to the FastAPI backend.
- *    - 'AuthProvider.logout': Clears the local session and redirects to the login screen.
- * 4. OUTPUTS/GUI:
- *    - A profile header with avatar.
- *    - A list of cards (read mode) or a form with TextFields (edit mode).
- *    - Toast notifications for success/failure of the save operation.
- */
+/// FILE: profile_screen.dart
+///
+/// DESCRIPTION:
+/// This screen allows users to view and manage their personal profile.
+/// It toggles between a read-only display mode and an interactive edit mode.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Provides the 'UserModel' for the currently logged-in user.
+/// 2. PROCESSING:
+///    - Initialization: Populates text controllers with the current user's data on startup.
+///    - Edit/Cancel Logic: Manages state to show/hide input fields and reset them if the user cancels.
+///    - Profile Update Construction: Creates a new 'UserModel' mapping the original
+///      immutable fields (ID, role, email) with the new values from the text fields.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.saveUser': Sends the updated profile to the FastAPI backend.
+///    - 'AuthProvider.logout': Clears the local session and redirects to the login screen.
+/// 4. OUTPUTS/GUI:
+///    - A profile header with avatar.
+///    - A list of cards (read mode) or a form with TextFields (edit mode).
+///    - Toast notifications for success/failure of the save operation.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +37,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final ApiService _api = ApiService();
-  
+
   // STATE: Controls if we are viewing or editing.
   bool _isEditing = false;
   bool _isLoading = false;
@@ -72,13 +71,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  /**
-   * CORE LOGIC: Profile Update Data Flow.
-   * 1. Validates the form fields.
-   * 2. Re-packages the original 'currentUser' data with the new values from the controllers.
-   * 3. SENDS: Call 'api.saveUser(updatedUser)'.
-   * 4. UI: Shows 'isLoading' during the network call and closes edit mode on success.
-   */
+  /// CORE LOGIC: Profile Update Data Flow.
+  /// 1. Validates the form fields.
+  /// 2. Re-packages the original 'currentUser' data with the new values from the controllers.
+  /// 3. SENDS: Call 'api.saveUser(updatedUser)'.
+  /// 4. UI: Shows 'isLoading' during the network call and closes edit mode on success.
   Future<void> _saveProfile(UserModel currentUser) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -115,9 +112,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to update profile: $e')));
       }
     } finally {
       if (mounted) {
@@ -167,7 +164,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: Theme.of(context).primaryColor,
-                      child: const Icon(Icons.person, size: 60, color: Colors.white),
+                      child: const Icon(
+                        Icons.person,
+                        size: 60,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -175,47 +176,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (!_isEditing) ...[
                       Text(
                         '${user.firstName} ${user.lastName}',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      Text(user.email, style: const TextStyle(color: Colors.grey)),
+                      Text(
+                        user.email,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
                       const SizedBox(height: 30),
-                      _buildProfileItem(Icons.bloodtype, 'Blood Group', user.bloodGroup),
+                      _buildProfileItem(
+                        Icons.bloodtype,
+                        'Blood Group',
+                        user.bloodGroup,
+                      ),
                       _buildProfileItem(Icons.phone, 'Contact', user.mobile),
                       _buildProfileItem(Icons.location_city, 'City', user.city),
                       _buildProfileItem(Icons.home, 'Address', user.address),
-                      _buildProfileItem(Icons.admin_panel_settings, 'Role', user.role.toUpperCase()),
-                    ] 
+                      _buildProfileItem(
+                        Icons.admin_panel_settings,
+                        'Role',
+                        user.role.toUpperCase(),
+                      ),
+                    ]
                     // --- EDIT MODE: Receiving User INPUT ---
                     else ...[
                       const SizedBox(height: 10),
                       TextFormField(
                         controller: _firstNameCtrl,
-                        decoration: const InputDecoration(labelText: 'First Name', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person)),
+                        decoration: const InputDecoration(
+                          labelText: 'First Name',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
                         validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _lastNameCtrl,
-                        decoration: const InputDecoration(labelText: 'Last Name', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person_outline)),
+                        decoration: const InputDecoration(
+                          labelText: 'Last Name',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
                         validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _mobileCtrl,
-                        decoration: const InputDecoration(labelText: 'Contact Number', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone)),
+                        decoration: const InputDecoration(
+                          labelText: 'Contact Number',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.phone),
+                        ),
                         keyboardType: TextInputType.phone,
                         validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _cityCtrl,
-                        decoration: const InputDecoration(labelText: 'City', border: OutlineInputBorder(), prefixIcon: Icon(Icons.location_city)),
+                        decoration: const InputDecoration(
+                          labelText: 'City',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.location_city),
+                        ),
                         validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _addressCtrl,
-                        decoration: const InputDecoration(labelText: 'Detailed Address', border: OutlineInputBorder(), prefixIcon: Icon(Icons.home)),
+                        decoration: const InputDecoration(
+                          labelText: 'Detailed Address',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.home),
+                        ),
                         maxLines: 2,
                         validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
@@ -225,12 +258,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : () => _saveProfile(user),
+                          onPressed: _isLoading
+                              ? null
+                              : () => _saveProfile(user),
                           icon: _isLoading
-                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
                               : const Icon(Icons.save),
-                          label: Text(_isLoading ? 'Saving...' : 'Save Changes'),
-                          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor, foregroundColor: Colors.white),
+                          label: Text(
+                            _isLoading ? 'Saving...' : 'Save Changes',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -244,11 +291,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: OutlinedButton.icon(
                           onPressed: () {
                             auth.logout();
-                            Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/login',
+                              (route) => false,
+                            );
                           },
                           icon: const Icon(Icons.logout, color: Colors.red),
-                          label: const Text('Logout', style: TextStyle(color: Colors.red)),
-                          style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red)),
+                          label: const Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                          ),
                         ),
                       ),
                   ],
@@ -270,8 +325,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                Text(value.isEmpty ? 'Not Provided' : value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                Text(
+                  value.isEmpty ? 'Not Provided' : value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
