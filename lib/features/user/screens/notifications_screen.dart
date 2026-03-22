@@ -1,24 +1,3 @@
-/// FILE: notifications_screen.dart
-///
-/// DESCRIPTION:
-/// This screen displays the user's Inbox for all system alerts.
-/// It primarily notifies users when their blood requests or donations
-/// are approved, rejected, or updated by hospital admins.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'FirebaseFirestore': Streams data in real-time from the 'notifications' collection.
-///    - 'AuthProvider': Provides the 'userId' used to filter the stream.
-/// 2. PROCESSING:
-///    - Real-time Streaming: Uses 'StreamBuilder' to update the UI the second a
-///      backend admin approves a request.
-///    - Mark-as-Read Logic: Updates the Firestore document field 'isRead' to true
-///      when the user taps an item.
-/// 3. SENDS DATA TO:
-///    - 'FirebaseFirestore': To update the 'isRead' status.
-/// 4. OUTPUTS/GUI:
-///    - A vertical list of alert cards with status-specific icons.
-///    - A bottom sheet 'Details' view for long messages or admin instructions.
 library;
 
 import 'package:flutter/material.dart';
@@ -262,3 +241,25 @@ class NotificationsScreen extends StatelessWidget {
     return '${date.day}/${date.month} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
+
+/// FILE: notifications_screen.dart
+///
+/// DESCRIPTION:
+/// This screen displays the user's Inbox for all system alerts.
+/// It primarily notifies users when their blood requests or donations
+/// are approved, rejected, or updated by hospital admins.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'FirebaseFirestore': Streams data in real-time from the 'notifications' collection.
+///    - 'AuthProvider': Provides the 'userId' used to filter the stream.
+/// 2. PROCESSING:
+///    - Real-time Streaming: Uses 'StreamBuilder' to update the UI the second a
+///      backend admin approves a request.
+///    - Mark-as-Read Logic: Updates the Firestore document field 'isRead' to true
+///      when the user taps an item.
+/// 3. SENDS DATA TO:
+///    - 'FirebaseFirestore': To update the 'isRead' status.
+/// 4. OUTPUTS/GUI:
+///    - A vertical list of alert cards with status-specific icons.
+///    - A bottom sheet 'Details' view for long messages or admin instructions.

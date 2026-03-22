@@ -1,28 +1,3 @@
-/// FILE: manage_users_screen.dart
-///
-/// DESCRIPTION:
-/// A directory and management console for Super Admins to oversee all users.
-/// Supports searching, banning/unbanning accounts, and promoting users
-/// to Hospital Admin roles with specific site assignments.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamAllUsers': Fetches a live list of every
-///      registered account in the system.
-///    - 'DatabaseService.streamHospitals': Populates the "Assign Hospital"
-///      dropdown for admins.
-/// 2. PROCESSING:
-///    - Search Filtering: Re-renders the list based on name or email matches
-///      in the text controller.
-///    - Security Logic: Explicitly hides other 'superadmin' accounts from
-///      the list to prevent self-deletion or unauthorized changes.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.toggleUserBan': Communicates with FastAPI to lock/unlock accounts.
-///    - 'ApiService.updateUserRole': Promotes or demotes users and links them
-///      to a hospital ID.
-/// 4. OUTPUTS/GUI:
-///    - Searchable list with ban switches and edit dialogs.
-///    - Dynamic role-editing modal that adjusts fields based on selected role.
 library;
 
 import 'package:flutter/material.dart';
@@ -235,3 +210,29 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 }
+
+/// FILE: manage_users_screen.dart
+///
+/// DESCRIPTION:
+/// A directory and management console for Super Admins to oversee all users.
+/// Supports searching, banning/unbanning accounts, and promoting users
+/// to Hospital Admin roles with specific site assignments.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamAllUsers': Fetches a live list of every
+///      registered account in the system.
+///    - 'DatabaseService.streamHospitals': Populates the "Assign Hospital"
+///      dropdown for admins.
+/// 2. PROCESSING:
+///    - Search Filtering: Re-renders the list based on name or email matches
+///      in the text controller.
+///    - Security Logic: Explicitly hides other 'superadmin' accounts from
+///      the list to prevent self-deletion or unauthorized changes.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.toggleUserBan': Communicates with FastAPI to lock/unlock accounts.
+///    - 'ApiService.updateUserRole': Promotes or demotes users and links them
+///      to a hospital ID.
+/// 4. OUTPUTS/GUI:
+///    - Searchable list with ban switches and edit dialogs.
+///    - Dynamic role-editing modal that adjusts fields based on selected role.

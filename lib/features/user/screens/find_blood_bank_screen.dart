@@ -1,24 +1,3 @@
-/// FILE: find_blood_bank_screen.dart
-///
-/// DESCRIPTION:
-/// This screen is the main interface for users to locate blood banks and hospitals.
-/// It provides both a List View and a Map View, with advanced filtering by
-/// geographical location (Island, Region, City, Barangay) and name search.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamHospitals': A real-time stream of all active hospitals.
-///    - 'LocationService': Provides the lists of Islands, Regions, Cities, etc., for the filter chips.
-///    - 'ApiService.getCoordinatesFromAddress': Fetches Lat/Lng to move the map when a location is selected.
-/// 2. PROCESSING:
-///    - Local State Management: Tracks search queries, selected filters, and Map/List toggle.
-///    - Filtering Logic: Client-side filtering of the hospital stream based on the 'searchQuery'.
-///    - Coordinate Conversion: When a user selects a City, it asks the API for coordinates to center the map there.
-/// 3. SENDS DATA TO:
-///    - 'HospitalMapView': Passes the filtered list of hospitals and map center to the custom map widget.
-///    - Hospital Detail Modal: Displays specific hospital data when a user taps a card or marker.
-/// 4. OUTPUTS/GUI:
-///    - A searchable, filterable list of cards or interactive map pins.
 library;
 
 import 'package:flutter/material.dart';
@@ -569,3 +548,25 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     }
   }
 }
+
+/// FILE: find_blood_bank_screen.dart
+///
+/// DESCRIPTION:
+/// This screen is the main interface for users to locate blood banks and hospitals.
+/// It provides both a List View and a Map View, with advanced filtering by
+/// geographical location (Island, Region, City, Barangay) and name search.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamHospitals': A real-time stream of all active hospitals.
+///    - 'LocationService': Provides the lists of Islands, Regions, Cities, etc., for the filter chips.
+///    - 'ApiService.getCoordinatesFromAddress': Fetches Lat/Lng to move the map when a location is selected.
+/// 2. PROCESSING:
+///    - Local State Management: Tracks search queries, selected filters, and Map/List toggle.
+///    - Filtering Logic: Client-side filtering of the hospital stream based on the 'searchQuery'.
+///    - Coordinate Conversion: When a user selects a City, it asks the API for coordinates to center the map there.
+/// 3. SENDS DATA TO:
+///    - 'HospitalMapView': Passes the filtered list of hospitals and map center to the custom map widget.
+///    - Hospital Detail Modal: Displays specific hospital data when a user taps a card or marker.
+/// 4. OUTPUTS/GUI:
+///    - A searchable, filterable list of cards or interactive map pins.

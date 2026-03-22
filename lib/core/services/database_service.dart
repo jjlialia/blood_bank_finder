@@ -1,27 +1,3 @@
-/// FILE: database_service.dart
-///
-/// DESCRIPTION:
-/// This file is responsible for all DIRECT read operations from Firebase Firestore.
-/// While 'api_service.dart' handles writing data through the FastAPI backend, this service
-/// focuses on retrieving that data in real-time using Streams and one-time Gets.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - Firebase Firestore (Cloud Database) via the 'cloud_firestore' package.
-/// 2. PROCESSING:
-///    - Listens to document/collection snapshots (real-time updates).
-///    - Maps raw Firestore Map data into structured Flutter models (UserModel, HospitalModel, etc.).
-///    - Filters hospital data based on geographical location (Island Group, Region, etc.).
-/// 3. SENDS DATA TO:
-///    - UI Screens (e.g., FindBloodBankScreen, HistoryScreen, Dashboard) via Streams and Futures.
-/// 4. OUTPUTS/RESPONSES:
-///    - Returns structured 'Model' objects or 'List<Model>' for the UI to display.
-///
-/// KEY COMPONENTS:
-/// - streamUser: Provides real-time profile updates for the currently logged-in user.
-/// - streamHospitals: Fetches and filters hospitals for the map and list views.
-/// - streamAllBloodRequests: Allows admins to monitor all donation/request activity.
-/// - streamInventory: Shows current blood supply levels for specific hospitals.
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -191,3 +167,28 @@ class DatabaseService {
         });
   }
 }
+
+/// FILE: database_service.dart
+///
+/// DESCRIPTION:
+/// This file is responsible for all DIRECT read operations from Firebase Firestore.
+/// While 'api_service.dart' handles writing data through the FastAPI backend, this service
+/// focuses on retrieving that data in real-time using Streams and one-time Gets.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - Firebase Firestore (Cloud Database) via the 'cloud_firestore' package.
+/// 2. PROCESSING:
+///    - Listens to document/collection snapshots (real-time updates).
+///    - Maps raw Firestore Map data into structured Flutter models (UserModel, HospitalModel, etc.).
+///    - Filters hospital data based on geographical location (Island Group, Region, etc.).
+/// 3. SENDS DATA TO:
+///    - UI Screens (e.g., FindBloodBankScreen, HistoryScreen, Dashboard) via Streams and Futures.
+/// 4. OUTPUTS/RESPONSES:
+///    - Returns structured 'Model' objects or 'List<Model>' for the UI to display.
+///
+/// KEY COMPONENTS:
+/// - streamUser: Provides real-time profile updates for the currently logged-in user.
+/// - streamHospitals: Fetches and filters hospitals for the map and list views.
+/// - streamAllBloodRequests: Allows admins to monitor all donation/request activity.
+/// - streamInventory: Shows current blood supply levels for specific hospitals.

@@ -1,26 +1,3 @@
-/// FILE: super_admin_dashboard.dart
-///
-/// DESCRIPTION:
-/// The primary system command center. It provides the Super Admin with a
-/// macro-level view of the entire platform's health, aggregating data
-/// across all users and all hospital facilities.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamAllUsers': For total population count.
-///    - 'DatabaseService.streamHospitals': For facility infrastructure count.
-///    - 'DatabaseService.streamAllBloodRequests': For system-wide request and
-///       donation metrics.
-/// 2. PROCESSING:
-///    - Data Aggregation: Counts objects in the streamed lists.
-///    - Specific Filtering: Separates 'Requests' from 'Donations' using
-///      the 'type' field in the shared request stream.
-/// 3. SENDS DATA TO:
-///    - GUI: Updates the four primary stat cards in real-time as the
-///      database changes.
-/// 4. OUTPUTS/GUI:
-///    - A high-contrast grid of "Executive Stat Cards" (Users, Hospitals,
-///      Pending Requests, Total Donations).
 library;
 
 import 'package:flutter/material.dart';
@@ -150,3 +127,27 @@ class SuperAdminDashboard extends StatelessWidget {
     );
   }
 }
+
+/// FILE: super_admin_dashboard.dart
+///
+/// DESCRIPTION:
+/// The primary system command center. It provides the Super Admin with a
+/// macro-level view of the entire platform's health, aggregating data
+/// across all users and all hospital facilities.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamAllUsers': For total population count.
+///    - 'DatabaseService.streamHospitals': For facility infrastructure count.
+///    - 'DatabaseService.streamAllBloodRequests': For system-wide request and
+///       donation metrics.
+/// 2. PROCESSING:
+///    - Data Aggregation: Counts objects in the streamed lists.
+///    - Specific Filtering: Separates 'Requests' from 'Donations' using
+///      the 'type' field in the shared request stream.
+/// 3. SENDS DATA TO:
+///    - GUI: Updates the four primary stat cards in real-time as the
+///      database changes.
+/// 4. OUTPUTS/GUI:
+///    - A high-contrast grid of "Executive Stat Cards" (Users, Hospitals,
+///      Pending Requests, Total Donations).

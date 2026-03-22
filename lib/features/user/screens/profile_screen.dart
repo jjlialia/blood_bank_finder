@@ -1,24 +1,3 @@
-/// FILE: profile_screen.dart
-///
-/// DESCRIPTION:
-/// This screen allows users to view and manage their personal profile.
-/// It toggles between a read-only display mode and an interactive edit mode.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Provides the 'UserModel' for the currently logged-in user.
-/// 2. PROCESSING:
-///    - Initialization: Populates text controllers with the current user's data on startup.
-///    - Edit/Cancel Logic: Manages state to show/hide input fields and reset them if the user cancels.
-///    - Profile Update Construction: Creates a new 'UserModel' mapping the original
-///      immutable fields (ID, role, email) with the new values from the text fields.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.saveUser': Sends the updated profile to the FastAPI backend.
-///    - 'AuthProvider.logout': Clears the local session and redirects to the login screen.
-/// 4. OUTPUTS/GUI:
-///    - A profile header with avatar.
-///    - A list of cards (read mode) or a form with TextFields (edit mode).
-///    - Toast notifications for success/failure of the save operation.
 library;
 
 import 'package:flutter/material.dart';
@@ -344,3 +323,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+/// FILE: profile_screen.dart
+///
+/// DESCRIPTION:
+/// This screen allows users to view and manage their personal profile.
+/// It toggles between a read-only display mode and an interactive edit mode.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Provides the 'UserModel' for the currently logged-in user.
+/// 2. PROCESSING:
+///    - Initialization: Populates text controllers with the current user's data on startup.
+///    - Edit/Cancel Logic: Manages state to show/hide input fields and reset them if the user cancels.
+///    - Profile Update Construction: Creates a new 'UserModel' mapping the original
+///      immutable fields (ID, role, email) with the new values from the text fields.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.saveUser': Sends the updated profile to the FastAPI backend.
+///    - 'AuthProvider.logout': Clears the local session and redirects to the login screen.
+/// 4. OUTPUTS/GUI:
+///    - A profile header with avatar.
+///    - A list of cards (read mode) or a form with TextFields (edit mode).
+///    - Toast notifications for success/failure of the save operation.

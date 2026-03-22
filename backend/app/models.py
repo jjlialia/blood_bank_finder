@@ -1,32 +1,3 @@
-"""
-FILE: models.py (Pydantic Models)
-
-DESCRIPTION:
-This file defines the data structure "Blueprints" for the entire backend. 
-It uses Pydantic to ensure that any data coming from the Flutter app is 
-valid (e.g., email is a string, units is a number) before the backend 
-even tries to process it.
-
-DATA FLOW OVERVIEW:
-1. RECEIVES DATA FROM: 
-   - The Flutter Frontend (via JSON in the body of HTTP requests).
-2. PROCESSING:
-   - Validation: Pydantic automatically checks the types and presence of fields.
-   - Serialization: Converts JSON objects into Python-friendly objects.
-3. SENDS DATA TO:
-   - 'FirestoreService': The routers pass these validated models to the 
-     service layer to be saved to the database.
-4. OUTPUTS:
-   - 'Response' models: Define exactly what JSON fields the Flutter app will 
-     see in return.
-
-COMPONENTS:
-- User Models: For profile management (uid, role, location).
-- Hospital Models: For directory entries (coordinates, contact info).
-- BloodRequest Models: For the core 'Request' and 'Donate' operations.
-- Inventory Models: For tracking stock levels.
-- Notification Models: For internal alerts.
-"""
 
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -139,3 +110,61 @@ class NotificationCreate(NotificationBase):
 class NotificationResponse(NotificationBase):
     """Unique notification record with ID."""
     id: str
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+FILE: models.py (Pydantic Models)
+
+DESCRIPTION:
+This file defines the data structure "Blueprints" for the entire backend. 
+It uses Pydantic to ensure that any data coming from the Flutter app is 
+valid (e.g., email is a string, units is a number) before the backend 
+even tries to process it.
+
+DATA FLOW OVERVIEW:
+1. RECEIVES DATA FROM: 
+   - The Flutter Frontend (via JSON in the body of HTTP requests).
+2. PROCESSING:
+   - Validation: Pydantic automatically checks the types and presence of fields.
+   - Serialization: Converts JSON objects into Python-friendly objects.
+3. SENDS DATA TO:
+   - 'FirestoreService': The routers pass these validated models to the 
+     service layer to be saved to the database.
+4. OUTPUTS:
+   - 'Response' models: Define exactly what JSON fields the Flutter app will 
+     see in return.
+
+COMPONENTS:
+- User Models: For profile management (uid, role, location).
+- Hospital Models: For directory entries (coordinates, contact info).
+- BloodRequest Models: For the core 'Request' and 'Donate' operations.
+- Inventory Models: For tracking stock levels.
+- Notification Models: For internal alerts.
+"""

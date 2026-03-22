@@ -1,28 +1,3 @@
-/// FILE: api_service.dart
-///
-/// DESCRIPTION:
-/// This file serves as the central communication hub between the Flutter frontend and the FastAPI backend.
-/// It manages all outbound HTTP requests for data persistence and administrative actions that require
-/// server-side logic (like banning users or updating roles).
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - UI Screens (e.g., RequestBloodScreen, DonateBloodScreen, ManageHospitalsScreen) in the form of
-///      Model objects (UserModel, BloodRequestModel, HospitalModel) or primitive types (strings, IDs).
-/// 2. PROCESSING:
-///    - Encodes data into JSON format using 'jsonEncode'.
-///    - Constructs dynamic URLs with query parameters for specific API endpoints.
-///    - Handles platform-specific base URLs (AVD vs. Web).
-/// 3. SENDS DATA TO:
-///    - FastAPI Backend (running on localhost:8000 or 10.0.2.2:8000).
-/// 4. OUTPUTS/RESPONSES:
-///    - Returns 'void' for most operations, throwing 'Exception' if the server returns a non-success status code.
-///    - Returns 'Location' objects for geocoding requests.
-///
-/// KEY COMPONENTS:
-/// - baseUrl: Determines the API's root address based on the running platform.
-/// - CRUD Operations: Methods for creating, updating, and deleting blood requests, users, and hospitals.
-/// - Geocoding: Converts physical addresses to geographic coordinates (lat/lng) for map integration.
 library;
 
 import 'dart:convert';
@@ -240,3 +215,29 @@ class ApiService {
     return null;
   }
 }
+
+/// FILE: api_service.dart
+///
+/// DESCRIPTION:
+/// This file serves as the central communication hub between the Flutter frontend and the FastAPI backend.
+/// It manages all outbound HTTP requests for data persistence and administrative actions that require
+/// server-side logic (like banning users or updating roles).
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - UI Screens (e.g., RequestBloodScreen, DonateBloodScreen, ManageHospitalsScreen) in the form of
+///      Model objects (UserModel, BloodRequestModel, HospitalModel) or primitive types (strings, IDs).
+/// 2. PROCESSING:
+///    - Encodes data into JSON format using 'jsonEncode'.
+///    - Constructs dynamic URLs with query parameters for specific API endpoints.
+///    - Handles platform-specific base URLs (AVD vs. Web).
+/// 3. SENDS DATA TO:
+///    - FastAPI Backend (running on localhost:8000 or 10.0.2.2:8000).
+/// 4. OUTPUTS/RESPONSES:
+///    - Returns 'void' for most operations, throwing 'Exception' if the server returns a non-success status code.
+///    - Returns 'Location' objects for geocoding requests.
+///
+/// KEY COMPONENTS:
+/// - baseUrl: Determines the API's root address based on the running platform.
+/// - CRUD Operations: Methods for creating, updating, and deleting blood requests, users, and hospitals.
+/// - Geocoding: Converts physical addresses to geographic coordinates (lat/lng) for map integration.

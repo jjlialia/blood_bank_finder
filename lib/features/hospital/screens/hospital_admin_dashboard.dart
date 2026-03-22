@@ -1,24 +1,3 @@
-/// FILE: hospital_admin_dashboard.dart
-///
-/// DESCRIPTION:
-/// The landing page for Hospital Administrators. It provides a real-time
-/// executive summary of their site's health, including critical alerts
-/// for pending emergency requests and low blood inventory.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Retrieves the 'hospitalId' for the logged-in admin.
-///    - 'DatabaseService': Streams both 'blood_requests' and 'inventory'
-///       data for a single hospital.
-/// 2. PROCESSING:
-///    - Aggregation: Calculates the count of 'pending' requests from the full list.
-///    - Alert Logic: Identifies inventory items with less than 5 units remaining.
-///    - Progress Calculation: Maps stock levels (0-20 units) to a visual % (0-1.0).
-/// 3. SENDS DATA TO:
-///    - Navigation: Links to 'InventoryManagementScreen' and 'BloodRequestsListScreen'.
-/// 4. OUTPUTS/GUI:
-///    - Stat Cards: Large indicators for urgent actions.
-///    - Inventory Summary: Visual progress bars for quick stock inspection.
 library;
 
 import 'package:flutter/material.dart';
@@ -211,3 +190,25 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 }
+
+/// FILE: hospital_admin_dashboard.dart
+///
+/// DESCRIPTION:
+/// The landing page for Hospital Administrators. It provides a real-time
+/// executive summary of their site's health, including critical alerts
+/// for pending emergency requests and low blood inventory.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Retrieves the 'hospitalId' for the logged-in admin.
+///    - 'DatabaseService': Streams both 'blood_requests' and 'inventory'
+///       data for a single hospital.
+/// 2. PROCESSING:
+///    - Aggregation: Calculates the count of 'pending' requests from the full list.
+///    - Alert Logic: Identifies inventory items with less than 5 units remaining.
+///    - Progress Calculation: Maps stock levels (0-20 units) to a visual % (0-1.0).
+/// 3. SENDS DATA TO:
+///    - Navigation: Links to 'InventoryManagementScreen' and 'BloodRequestsListScreen'.
+/// 4. OUTPUTS/GUI:
+///    - Stat Cards: Large indicators for urgent actions.
+///    - Inventory Summary: Visual progress bars for quick stock inspection.

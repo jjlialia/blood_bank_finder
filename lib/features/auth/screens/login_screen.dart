@@ -1,23 +1,3 @@
-/// FILE: login_screen.dart
-///
-/// DESCRIPTION:
-/// This is the gateway for existing users to access the application.
-/// It provides a secure form for entering credentials and handles the
-/// redirect logic based on the user's assigned role.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - User Input: 'Email' and 'Password' text fields.
-///    - 'AuthProvider': Provides the status of the login attempt and the final 'UserModel'.
-/// 2. PROCESSING:
-///    - Validation: Ensures email format and password length are correct before sending.
-///    - Role-Based Navigation: After a successful login, it checks 'auth.user?.role'
-///      to decide whether to show the User Home, Hospital Admin, or Super Admin dashboard.
-/// 3. SENDS DATA TO:
-///    - 'AuthProvider.login': Passes credentials to the provider, which calls the FastAPI backend.
-/// 4. OUTPUTS/GUI:
-///    - Interactive form with validation feedback.
-///    - Navigation to the appropriate dashboard upon success.
 library;
 
 import 'package:flutter/material.dart';
@@ -192,3 +172,24 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+/// FILE: login_screen.dart
+///
+/// DESCRIPTION:
+/// This is the gateway for existing users to access the application.
+/// It provides a secure form for entering credentials and handles the
+/// redirect logic based on the user's assigned role.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - User Input: 'Email' and 'Password' text fields.
+///    - 'AuthProvider': Provides the status of the login attempt and the final 'UserModel'.
+/// 2. PROCESSING:
+///    - Validation: Ensures email format and password length are correct before sending.
+///    - Role-Based Navigation: After a successful login, it checks 'auth.user?.role'
+///      to decide whether to show the User Home, Hospital Admin, or Super Admin dashboard.
+/// 3. SENDS DATA TO:
+///    - 'AuthProvider.login': Passes credentials to the provider, which calls the FastAPI backend.
+/// 4. OUTPUTS/GUI:
+///    - Interactive form with validation feedback.
+///    - Navigation to the appropriate dashboard upon success.

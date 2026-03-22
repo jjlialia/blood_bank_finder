@@ -1,20 +1,3 @@
-/// FILE: inventory_model.dart
-///
-/// DESCRIPTION:
-/// This file defines the 'InventoryModel', which tracks the stock levels of a
-/// specific blood type (e.g., A+, B-) within a hospital.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - Firestore (via 'fromMap'): Fetches from the 'inventory' sub-collection of a hospital.
-///    - Hospital Admin UI: When updating stock levels.
-/// 2. PROCESSING:
-///    - Manages the 'units' count (amount of blood available).
-///    - Tracks 'lastUpdated' to ensure data freshness.
-/// 3. SENDS DATA TO:
-///    - Firestore (via 'toMap'): Directly updates the hospital's inventory sub-collection.
-///    - FastAPI: Used when the backend needs to validate stock before approving a request.
-///    - Dashboard UI: Shows admins and users what blood is currently available.
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -50,3 +33,21 @@ class InventoryModel {
     };
   }
 }
+
+/// FILE: inventory_model.dart
+///
+/// DESCRIPTION:
+/// This file defines the 'InventoryModel', which tracks the stock levels of a
+/// specific blood type (e.g., A+, B-) within a hospital.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - Firestore (via 'fromMap'): Fetches from the 'inventory' sub-collection of a hospital.
+///    - Hospital Admin UI: When updating stock levels.
+/// 2. PROCESSING:
+///    - Manages the 'units' count (amount of blood available).
+///    - Tracks 'lastUpdated' to ensure data freshness.
+/// 3. SENDS DATA TO:
+///    - Firestore (via 'toMap'): Directly updates the hospital's inventory sub-collection.
+///    - FastAPI: Used when the backend needs to validate stock before approving a request.
+///    - Dashboard UI: Shows admins and users what blood is currently available.

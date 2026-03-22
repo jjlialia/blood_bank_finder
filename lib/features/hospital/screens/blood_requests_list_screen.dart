@@ -1,26 +1,3 @@
-/// FILE: blood_requests_list_screen.dart
-///
-/// DESCRIPTION:
-/// This screen is the command center for Hospital Admins managing patient
-/// requests and donor pledges. It allows for advanced filtering and
-/// provides a workflow for updating the status of individual requests.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Identifies the hospital context.
-///    - 'DatabaseService': Streams all requests where 'hospitalId' matches.
-/// 2. PROCESSING:
-///    - Local Filtering: Sorts requests by status (Pending, On Progress, etc.)
-///      in the GUI without a new database call.
-///    - Status Lifecycle: Defines the path of a request: Pending -> Progress -> Completed/Rejected.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.updateRequestStatus': Sends the chosen status and an optional
-///      admin note to the backend.
-///    - Automated Triggers: Note that updating status here automatically triggers
-///      a notification sent to the user (handled by the backend service).
-/// 4. OUTPUTS/GUI:
-///    - Filterable list with status Chips and swipe actions.
-///    - A comprehensive "Detailed View" bottom sheet with transaction history.
 library;
 
 import 'package:flutter/material.dart';
@@ -352,3 +329,27 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 }
+
+/// FILE: blood_requests_list_screen.dart
+///
+/// DESCRIPTION:
+/// This screen is the command center for Hospital Admins managing patient
+/// requests and donor pledges. It allows for advanced filtering and
+/// provides a workflow for updating the status of individual requests.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Identifies the hospital context.
+///    - 'DatabaseService': Streams all requests where 'hospitalId' matches.
+/// 2. PROCESSING:
+///    - Local Filtering: Sorts requests by status (Pending, On Progress, etc.)
+///      in the GUI without a new database call.
+///    - Status Lifecycle: Defines the path of a request: Pending -> Progress -> Completed/Rejected.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.updateRequestStatus': Sends the chosen status and an optional
+///      admin note to the backend.
+///    - Automated Triggers: Note that updating status here automatically triggers
+///      a notification sent to the user (handled by the backend service).
+/// 4. OUTPUTS/GUI:
+///    - Filterable list with status Chips and swipe actions.
+///    - A comprehensive "Detailed View" bottom sheet with transaction history.

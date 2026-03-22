@@ -1,22 +1,3 @@
-"""
-FILE: config.py
-
-DESCRIPTION:
-This file manages the "Vital Life Support" of the backend—its connection to 
-external services like Firebase and Google Maps. It handles environment 
-variables and service authentication.
-
-DATA FLOW OVERVIEW:
-1. RECEIVES DATA FROM: 
-   - '.env' file: Securely reads 'FIREBASE_SERVICE_ACCOUNT_PATH' and 'GOOGLE_MAPS_API_KEY'.
-2. PROCESSING:
-   - Environment Setup: Loads keys into the system process.
-   - Firebase Boot: Initializes the official Admin SDK using the provided JSON key.
-3. SENDS DATA TO:
-   - The rest of the Backend: Provides a live 'db' (Firestore Client) to all routers.
-4. OUTPUTS:
-   - A single connection point it uses to authenticate all database reads and writes.
-"""
 
 import os
 import firebase_admin
@@ -54,3 +35,55 @@ def get_db():
     """
     initialize_firebase()
     return firestore.client()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+FILE: config.py
+
+DESCRIPTION:
+This file manages the "Vital Life Support" of the backend—its connection to 
+external services like Firebase and Google Maps. It handles environment 
+variables and service authentication.
+
+DATA FLOW OVERVIEW:
+1. RECEIVES DATA FROM: 
+   - '.env' file: Securely reads 'FIREBASE_SERVICE_ACCOUNT_PATH' and 'GOOGLE_MAPS_API_KEY'.
+2. PROCESSING:
+   - Environment Setup: Loads keys into the system process.
+   - Firebase Boot: Initializes the official Admin SDK using the provided JSON key.
+3. SENDS DATA TO:
+   - The rest of the Backend: Provides a live 'db' (Firestore Client) to all routers.
+4. OUTPUTS:
+   - A single connection point it uses to authenticate all database reads and writes.
+"""

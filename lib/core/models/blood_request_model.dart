@@ -1,21 +1,3 @@
-/// FILE: blood_request_model.dart
-///
-/// DESCRIPTION:
-/// This file defines the 'BloodRequestModel', which tracks a single event of
-/// requesting or donating blood. It connects a User to a Hospital.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - Request/Donate UI: Users fill out forms to create these requests.
-///    - Firestore: Fetched for history views and admin dashboards.
-/// 2. PROCESSING:
-///    - Categorizes the action as either 'Request' (needing blood) or 'Donate' (giving blood).
-///    - Tracks the 'status' (pending -> approved -> completed/rejected).
-///    - Stores administrative feedback via 'adminMessage'.
-/// 3. SENDS DATA TO:
-///    - FastAPI (via 'toJson'): ALL new requests are sent through the API for security.
-///    - Firestore: For updates (status changes) or historical record keeping.
-///    - Notifications: When a status changes, this data is used to alert the user.
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -116,3 +98,22 @@ class BloodRequestModel {
     };
   }
 }
+
+/// FILE: blood_request_model.dart
+///
+/// DESCRIPTION:
+/// This file defines the 'BloodRequestModel', which tracks a single event of
+/// requesting or donating blood. It connects a User to a Hospital.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - Request/Donate UI: Users fill out forms to create these requests.
+///    - Firestore: Fetched for history views and admin dashboards.
+/// 2. PROCESSING:
+///    - Categorizes the action as either 'Request' (needing blood) or 'Donate' (giving blood).
+///    - Tracks the 'status' (pending -> approved -> completed/rejected).
+///    - Stores administrative feedback via 'adminMessage'.
+/// 3. SENDS DATA TO:
+///    - FastAPI (via 'toJson'): ALL new requests are sent through the API for security.
+///    - Firestore: For updates (status changes) or historical record keeping.
+///    - Notifications: When a status changes, this data is used to alert the user.

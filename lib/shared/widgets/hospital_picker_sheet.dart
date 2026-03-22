@@ -1,26 +1,3 @@
-/// FILE: hospital_picker_sheet.dart (Shared Widget)
-///
-/// DESCRIPTION:
-/// A comprehensive bottom-sheet UI for selecting a hospital facility.
-/// Supports text search and advanced geographic filtering to help
-/// users find the nearest site.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamHospitals': Fetches filtered facilities
-///       based on selected Island, Region, or City.
-///    - 'LocationService': Populates the location filter dropdowns.
-/// 2. PROCESSING:
-///    - Dynamic Querying: Updates the Firestore stream whenever a
-///      geographic filter is changed in the GUI.
-///    - Client-side Search: Filters the resulting list locally by
-///      Hospital Name text matching.
-/// 3. SENDS DATA TO:
-///    - 'onHospitalSelected' Callback: Returns a full 'HospitalModel'
-///       object to the requesting screen (e.g., Blood Request).
-/// 4. OUTPUTS/GUI:
-///    - A scrollable, searchable list within a draggable bottom sheet.
-///    - Visual chips for active geographic filters.
 library;
 
 import 'package:flutter/material.dart';
@@ -181,3 +158,27 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
     );
   }
 }
+
+/// FILE: hospital_picker_sheet.dart (Shared Widget)
+///
+/// DESCRIPTION:
+/// A comprehensive bottom-sheet UI for selecting a hospital facility.
+/// Supports text search and advanced geographic filtering to help
+/// users find the nearest site.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamHospitals': Fetches filtered facilities
+///       based on selected Island, Region, or City.
+///    - 'LocationService': Populates the location filter dropdowns.
+/// 2. PROCESSING:
+///    - Dynamic Querying: Updates the Firestore stream whenever a
+///      geographic filter is changed in the GUI.
+///    - Client-side Search: Filters the resulting list locally by
+///      Hospital Name text matching.
+/// 3. SENDS DATA TO:
+///    - 'onHospitalSelected' Callback: Returns a full 'HospitalModel'
+///       object to the requesting screen (e.g., Blood Request).
+/// 4. OUTPUTS/GUI:
+///    - A scrollable, searchable list within a draggable bottom sheet.
+///    - Visual chips for active geographic filters.

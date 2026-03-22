@@ -1,25 +1,3 @@
-/// FILE: donate_blood_screen.dart
-///
-/// DESCRIPTION:
-/// This screen provides a guided, multi-step process (Stepper) for users who
-/// wish to donate blood. It includes an eligibility quiz, location selection,
-/// and final data submission.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': To get the currently logged-in user's UID and profile info.
-///    - 'HospitalPickerSheet': A custom widget that lets the user select a
-///      target hospital from a list fetched from Firestore.
-/// 2. PROCESSING:
-///    - Validation: Checks if the user meets all 5 health criteria in Step 1.
-///    - Model Construction: Combines user input (blood type, quantity, contact)
-///      with fixed data (Status = 'pending', Type = 'Donate') into a 'BloodRequestModel'.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.createBloodRequest': Sends the final JSON object to the
-///      FastAPI backend, which then writes it to Firestore.
-/// 4. OUTPUTS/GUI:
-///    - A vertical Stepper UI that validates each step before allowing progression.
-///    - Visual feedback (SnackBars) for success or failure of the submission.
 library;
 
 import 'package:flutter/material.dart';
@@ -319,3 +297,26 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
     }
   }
 }
+
+/// FILE: donate_blood_screen.dart
+///
+/// DESCRIPTION:
+/// This screen provides a guided, multi-step process (Stepper) for users who
+/// wish to donate blood. It includes an eligibility quiz, location selection,
+/// and final data submission.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': To get the currently logged-in user's UID and profile info.
+///    - 'HospitalPickerSheet': A custom widget that lets the user select a
+///      target hospital from a list fetched from Firestore.
+/// 2. PROCESSING:
+///    - Validation: Checks if the user meets all 5 health criteria in Step 1.
+///    - Model Construction: Combines user input (blood type, quantity, contact)
+///      with fixed data (Status = 'pending', Type = 'Donate') into a 'BloodRequestModel'.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.createBloodRequest': Sends the final JSON object to the
+///      FastAPI backend, which then writes it to Firestore.
+/// 4. OUTPUTS/GUI:
+///    - A vertical Stepper UI that validates each step before allowing progression.
+///    - Visual feedback (SnackBars) for success or failure of the submission.

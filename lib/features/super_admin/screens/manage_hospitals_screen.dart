@@ -1,31 +1,3 @@
-/// FILE: manage_hospitals_screen.dart
-///
-/// DESCRIPTION:
-/// This screen is the exclusive control panel for Super Admins to manage the
-/// directory of hospitals and blood banks in the system. It supports full
-/// CRUD (Create, Read, Update, Delete) operations and data synchronization.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamHospitals(allowAll: true)': A stream of ALL hospitals,
-///       including those marked as inactive.
-///    - 'LocationService': Populates the cascading dropdowns (Island -> Region -> City)
-///       in the registration form.
-///    - 'ApiService.getCoordinatesFromAddress': Automatically finds Lat/Lng for a hospital
-///       based on its typed address.
-/// 2. PROCESSING:
-///    - Form Handling: Manages a complex, multi-field form for hospital details.
-///    - Cascading Dropdowns: Dynamically loads Regions when an Island is picked, and
-///      Cities when a Region is picked.
-///    - Geocoding: Converts user-entered addresses into map coordinates before saving.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.addHospital' / 'updateHospital': Sends the validated data to the
-///      FastAPI backend for Firestore persistence.
-///    - 'ApiService.deleteHospital': Removes a hospital record from the system.
-///    - 'BackfillService.syncAllHospitals': Triggers a global data verification/sync.
-/// 4. OUTPUTS/GUI:
-///    - A list of hospital cards with inline Edit/Delete actions.
-///    - A bottom-sheet modal for adding or modifying hospital records.
 library;
 
 import 'package:flutter/material.dart';
@@ -830,3 +802,32 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 }
+
+/// FILE: manage_hospitals_screen.dart
+///
+/// DESCRIPTION:
+/// This screen is the exclusive control panel for Super Admins to manage the
+/// directory of hospitals and blood banks in the system. It supports full
+/// CRUD (Create, Read, Update, Delete) operations and data synchronization.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'DatabaseService.streamHospitals(allowAll: true)': A stream of ALL hospitals,
+///       including those marked as inactive.
+///    - 'LocationService': Populates the cascading dropdowns (Island -> Region -> City)
+///       in the registration form.
+///    - 'ApiService.getCoordinatesFromAddress': Automatically finds Lat/Lng for a hospital
+///       based on its typed address.
+/// 2. PROCESSING:
+///    - Form Handling: Manages a complex, multi-field form for hospital details.
+///    - Cascading Dropdowns: Dynamically loads Regions when an Island is picked, and
+///      Cities when a Region is picked.
+///    - Geocoding: Converts user-entered addresses into map coordinates before saving.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.addHospital' / 'updateHospital': Sends the validated data to the
+///      FastAPI backend for Firestore persistence.
+///    - 'ApiService.deleteHospital': Removes a hospital record from the system.
+///    - 'BackfillService.syncAllHospitals': Triggers a global data verification/sync.
+/// 4. OUTPUTS/GUI:
+///    - A list of hospital cards with inline Edit/Delete actions.
+///    - A bottom-sheet modal for adding or modifying hospital records.

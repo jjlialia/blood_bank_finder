@@ -1,26 +1,3 @@
-/// FILE: inventory_management_screen.dart
-///
-/// DESCRIPTION:
-/// This screen provides Hospital Admins with direct control over their
-/// site's blood stock levels. It lists all standard blood groups and
-/// allows for precise unit updates via the FastAPI backend.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Retrieves the 'hospitalId' to identify which site's
-///      inventory to manage.
-///    - 'DatabaseService': Streams the current units for each blood type
-///      in real-time from Firestore.
-/// 2. PROCESSING:
-///    - Input Mapping: Matches the streamed inventory data to a static
-///      list of standard blood types (A+, O-, etc.).
-///    - Validation: Ensures new unit counts are valid numbers (>= 0).
-/// 3. SENDS DATA TO:
-///    - 'ApiService.updateInventory': Transmits the new stock level to the
-///      FastAPI backend, which performs a safe transactional update.
-/// 4. OUTPUTS/GUI:
-///    - A list of cards, each containing an editable 'Qty' text field.
-///    - Immediate feedback snackbars upon successful database updates.
 library;
 
 import 'package:flutter/material.dart';
@@ -160,3 +137,27 @@ class InventoryManagementScreen extends StatelessWidget {
     );
   }
 }
+
+/// FILE: inventory_management_screen.dart
+///
+/// DESCRIPTION:
+/// This screen provides Hospital Admins with direct control over their
+/// site's blood stock levels. It lists all standard blood groups and
+/// allows for precise unit updates via the FastAPI backend.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Retrieves the 'hospitalId' to identify which site's
+///      inventory to manage.
+///    - 'DatabaseService': Streams the current units for each blood type
+///      in real-time from Firestore.
+/// 2. PROCESSING:
+///    - Input Mapping: Matches the streamed inventory data to a static
+///      list of standard blood types (A+, O-, etc.).
+///    - Validation: Ensures new unit counts are valid numbers (>= 0).
+/// 3. SENDS DATA TO:
+///    - 'ApiService.updateInventory': Transmits the new stock level to the
+///      FastAPI backend, which performs a safe transactional update.
+/// 4. OUTPUTS/GUI:
+///    - A list of cards, each containing an editable 'Qty' text field.
+///    - Immediate feedback snackbars upon successful database updates.

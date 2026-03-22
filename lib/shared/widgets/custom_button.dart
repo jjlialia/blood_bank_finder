@@ -1,22 +1,3 @@
-/// FILE: custom_button.dart (Shared Utility)
-///
-/// DESCRIPTION:
-/// A primary action component used project-wide. It handles 3 states:
-/// Ready, Loading (showing a spinner), and Disabled.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'label': The text to display.
-///    - 'icon': Optional visual anchor.
-///    - 'isLoading': A boolean flag that logic layers use to prevent
-///      double-submissions during API calls.
-/// 2. PROCESSING:
-///    - Logic Gate: If 'isLoading' is true, the button is automatically
-///      disabled and swaps the text for a 'CircularProgressIndicator'.
-/// 3. SENDS DATA TO:
-///    - 'onPressed' Callback: Triggers the parent screen's logic (e.g., login, save).
-/// 4. OUTPUTS/GUI:
-///    - A full-width 'ElevatedButton' with brand-consistent sizing and colors.
 library;
 
 import 'package:flutter/material.dart';
@@ -63,3 +44,23 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
+
+/// FILE: custom_button.dart (Shared Utility)
+///
+/// DESCRIPTION:
+/// A primary action component used project-wide. It handles 3 states:
+/// Ready, Loading (showing a spinner), and Disabled.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'label': The text to display.
+///    - 'icon': Optional visual anchor.
+///    - 'isLoading': A boolean flag that logic layers use to prevent
+///      double-submissions during API calls.
+/// 2. PROCESSING:
+///    - Logic Gate: If 'isLoading' is true, the button is automatically
+///      disabled and swaps the text for a 'CircularProgressIndicator'.
+/// 3. SENDS DATA TO:
+///    - 'onPressed' Callback: Triggers the parent screen's logic (e.g., login, save).
+/// 4. OUTPUTS/GUI:
+///    - A full-width 'ElevatedButton' with brand-consistent sizing and colors.

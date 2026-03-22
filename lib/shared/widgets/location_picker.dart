@@ -1,24 +1,3 @@
-/// FILE: location_picker.dart (Shared Widget)
-///
-/// DESCRIPTION:
-/// A cascading selection widget specialized for Philippine geographic
-/// hierarchy (Island -> Region -> City -> Barangay).
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'LocationService': Fetches JSON-based location data from the
-///      PSGC (Philippine Standard Geographic Code).
-/// 2. PROCESSING:
-///    - Cascading Logic: Selecting an Island triggers a 'Region' fetch.
-///      Selecting a Region triggers a 'City' fetch, etc.
-///    - State Reset: Whenever a parent selection changes, all child
-///      selections are cleared to maintain data integrity.
-/// 3. SENDS DATA TO:
-///    - 'onLocationChanged' Callback: Bubbles the selected names (not codes)
-///      up to the parent screen (e.g., Signup or Hospital Registration).
-/// 4. OUTPUTS/GUI:
-///    - A column of 4 Dropdown fields, with loading indicators during
-///      asynchronous API/JSON fetches.
 library;
 
 import 'package:flutter/material.dart';
@@ -211,3 +190,25 @@ class _PhLocationPickerState extends State<PhLocationPicker> {
     );
   }
 }
+
+/// FILE: location_picker.dart (Shared Widget)
+///
+/// DESCRIPTION:
+/// A cascading selection widget specialized for Philippine geographic
+/// hierarchy (Island -> Region -> City -> Barangay).
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'LocationService': Fetches JSON-based location data from the
+///      PSGC (Philippine Standard Geographic Code).
+/// 2. PROCESSING:
+///    - Cascading Logic: Selecting an Island triggers a 'Region' fetch.
+///      Selecting a Region triggers a 'City' fetch, etc.
+///    - State Reset: Whenever a parent selection changes, all child
+///      selections are cleared to maintain data integrity.
+/// 3. SENDS DATA TO:
+///    - 'onLocationChanged' Callback: Bubbles the selected names (not codes)
+///      up to the parent screen (e.g., Signup or Hospital Registration).
+/// 4. OUTPUTS/GUI:
+///    - A column of 4 Dropdown fields, with loading indicators during
+///      asynchronous API/JSON fetches.

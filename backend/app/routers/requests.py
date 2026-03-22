@@ -1,23 +1,3 @@
-"""
-FILE: requests.py (FastAPI Router)
-
-DESCRIPTION:
-This router is the heart of the "Blood Transaction" system. It manages 
-all requests from users looking for blood and all donation pledges.
-
-DATA FLOW OVERVIEW:
-1. RECEIVES DATA FROM: 
-   - 'DonateBloodScreen' or 'RequestBloodScreen' in the Flutter app.
-2. PROCESSING:
-   - Status Updates: Allows Hospital Admins to move a request from 
-     'pending' to 'on progress' or 'completed'.
-   - Trigger Logic: Note that 'FirestoreService' automatically sends 
-     notifications when these status updates happen.
-3. SENDS DATA TO:
-   - 'FirestoreService': To manage the 'blood_requests' collection.
-4. OUTPUTS:
-   - 'BloodRequestResponse': The record of the request, including its unique ID.
-"""
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Optional
@@ -68,3 +48,49 @@ async def update_status(
     """
     await service.update_request_status(request_id, status, admin_message)
     return {"message": "Request status updated"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+FILE: requests.py (FastAPI Router)
+
+DESCRIPTION:
+This router is the heart of the "Blood Transaction" system. It manages 
+all requests from users looking for blood and all donation pledges.
+
+DATA FLOW OVERVIEW:
+1. RECEIVES DATA FROM: 
+   - 'DonateBloodScreen' or 'RequestBloodScreen' in the Flutter app.
+2. PROCESSING:
+   - Status Updates: Allows Hospital Admins to move a request from 
+     'pending' to 'on progress' or 'completed'.
+   - Trigger Logic: Note that 'FirestoreService' automatically sends 
+     notifications when these status updates happen.
+3. SENDS DATA TO:
+   - 'FirestoreService': To manage the 'blood_requests' collection.
+4. OUTPUTS:
+   - 'BloodRequestResponse': The record of the request, including its unique ID.
+"""

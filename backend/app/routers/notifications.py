@@ -1,21 +1,3 @@
-"""
-FILE: notifications.py (FastAPI Router)
-
-DESCRIPTION:
-This router manages the creation and retrieval of in-app alerts for users. 
-While most notifications are created automatically during request updates, 
-this router allows for manual alerts as well.
-
-DATA FLOW OVERVIEW:
-1. RECEIVES DATA FROM: 
-   - Internal automated triggers (via Service) or manual Admin alerts.
-2. PROCESSING:
-   - User Matching: Ensures each notification is mapped to the correct 'userId'.
-3. SENDS DATA TO:
-   - 'FirestoreService': To add records to the 'notifications' collection.
-4. OUTPUTS:
-   - 'NotificationResponse': A list of alerts ready to be displayed in the app's bell icon.
-"""
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
@@ -45,3 +27,50 @@ async def list_notifications(user_id: str, service: FirestoreService = Depends(g
     SENT TO: `FirestoreService.list_user_notifications`.
     """
     return await service.list_user_notifications(user_id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+FILE: notifications.py (FastAPI Router)
+
+DESCRIPTION:
+This router manages the creation and retrieval of in-app alerts for users. 
+While most notifications are created automatically during request updates, 
+this router allows for manual alerts as well.
+
+DATA FLOW OVERVIEW:
+1. RECEIVES DATA FROM: 
+   - Internal automated triggers (via Service) or manual Admin alerts.
+2. PROCESSING:
+   - User Matching: Ensures each notification is mapped to the correct 'userId'.
+3. SENDS DATA TO:
+   - 'FirestoreService': To add records to the 'notifications' collection.
+4. OUTPUTS:
+   - 'NotificationResponse': A list of alerts ready to be displayed in the app's bell icon.
+"""

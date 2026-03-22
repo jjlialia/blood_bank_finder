@@ -1,23 +1,3 @@
-/// FILE: signup_screen.dart
-///
-/// DESCRIPTION:
-/// This screen handles the comprehensive registration process for new users.
-/// It collects personal identity, health information (blood group),
-/// and detailed location data.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - User Input: Multiple TextFields and Dropdowns.
-///    - 'PhLocationPicker': A dedicated widget for Philippine address hierarchy.
-/// 2. PROCESSING:
-///    - Data Aggregation: Collects all inputs into a single '_formData' map.
-///    - Validation: Ensures all required fields (identity, location, credentials) are filled.
-/// 3. SENDS DATA TO:
-///    - 'AuthProvider.signup': Sends the full profile map to the provider, which
-///      calls the FastAPI backend to create both the Auth account and Firestore doc.
-/// 4. OUTPUTS/GUI:
-///    - A long, scrollable form divided into 'Personal', 'Location', and 'Account' sections.
-///    - Direct navigation to the 'UserHomeScreen' upon successful registration.
 library;
 
 import 'package:flutter/material.dart';
@@ -38,7 +18,7 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // DATA STORAGE: Temporary map to hold all user inputs before submission.
+  //i store diri ang data sa user.
   final Map<String, dynamic> _formData = {
     'gender': 'Male',
     'bloodGroup': 'A+',
@@ -48,17 +28,14 @@ class _SignupScreenState extends State<SignupScreen> {
     'barangay': null,
   };
 
-  /// CORE LOGIC: Signup Data Flow.
-  /// 1. Triggers form 'save()' to populate the '_formData' map.
-  /// 2. Calls the 'auth.signup' method.
-  /// 3. DATA JOURNEY: App -> AuthProvider -> FastAPI -> Firebase Auth & Firestore.
-  /// 4. On SUCCESS: Clears login history and enters the Home Screen.
+  /// i validate and form then mo save sa _formData.
+  /// ang auth provider ang mo handle sa pag save sa data sa firebase.
   void _signup() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final auth = context.read<AuthProvider>();
 
-      // STEP: Submit the gathered data.
+      //gi send na sa authprovider and data sa formkey og password. maghuwat if okay or naay error para i show.
       final error = await auth.signup(_formData, _formData['password']);
 
       if (!mounted) return;
@@ -70,7 +47,7 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
-      // STEP: Success. Redirect to the main app area.
+      //if walay error sa babaw i false na ni para dli kabalik ang user og adto na sa home screen.
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const UserHomeScreen()),
@@ -90,7 +67,7 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- SECTION 1: Personal Data ---
+              // input data
               Text(
                 'Personal Information',
                 style: TextStyle(
@@ -129,7 +106,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ], 'bloodGroup'),
 
               const SizedBox(height: 16),
-              // --- SECTION 2: Location Data ---
+              // location
               Text(
                 'Location Details',
                 style: TextStyle(
@@ -139,7 +116,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // STEP: This widget provides cascading selection for PH addresses.
+              // mopili og location. island, region, city, barangay.
               PhLocationPicker(
                 onLocationChanged: (island, region, city, barangay) {
                   _formData['islandGroup'] = island;
@@ -156,7 +133,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
 
               const SizedBox(height: 16),
-              // --- SECTION 3: Account Data ---
+              // email og password
               Text(
                 'Account Credentials',
                 style: TextStyle(
@@ -179,7 +156,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 onSaved: (v) => _formData['password'] = v,
               ),
               const SizedBox(height: 32),
-              // ACTION: Triggers the _signup flow.
+              // pagclick sa signup button mogamit sa _signup method.
               Consumer<AuthProvider>(
                 builder: (context, auth, _) => CustomButton(
                   label: 'Sign Up',
@@ -195,7 +172,7 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  // --- UI HELPER: Reusable dropdown for gender and blood group ---
+  //reusable. gigamit nga dropdown sa gender og bloodgroup
   Widget _buildDropdown(String label, List<String> items, String key) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -210,3 +187,40 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+/// FILE: signup_screen.dart
+///
+/// DESCRIPTION:
+/// This screen handles the comprehensive registration process for new users.
+/// It collects personal identity, health information (blood group),
+/// and detailed location data.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - User Input: Multiple TextFields and Dropdowns.
+///    - 'PhLocationPicker': A dedicated widget for Philippine address hierarchy.
+/// 2. PROCESSING:
+///    - Data Aggregation: Collects all inputs into a single '_formData' map.
+///    - Validation: Ensures all required fields (identity, location, credentials) are filled.
+/// 3. SENDS DATA TO:
+///    - 'AuthProvider.signup': Sends the full profile map to the provider, which
+///      calls the FastAPI backend to create both the Auth account and Firestore doc.
+/// 4. OUTPUTS/GUI:
+///    - A long, scrollable form divided into 'Personal', 'Location', and 'Account' sections.
+///    - Direct navigation to the 'UserHomeScreen' upon successful registration.
+
+//onsaved: (v) => _formData['key'] = v,
+//ang v kay ang value sa textfield.
+//phlocationpicker: gikan sa location_picker.dart
+
+//ang _formData kay ang data sa user og ang _formkey kay ang key sa form.
+//ang _signup kay ang function sa pag-signup.
+//ang _buildDropdown kay ang function sa pag-build ng dropdown.

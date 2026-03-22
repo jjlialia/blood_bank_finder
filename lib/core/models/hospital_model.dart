@@ -1,21 +1,3 @@
-/// FILE: hospital_model.dart
-///
-/// DESCRIPTION:
-/// This file defines the 'HospitalModel' class, representing a blood bank or hospital
-/// in the system. It tracks its location, contact information, and blood availability.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - Firestore (via 'fromMap'): Fetches from the 'hospitals' collection.
-///    - Super Admin UI: When creating or editing a hospital entry.
-/// 2. PROCESSING:
-///    - Converts geographical coordinates (lat/lng) for map markers.
-///    - Manages a list of 'availableBloodTypes'.
-///    - Tracks the 'isActive' status to show/hide the hospital from users.
-/// 3. SENDS DATA TO:
-///    - Firestore (via 'toMap'): For database updates.
-///    - FastAPI (via 'toJson'): For administrative actions managed by the backend.
-///    - Map/List UI: To show users where they can find or donate blood.
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -122,3 +104,22 @@ class HospitalModel {
     };
   }
 }
+
+/// FILE: hospital_model.dart
+///
+/// DESCRIPTION:
+/// This file defines the 'HospitalModel' class, representing a blood bank or hospital
+/// in the system. It tracks its location, contact information, and blood availability.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - Firestore (via 'fromMap'): Fetches from the 'hospitals' collection.
+///    - Super Admin UI: When creating or editing a hospital entry.
+/// 2. PROCESSING:
+///    - Converts geographical coordinates (lat/lng) for map markers.
+///    - Manages a list of 'availableBloodTypes'.
+///    - Tracks the 'isActive' status to show/hide the hospital from users.
+/// 3. SENDS DATA TO:
+///    - Firestore (via 'toMap'): For database updates.
+///    - FastAPI (via 'toJson'): For administrative actions managed by the backend.
+///    - Map/List UI: To show users where they can find or donate blood.

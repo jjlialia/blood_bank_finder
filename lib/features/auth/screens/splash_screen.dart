@@ -1,22 +1,3 @@
-/// FILE: splash_screen.dart
-///
-/// DESCRIPTION:
-/// The entry point of the application UI. It performs background
-/// authentication checks while displaying a branded animation to the user.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Checks 'isAuthenticated' to see if a session exists.
-///    - 'UserModel': Retrieves the 'role' to decide where to send the user.
-/// 2. PROCESSING:
-///    - Persistence Check: As soon as the app opens, it asks the AuthProvider
-///      if a user was previously logged in.
-///    - Animation Lifecycle: Runs a 2-second fade-in visual.
-/// 3. SENDS DATA TO:
-///    - Navigation: Switches the GUI to either 'LoginScreen' or a specific Dashboard.
-/// 4. OUTPUTS/GUI:
-///    - Animated logo and "Blood Bank Finder" title.
-///    - "Proceed to Login" button for manual navigation.
 library;
 
 import 'package:flutter/material.dart';
@@ -185,3 +166,23 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
+
+/// FILE: splash_screen.dart
+///
+/// DESCRIPTION:
+/// The entry point of the application UI. It performs background
+/// authentication checks while displaying a branded animation to the user.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': Checks 'isAuthenticated' to see if a session exists.
+///    - 'UserModel': Retrieves the 'role' to decide where to send the user.
+/// 2. PROCESSING:
+///    - Persistence Check: As soon as the app opens, it asks the AuthProvider
+///      if a user was previously logged in.
+///    - Animation Lifecycle: Runs a 2-second fade-in visual.
+/// 3. SENDS DATA TO:
+///    - Navigation: Switches the GUI to either 'LoginScreen' or a specific Dashboard.
+/// 4. OUTPUTS/GUI:
+///    - Animated logo and "Blood Bank Finder" title.
+///    - "Proceed to Login" button for manual navigation.

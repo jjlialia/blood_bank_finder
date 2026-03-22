@@ -1,27 +1,3 @@
-/// FILE: location_service.dart
-///
-/// DESCRIPTION:
-/// This file handles the retrieval of administrative geographical data (Regions, Cities, Barangays)
-/// specifically for the Philippines using the PSGC (Philippine Standard Geographic Code) API.
-/// It is used for filtering hospitals and donors by location.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - The PSGC Cloud API (https://psgc.cloud/api/v2).
-/// 2. PROCESSING:
-///    - Fetches raw JSON data for regions, cities, and municipalities.
-///    - Filters regions based on Island Group (Luzon, Visayas, Mindanao) using hardcoded PSGC codes.
-///    - Caches results in-memory ('_cache') to avoid redundant network calls and speed up the UI.
-///    - Sorts all lists alphabetically by name for a better user experience in dropdowns.
-/// 3. SENDS DATA TO:
-///    - UI Screens with location dropdowns (e.g., FindBloodBankScreen, ProfileScreen, ManageHospitalsScreen).
-/// 4. OUTPUTS/RESPONSES:
-///    - Returns 'List<Map<String, dynamic>>' containing geographic details (name, code, etc.).
-///
-/// KEY COMPONENTS:
-/// - islandGroupMapping: A dictionary that links major islands (Luzon/Visayas/Mindanao) to their respective region PSGC codes.
-/// - _cache: A simple in-memory map to store previous API responses.
-/// - getBarangays: The most granular level of location filtering in the app.
 library;
 
 import 'dart:convert';
@@ -150,3 +126,28 @@ class LocationService {
     }
   }
 }
+
+/// FILE: location_service.dart
+///
+/// DESCRIPTION:
+/// This file handles the retrieval of administrative geographical data (Regions, Cities, Barangays)
+/// specifically for the Philippines using the PSGC (Philippine Standard Geographic Code) API.
+/// It is used for filtering hospitals and donors by location.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - The PSGC Cloud API (https://psgc.cloud/api/v2).
+/// 2. PROCESSING:
+///    - Fetches raw JSON data for regions, cities, and municipalities.
+///    - Filters regions based on Island Group (Luzon, Visayas, Mindanao) using hardcoded PSGC codes.
+///    - Caches results in-memory ('_cache') to avoid redundant network calls and speed up the UI.
+///    - Sorts all lists alphabetically by name for a better user experience in dropdowns.
+/// 3. SENDS DATA TO:
+///    - UI Screens with location dropdowns (e.g., FindBloodBankScreen, ProfileScreen, ManageHospitalsScreen).
+/// 4. OUTPUTS/RESPONSES:
+///    - Returns 'List<Map<String, dynamic>>' containing geographic details (name, code, etc.).
+///
+/// KEY COMPONENTS:
+/// - islandGroupMapping: A dictionary that links major islands (Luzon/Visayas/Mindanao) to their respective region PSGC codes.
+/// - _cache: A simple in-memory map to store previous API responses.
+/// - getBarangays: The most granular level of location filtering in the app.

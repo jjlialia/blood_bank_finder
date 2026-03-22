@@ -1,24 +1,3 @@
-/// FILE: request_blood_screen.dart
-///
-/// DESCRIPTION:
-/// This screen allows users to post an emergency request for blood.
-/// It collects technical details (blood type, quantity) and integrates
-/// a hospital directory for site selection.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': For the requester's ID and Name.
-///    - 'HospitalPickerSheet': For selecting the destination facility.
-///    - User Input: Blood type dropdown and unit quantity.
-/// 2. PROCESSING:
-///    - Request Assembly: Creates a 'BloodRequestModel' object with 'status: pending'.
-///    - Validation: Ensures a hospital is selected and quantity is a valid number.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.createBloodRequest': Transmits the request data to the
-///      FastAPI backend, which persists it in Firestore.
-/// 4. OUTPUTS/GUI:
-///    - Multi-input form with a 'Sworn Statement' checkbox for medical urgency.
-///    - Success/Error snackbars based on the API response.
 library;
 
 import 'package:flutter/material.dart';
@@ -235,3 +214,25 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     );
   }
 }
+
+/// FILE: request_blood_screen.dart
+///
+/// DESCRIPTION:
+/// This screen allows users to post an emergency request for blood.
+/// It collects technical details (blood type, quantity) and integrates
+/// a hospital directory for site selection.
+///
+/// DATA FLOW OVERVIEW:
+/// 1. RECEIVES DATA FROM:
+///    - 'AuthProvider': For the requester's ID and Name.
+///    - 'HospitalPickerSheet': For selecting the destination facility.
+///    - User Input: Blood type dropdown and unit quantity.
+/// 2. PROCESSING:
+///    - Request Assembly: Creates a 'BloodRequestModel' object with 'status: pending'.
+///    - Validation: Ensures a hospital is selected and quantity is a valid number.
+/// 3. SENDS DATA TO:
+///    - 'ApiService.createBloodRequest': Transmits the request data to the
+///      FastAPI backend, which persists it in Firestore.
+/// 4. OUTPUTS/GUI:
+///    - Multi-input form with a 'Sworn Statement' checkbox for medical urgency.
+///    - Success/Error snackbars based on the API response.

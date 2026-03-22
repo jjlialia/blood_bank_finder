@@ -1,22 +1,3 @@
-"""
-FILE: inventory.py (FastAPI Router)
-
-DESCRIPTION:
-This router manages the stock levels of different blood types within 
-individual hospitals. It is primarily used by Hospital Admins.
-
-DATA FLOW OVERVIEW:
-1. RECEIVES DATA FROM: 
-   - 'ManageInventoryScreen' in the Flutter app.
-2. PROCESSING:
-   - Hospital Association: All inventory items are stored as sub-collections 
-     under a specific hospital document in Firestore.
-   - Transactional Safety: Handled at the service layer to prevent math errors.
-3. SENDS DATA TO:
-   - 'FirestoreService': To update the 'inventory' sub-collection of a hospital.
-4. OUTPUTS:
-   - 'InventoryResponse': Current units and last updated timestamp for a blood type.
-"""
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
@@ -57,3 +38,53 @@ async def get_inventory(hospital_id: str, service: FirestoreService = Depends(ge
     SENT TO: `FirestoreService.get_inventory`.
     """
     return await service.get_inventory(hospital_id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+FILE: inventory.py (FastAPI Router)
+
+DESCRIPTION:
+This router manages the stock levels of different blood types within 
+individual hospitals. It is primarily used by Hospital Admins.
+
+DATA FLOW OVERVIEW:
+1. RECEIVES DATA FROM: 
+   - 'ManageInventoryScreen' in the Flutter app.
+2. PROCESSING:
+   - Hospital Association: All inventory items are stored as sub-collections 
+     under a specific hospital document in Firestore.
+   - Transactional Safety: Handled at the service layer to prevent math errors.
+3. SENDS DATA TO:
+   - 'FirestoreService': To update the 'inventory' sub-collection of a hospital.
+4. OUTPUTS:
+   - 'InventoryResponse': Current units and last updated timestamp for a blood type.
+"""
