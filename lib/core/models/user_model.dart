@@ -3,10 +3,9 @@ library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
-  // The unique identifier from Firebase Auth.
+  //  unique identifier gkan Firebase Auth.
   final String uid;
   final String email;
-  // Defines what the user can see/do ('user', 'superadmin', or 'admin').
   final String role;
   final String firstName;
   final String lastName;
@@ -22,9 +21,8 @@ class UserModel {
   final String barangay;
   final String address;
 
-  // Only populated if the user is a Hospital Admin.
+  // if hospital admin ra ni naay value
   final String? hospitalId;
-  // Restricts app access if set to true.
   final bool isBanned;
   final DateTime createdAt;
 

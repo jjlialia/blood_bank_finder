@@ -17,7 +17,7 @@ class DonateBloodScreen extends StatefulWidget {
 }
 
 class _DonateBloodScreenState extends State<DonateBloodScreen> {
-  // STATE MANAGEMENT: Tracking the user's progress through the form.
+  //
   int _currentStep = 0;
   String? _selectedBloodType;
   HospitalModel? _selectedHospital;
@@ -25,7 +25,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   final _contactController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  // ELIGIBILITY STATE: These must all be TRUE to proceed.
+  //These must all be TRUE to proceed.
   bool _isSworn = false;
   bool _ageOk = false;
   bool _weightOk = false;
@@ -43,7 +43,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         type: StepperType.vertical,
         currentStep: _currentStep,
         onStepContinue: () {
-          // STEP: Validation Gate for the Eligibility Quiz.
+          //  Validation for the Eligibility Quiz.
           if (_currentStep == 0) {
             if (!(_ageOk && _weightOk && _travelOk && _medsOk && _wellOk)) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -55,7 +55,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               return;
             }
           }
-          // STEP: Validation Gate for the Details Form.
+          // Validation Gate for the Details Form.
           if (_currentStep == 3) {
             if (!_formKey.currentState!.validate()) return;
           }
@@ -63,7 +63,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           if (_currentStep < 4) {
             setState(() => _currentStep++);
           } else {
-            // FINAL STEP: Submit the gathered data to the server.
+            // Submit the gathered data to the server.
             _submitDonation(auth);
           }
         },
@@ -71,7 +71,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           if (_currentStep > 0) setState(() => _currentStep--);
         },
         steps: [
-          // GUI: Step 1 - Health Screening.
+          // Health Screening.
           Step(
             title: const Text('Eligibility Quiz'),
             isActive: _currentStep >= 0,
@@ -107,7 +107,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ],
             ),
           ),
-          // GUI: Step 2 - Blood Group.
+          //  Blood Group.
           Step(
             title: const Text('Select Blood Type'),
             isActive: _currentStep >= 1,
@@ -127,7 +127,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               decoration: const InputDecoration(labelText: 'Your Blood Type'),
             ),
           ),
-          // GUI: Step 3 - Hospital Selection.
+          //  Hospital Selection.
           Step(
             title: const Text('Select Hospital'),
             isActive: _currentStep >= 2,
@@ -197,7 +197,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ],
             ),
           ),
-          // GUI: Step 4 - Contact and Quantity.
+          // Contact and Quantity.
           Step(
             title: const Text('Details'),
             isActive: _currentStep >= 3,
@@ -230,7 +230,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ),
             ),
           ),
-          // GUI: Step 5 - Legal Declaration.
+          // Legal Declaration.
           Step(
             title: const Text('Declaration'),
             isActive: _currentStep >= 4,
@@ -247,11 +247,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
     );
   }
 
-  /// CORE LOGIC: Final Data Flow Submission.
-  /// 1. Consolidates all state variables into a 'BloodRequestModel'.
-  /// 2. Calls the 'api.createBloodRequest' method.
-  /// 3. DATA DESTINATION: FastAPI backend -> Firestore 'blood_requests' collection.
-  /// 4. If successful, closes the screen and shows a green success banner.
   void _submitDonation(AuthProvider auth) async {
     if (!_isSworn || _selectedHospital == null || _selectedBloodType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -297,26 +292,3 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
     }
   }
 }
-
-/// FILE: donate_blood_screen.dart
-///
-/// DESCRIPTION:
-/// This screen provides a guided, multi-step process (Stepper) for users who
-/// wish to donate blood. It includes an eligibility quiz, location selection,
-/// and final data submission.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': To get the currently logged-in user's UID and profile info.
-///    - 'HospitalPickerSheet': A custom widget that lets the user select a
-///      target hospital from a list fetched from Firestore.
-/// 2. PROCESSING:
-///    - Validation: Checks if the user meets all 5 health criteria in Step 1.
-///    - Model Construction: Combines user input (blood type, quantity, contact)
-///      with fixed data (Status = 'pending', Type = 'Donate') into a 'BloodRequestModel'.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.createBloodRequest': Sends the final JSON object to the
-///      FastAPI backend, which then writes it to Firestore.
-/// 4. OUTPUTS/GUI:
-///    - A vertical Stepper UI that validates each step before allowing progression.
-///    - Visual feedback (SnackBars) for success or failure of the submission.
