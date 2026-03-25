@@ -6,6 +6,7 @@ import 'package:blood_bank_finder/features/super_admin/screens/super_admin_dashb
 import 'package:blood_bank_finder/features/super_admin/screens/manage_hospitals_screen.dart';
 import 'package:blood_bank_finder/features/super_admin/screens/manage_users_screen.dart';
 import 'package:blood_bank_finder/features/super_admin/screens/global_log_screen.dart';
+import 'package:blood_bank_finder/features/chat/screens/chat_list_screen.dart';
 
 class SuperAdminDrawer extends StatelessWidget {
   const SuperAdminDrawer({super.key});
@@ -40,6 +41,19 @@ class SuperAdminDrawer extends StatelessWidget {
                 builder: (context) => const SuperAdminDashboard(),
               ),
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.chat),
+            title: const Text('Messages'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatListScreen(),
+                ),
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.local_hospital),

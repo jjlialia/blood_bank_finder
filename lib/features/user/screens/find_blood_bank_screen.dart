@@ -7,6 +7,10 @@ import '../../../core/services/database_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/api_service.dart';
 import '../widgets/hospital_map_view.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../chat/services/chat_service.dart';
+import '../../chat/screens/chat_room_screen.dart';
 
 class FindBloodBankScreen extends StatefulWidget {
   const FindBloodBankScreen({super.key});
@@ -251,6 +255,46 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  if (h.id == null) return;
+                  final auth = context.read<AuthProvider>();
+                  if (auth.user == null) return;
+                  
+                  final chatService = ChatService();
+                  final chatId = await chatService.createOrGetChat(
+                    auth.user!.uid, 
+                    h.id!,
+                    {
+                      auth.user!.uid: auth.user!.firstName,
+                      h.id!: h.name,
+                    }
+                  );
+                  // Close bottom sheet
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatRoomScreen(
+                        chatRoomId: chatId,
+                        otherParticipantName: h.name,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.chat),
+                label: const Text('Message Hospital'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Theme.of(context).primaryColor,
+                  side: BorderSide(color: Theme.of(context).primaryColor),
                 ),
               ),
             ),

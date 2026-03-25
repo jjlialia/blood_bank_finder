@@ -6,6 +6,9 @@ import 'package:blood_bank_finder/features/hospital/screens/hospital_admin_dashb
 import 'package:blood_bank_finder/features/hospital/screens/inventory_management_screen.dart';
 import 'package:blood_bank_finder/features/hospital/screens/blood_requests_list_screen.dart';
 import 'package:blood_bank_finder/features/hospital/screens/hospital_profile_screen.dart';
+import 'package:blood_bank_finder/features/chat/screens/chat_list_screen.dart';
+import 'package:blood_bank_finder/features/chat/screens/chat_room_screen.dart';
+import 'package:blood_bank_finder/features/chat/services/chat_service.dart';
 
 class HospitalAdminDrawer extends StatelessWidget {
   const HospitalAdminDrawer({super.key});
@@ -42,6 +45,19 @@ class HospitalAdminDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
+            leading: const Icon(Icons.chat),
+            title: const Text('Messages'),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer first
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatListScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.inventory),
             title: const Text('Inventory'),
             onTap: () => Navigator.pushReplacement(
@@ -70,6 +86,36 @@ class HospitalAdminDrawer extends StatelessWidget {
                 builder: (context) => const HospitalProfileScreen(),
               ),
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.support_agent),
+            title: const Text('Contact Support'),
+            onTap: () async {
+              final auth = context.read<AuthProvider>();
+              final currentUser = auth.user;
+              if (currentUser == null || currentUser.hospitalId == null) return;
+              
+              final chatService = ChatService();
+              final chatId = await chatService.createOrGetChat(
+                currentUser.hospitalId!,
+                'superadmin',
+                {
+                  currentUser.hospitalId!: '${currentUser.firstName} (Admin)',
+                  'superadmin': 'System Admin',
+                }
+              );
+              if (!context.mounted) return;
+              Navigator.pop(context); // Close drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatRoomScreen(
+                    chatRoomId: chatId,
+                    otherParticipantName: 'System Admin',
+                  ),
+                ),
+              );
+            },
           ),
           const Spacer(),
           const Divider(),

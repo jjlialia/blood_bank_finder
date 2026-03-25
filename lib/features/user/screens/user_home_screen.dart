@@ -8,6 +8,7 @@ import 'find_blood_bank_screen.dart';
 import 'donate_blood_screen.dart';
 import 'request_blood_screen.dart';
 import 'notifications_screen.dart';
+import '../../chat/screens/chat_list_screen.dart';
 
 class UserHomeScreen extends StatelessWidget {
   const UserHomeScreen({super.key});
@@ -23,6 +24,16 @@ class UserHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          // GUI: Quick access to messages
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ChatListScreen(),
+              ),
+            ),
+          ),
           // GUI: Quick access to the notifications history.
           IconButton(
             icon: const Icon(Icons.notifications_none),

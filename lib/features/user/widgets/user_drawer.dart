@@ -5,6 +5,8 @@ import 'package:blood_bank_finder/features/auth/screens/login_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/user_home_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/profile_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/notifications_screen.dart';
+import 'package:blood_bank_finder/features/chat/screens/chat_room_screen.dart';
+import 'package:blood_bank_finder/features/chat/services/chat_service.dart';
 
 class UserDrawer extends StatelessWidget {
   const UserDrawer({super.key});
@@ -68,6 +70,36 @@ class UserDrawer extends StatelessWidget {
                 context: context,
                 applicationName: 'Blood Bank Finder',
                 applicationVersion: '1.0.0',
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.support_agent),
+            title: const Text('Contact Support'),
+            onTap: () async {
+              final auth = context.read<AuthProvider>();
+              final currentUser = auth.user;
+              if (currentUser == null) return;
+              
+              final chatService = ChatService();
+              final chatId = await chatService.createOrGetChat(
+                currentUser.uid,
+                'superadmin',
+                {
+                  currentUser.uid: '${currentUser.firstName} ${currentUser.lastName}',
+                  'superadmin': 'System Admin',
+                }
+              );
+              if (!context.mounted) return;
+              Navigator.pop(context); // Close drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatRoomScreen(
+                    chatRoomId: chatId,
+                    otherParticipantName: 'System Admin',
+                  ),
+                ),
               );
             },
           ),
