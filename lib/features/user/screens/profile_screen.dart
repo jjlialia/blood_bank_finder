@@ -17,7 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final ApiService _api = ApiService();
 
-  // STATE: Controls if we are viewing or editing.
+  // Controls if nag viewing or editing.
   bool _isEditing = false;
   bool _isLoading = false;
 
@@ -31,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // STEP: Load existing data from the AuthProvider into the GUI controllers.
+    // Load existing data from the AuthProvider into the GUI controllers.
     final user = context.read<AuthProvider>().user;
     _firstNameCtrl = TextEditingController(text: user?.firstName ?? '');
     _lastNameCtrl = TextEditingController(text: user?.lastName ?? '');
@@ -50,9 +50,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  /// CORE LOGIC: Profile Update Data Flow.
-  /// 1. Validates the form fields.
-  /// 2. Re-packages the original 'currentUser' data with the new values from the controllers.
+  ///Profile Update
+  /// i validate sa formfields first, og gibag o ang saunang text giilis sa bag o gikan sa controllers
   /// 3. SENDS: Call 'api.saveUser(updatedUser)'.
   /// 4. UI: Shows 'isLoading' during the network call and closes edit mode on success.
   Future<void> _saveProfile(UserModel currentUser) async {
@@ -104,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // STEP: Listen to the 'AuthProvider' for the real-time user object.
+    // Listen to the 'AuthProvider' for the real-time user object.
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
 
@@ -120,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 setState(() {
                   _isEditing = !_isEditing;
                   if (!_isEditing) {
-                    // RESET: If cancelling, put the original data back in the controllers.
+                    //If cancelling,i put the original data back in the controllers.
                     _firstNameCtrl.text = user.firstName;
                     _lastNameCtrl.text = user.lastName;
                     _mobileCtrl.text = user.mobile;
@@ -232,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 24),
-                      // SAVE BUTTON: Triggers the data flow to the backend.
+                      // SAVE BUTTON, trigger to backend
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -292,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --- UI HELPER: Displays a single row of user information ---
+  // Displays a single row of user information ---
   Widget _buildProfileItem(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),

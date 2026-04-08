@@ -20,7 +20,7 @@ class RequestBloodScreen extends StatefulWidget {
 class _RequestBloodScreenState extends State<RequestBloodScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // STATE: Holding the user's selections.
+  // mo hold sa users selections
   String? _selectedBloodType;
   HospitalModel? _selectedHospital;
   final _unitsController = TextEditingController(text: '1.0');
@@ -32,13 +32,8 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     super.initState();
   }
 
-  /// CORE LOGIC: The Emergency Request Data Flow.
-  /// 1. PRE-CHECK: Ensures a Hospital and Blood Type are selected.
-  /// 2. ASSEMBLY: Gathers Data from: Auth (User) + GUI (Inputs) + Picker (Hospital).
-  /// 3. DATA JOURNEY: App -> ApiService -> FastAPI Backend -> Firestore.
-  /// 4. UI UPDATE: Closes the screen and shows a green success snackbar.
+  /// 1,
   void _submitRequest(AuthProvider auth) async {
-    // STEP: Validate that the picker was used.
     if (_selectedHospital == null || _selectedBloodType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select hospital and blood type')),
@@ -49,7 +44,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     try {
       final api = ApiService();
 
-      // STEP: Create the data structure for the backend.
+      //Create the data structure for the backend.
       final request = BloodRequestModel(
         userId: auth.user!.uid,
         userName: '${auth.user!.firstName} ${auth.user!.lastName}',
@@ -63,12 +58,12 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
         createdAt: DateTime.now(),
       );
 
-      // STEP: Send the package over the network.
+      //Send the package over the network.
       await api.createBloodRequest(request);
 
       if (!mounted) return;
 
-      // STEP: GUI cleanup and feedback.
+      // GUI cleanup and feedback.
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -100,7 +95,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // INPUT: Blood selection dropdown.
+              //  Blood selection dropdown.
               DropdownButtonFormField<String>(
                 initialValue: _selectedBloodType,
                 items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
@@ -112,7 +107,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // INPUT: Interactive Hospital selection sheet.
+              //Interactive Hospital selection sheet.
               InkWell(
                 onTap: () {
                   showModalBottomSheet(
@@ -156,7 +151,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                   ),
                 ),
               ),
-              // GUI: Displaying location preview once a hospital is picked.
+              // Displaying location preview once nakapili og hospital
               if (_selectedHospital != null) ...[
                 const SizedBox(height: 8),
                 Padding(
@@ -168,7 +163,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              // INPUT: Units required.
+              // Units required.
               CustomTextField(
                 label: 'Quantity (Units)',
                 controller: _unitsController,
@@ -191,7 +186,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                     v == null || v.isEmpty ? 'Contact required' : null,
               ),
               const SizedBox(height: 16),
-              // INPUT: Legal verification checkbox.
+              //Legal verification checkbox.
               CheckboxListTile(
                 title: const Text(
                   'I solemnly swear this request is for a medical need.',
@@ -202,7 +197,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 onChanged: (v) => setState(() => _isSworn = v ?? false),
               ),
               const SizedBox(height: 32),
-              // ACTION: Triggers the data submission.
+              //Triggers the data submission.
               CustomButton(
                 label: 'Post Emergency Request',
                 onPressed: _isSworn ? () => _submitRequest(auth) : null,
@@ -214,25 +209,3 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     );
   }
 }
-
-/// FILE: request_blood_screen.dart
-///
-/// DESCRIPTION:
-/// This screen allows users to post an emergency request for blood.
-/// It collects technical details (blood type, quantity) and integrates
-/// a hospital directory for site selection.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': For the requester's ID and Name.
-///    - 'HospitalPickerSheet': For selecting the destination facility.
-///    - User Input: Blood type dropdown and unit quantity.
-/// 2. PROCESSING:
-///    - Request Assembly: Creates a 'BloodRequestModel' object with 'status: pending'.
-///    - Validation: Ensures a hospital is selected and quantity is a valid number.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.createBloodRequest': Transmits the request data to the
-///      FastAPI backend, which persists it in Firestore.
-/// 4. OUTPUTS/GUI:
-///    - Multi-input form with a 'Sworn Statement' checkbox for medical urgency.
-///    - Success/Error snackbars based on the API response.

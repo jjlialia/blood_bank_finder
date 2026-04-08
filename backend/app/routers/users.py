@@ -14,9 +14,7 @@ def get_service(db=Depends(get_db)):
 @router.post("/", response_model=UserResponse)
 async def create_user(user: UserCreate, service: FirestoreService = Depends(get_service)):
     """
-    DATA FLOW: Signup Screen (Flutter) -> This Handler -> create_or_update_user in Service.
-    Authenticates and saves a new user profile.
-    RECEIVED FROM: SignupScreen (Flutter).
+    RECEIVED FROM: SignupScreen (Flutter) og profile screen
     SENT TO: `FirestoreService.create_or_update_user` -> 'users' collection.
     """
     return await service.create_or_update_user(user.uid, user.dict())

@@ -39,9 +39,8 @@ class FirestoreService:
 
     async def create_or_update_user(self, user_id: str, user_data: dict):
         """
-        Saves or updates a user profile. 
-        SECURITY: This method merges new data with existing 'role' and 'isBanned' 
-        status to prevent accidental demotions by the client.
+        Saves or updates  user profile. 
+        nagamit sa signup og profile screen
         """
         doc_ref = self.db.collection('users').document(user_id)
         doc = doc_ref.get()

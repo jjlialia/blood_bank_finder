@@ -18,11 +18,9 @@ class ApiService {
   }
 
   // --- Blood Requests ---
-
-  /// DATA SOURCE: RequestBloodScreen / DonateBloodScreen (UI).
-  /// DATA JOURNEY: Flutter -> FastAPI (/blood-requests/) -> Firestore.
-  /// STEP 1: Receives a 'BloodRequestModel' containing form data.
-  /// STEP 2: Sends a POST request to the backend.
+  //receive gikan sa blood request og donate blood
+  //ihatag padung sa backend para ma save sa database
+  // mo post sa blood request
   Future<void> createBloodRequest(BloodRequestModel request) async {
     final response = await http.post(
       Uri.parse('$baseUrl/blood-requests/'),
@@ -83,7 +81,7 @@ class ApiService {
 
   // --- Users ---
 
-  /// DATA SOURCE: SignupScreen (Auth Flow).
+  /// gkan SignupScreen og profile screen.
   /// DATA JOURNEY: Flutter -> FastAPI (/users/) -> Firestore.
   /// STEP 1: Receives a 'UserModel' after Firebase Auth creation.
   /// STEP 2: Sends a POST request to save the full profile to the backend db.
