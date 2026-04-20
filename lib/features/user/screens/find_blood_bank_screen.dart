@@ -3,6 +3,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/models/hospital_model.dart';
+import '../../../core/models/inventory_model.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/api_service.dart';
@@ -20,18 +21,16 @@ class FindBloodBankScreen extends StatefulWidget {
 }
 
 class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
-  // SERVICE TOOLS: Our links to the backend and data sources.
   final DatabaseService _db = DatabaseService();
   final LocationService _locationSvc = LocationService();
   final ApiService _api = ApiService();
 
-  // LOCAL STATE: Things that change as the user interacts with the GUI.
   String _searchQuery = '';
   String? _selectedIsland;
   String? _selectedRegion;
   String? _selectedCity;
   String? _selectedBarangay;
-  bool _isMapView = false; // Toggles between the list and the map.
+  bool _isMapView = false; // Toggles if list or map
   LatLng? _mapCenter;
   double _mapZoom = 12;
 
@@ -41,7 +40,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       appBar: AppBar(
         title: const Text('Find Blood Bank'),
         actions: [
-          // STEP: User taps this to switch between visual Map and text List.
+          // toggle
           IconButton(
             icon: Icon(_isMapView ? Icons.list : Icons.map),
             onPressed: () => setState(() => _isMapView = !_isMapView),
@@ -51,14 +50,12 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       ),
       body: Column(
         children: [
-          // --- TOP SECTION: SEARCH & FILTERS ---
-          // Here, the user provides INPUT that determines what data we see.
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // SEARCH BAR: Receives text input from the user.
+                // SEARCH BAR
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -87,7 +84,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // FILTER CHIPS: Trigger location pickers for hierarchical selection.
+                // FILTERS
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -121,11 +118,10 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
               ],
             ),
           ),
-          // --- MAIN SECTION: DATA DISPLAY ---
-          // This uses StreamBuilder to reactively show data from Firestore.
+
           Expanded(
             child: StreamBuilder<List<HospitalModel>>(
-              // STEP: We send our location filters to the Database Service.
+              //send to database service
               stream: _db.streamHospitals(
                 islandGroup: _selectedIsland,
                 region: _selectedRegion,
@@ -137,7 +133,6 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                // STEP: We further filter the database results based on the Search Text.
                 final hospitals = (snapshot.data ?? [])
                     .where(
                       (h) => h.name.toLowerCase().contains(
@@ -147,7 +142,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                     .toList();
 
                 if (hospitals.isEmpty) {
-                  // Even if empty, we might show an empty Map.
+                  // Even if empty we  how empty Map.
                   if (_isMapView) {
                     return HospitalMapView(
                       hospitals: const [],
@@ -161,11 +156,11 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   );
                 }
 
-                // GUI STEP: Use IndexedStack to keep both Map and List alive but only show one.
+                //IndexedStack to keep both Map and List alive but only show one.
                 return IndexedStack(
                   index: _isMapView ? 1 : 0,
                   children: [
-                    // --- LIST VIEW ---
+                    // LIST VIEW
                     ListView.builder(
                       itemCount: hospitals.length,
                       itemBuilder: (context, index) {
@@ -217,8 +212,8 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
-  /// GUI STEP: Shows a bottom sheet with detailed hospital info when selected.
-  /// Receives a 'HospitalModel' to display its properties (address, email, etc.).
+  /// Shows a bottom sheet with detailed hospital info when selected.
+  /// Includes a live blood inventory grid streamed from Firestore.
   void _showHospitalDetails(BuildContext context, HospitalModel h) {
     showModalBottomSheet(
       context: context,
@@ -226,94 +221,331 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(h.name, style: Theme.of(context).textTheme.titleLarge),
-            const Divider(height: 32),
-            _detailRow(Icons.location_on, 'Address', h.address),
-            _detailRow(Icons.phone, 'Contact', h.contactNumber),
-            _detailRow(Icons.email, 'Email', h.email),
-            const SizedBox(height: 24),
-            // OPTION: User can jump from the details directly to the Map location.
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _mapCenter = LatLng(h.latitude, h.longitude);
-                    _mapZoom = 15;
-                    _isMapView = true;
-                  });
-                  Navigator.pop(context);
-                },
-                icon: const Icon(Icons.map),
-                label: const Text('Show on Map'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
+      builder: (ctx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.92,
+        builder: (_, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── drag handle ──────────────────────────────────────────
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (h.id == null) return;
-                  final auth = context.read<AuthProvider>();
-                  if (auth.user == null) return;
-                  
-                  final chatService = ChatService();
-                  final chatId = await chatService.createOrGetChat(
-                    auth.user!.uid, 
-                    h.id!,
-                    {
-                      auth.user!.uid: auth.user!.firstName,
-                      h.id!: h.name,
-                    }
-                  );
-                  // Close bottom sheet
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatRoomScreen(
-                        chatRoomId: chatId,
-                        otherParticipantName: h.name,
-                      ),
+
+              // ── hospital name ─────────────────────────────────────────
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.12),
+                    child: Icon(
+                      Icons.local_hospital,
+                      color: Theme.of(context).primaryColor,
                     ),
-                  );
-                },
-                icon: const Icon(Icons.chat),
-                label: const Text('Message Hospital'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Theme.of(context).primaryColor,
-                  side: BorderSide(color: Theme.of(context).primaryColor),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      h.name,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 28),
+
+              // ── contact details ───────────────────────────────────────
+              _detailRow(Icons.location_on, 'Address', h.address),
+              _detailRow(Icons.phone, 'Contact', h.contactNumber),
+              _detailRow(Icons.email, 'Email', h.email),
+
+              const SizedBox(height: 20),
+
+              // ── live inventory section ────────────────────────────────
+              Row(
+                children: [
+                  Icon(
+                    Icons.bloodtype,
+                    size: 20,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Live Blood Inventory',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // StreamBuilder reads the inventory sub-collection in real-time
+              if (h.id != null)
+                StreamBuilder<List<InventoryModel>>(
+                  stream: _db.streamInventory(h.id!),
+                  builder: (context, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    final inventory = snap.data ?? [];
+
+                    if (inventory.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'No inventory data available for this hospital.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      );
+                    }
+
+                    // Sort blood types in a predictable clinical order
+                    const order = [
+                      'A+', 'A-', 'B+', 'B-',
+                      'AB+', 'AB-', 'O+', 'O-'
+                    ];
+                    inventory.sort((a, b) {
+                      final ai = order.indexOf(a.bloodType);
+                      final bi = order.indexOf(b.bloodType);
+                      return (ai == -1 ? 99 : ai)
+                          .compareTo(bi == -1 ? 99 : bi);
+                    });
+
+                    // Find the most-recent lastUpdated timestamp
+                    final latestUpdate = inventory
+                        .map((e) => e.lastUpdated)
+                        .reduce((a, b) => a.isAfter(b) ? a : b);
+                    final updatedStr =
+                        '${latestUpdate.day}/${latestUpdate.month}/${latestUpdate.year}'
+                        '  ${latestUpdate.hour.toString().padLeft(2, '0')}:'
+                        '${latestUpdate.minute.toString().padLeft(2, '0')}';
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 2-column grid of blood type cards
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            childAspectRatio: 2.6,
+                          ),
+                          itemCount: inventory.length,
+                          itemBuilder: (context, i) {
+                            final item = inventory[i];
+                            final available = item.units > 0;
+                            final isLow =
+                                item.units > 0 && item.units <= 5;
+                            final color = available
+                                ? (isLow
+                                    ? Colors.orange.shade600
+                                    : Colors.green.shade600)
+                                : Colors.red.shade400;
+                            final bgColor = available
+                                ? (isLow
+                                    ? Colors.orange.shade50
+                                    : Colors.green.shade50)
+                                : Colors.red.shade50;
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: bgColor,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: color.withValues(alpha: 0.4)),
+                              ),
+                              child: Row(
+                                children: [
+                                  // blood type label
+                                  Text(
+                                    item.bloodType,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: color,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  // availability icon + unit count
+                                  Icon(
+                                    available
+                                        ? Icons.check_circle
+                                        : Icons.cancel,
+                                    size: 14,
+                                    color: color,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    available
+                                        ? '${item.units} u'
+                                        : 'None',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        // legend + last updated
+                        Row(
+                          children: [
+                            _legendDot(Colors.green.shade600, 'Available'),
+                            const SizedBox(width: 12),
+                            _legendDot(Colors.orange.shade600, 'Low (≤5)'),
+                            const SizedBox(width: 12),
+                            _legendDot(Colors.red.shade400, 'Empty'),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Updated: $updatedStr',
+                          style: const TextStyle(
+                              fontSize: 11, color: Colors.grey),
+                        ),
+                      ],
+                    );
+                  },
+                )
+              else
+                const Text(
+                  'Hospital ID missing — inventory unavailable.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+
+              const SizedBox(height: 24),
+
+              // ── action buttons ────────────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _mapCenter = LatLng(h.latitude, h.longitude);
+                      _mapZoom = 15;
+                      _isMapView = true;
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  icon: const Icon(Icons.map),
+                  label: const Text('Show on Map'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (h.id == null) return;
+                    final auth = context.read<AuthProvider>();
+                    if (auth.user == null) return;
+
+                    final chatService = ChatService();
+                    final chatId = await chatService.createOrGetChat(
+                      auth.user!.uid,
+                      h.id!,
+                      {
+                        auth.user!.uid: auth.user!.firstName,
+                        h.id!: h.name
+                      },
+                    );
+                    if (!context.mounted) return;
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatRoomScreen(
+                          chatRoomId: chatId,
+                          otherParticipantName: h.name,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat),
+                  label: const Text('Message Hospital'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Theme.of(context).primaryColor,
+                    side: BorderSide(color: Theme.of(context).primaryColor),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // --- UI HELPER: Reusable row for details ---
+  /// Small coloured dot + label used in the inventory legend.
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      ],
+    );
+  }
+
+  //ui helper for detail row
   Widget _detailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -328,7 +560,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
-  // --- UI HELPER: The Filter Chip visual widget ---
+  // ui helper filter chip
   Widget _buildFilterChip({
     required String label,
     required bool isSelected,
@@ -376,16 +608,12 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
-  /// STEP 1: Receives the 'type' of location to pick (e.g., 'region').
-  /// STEP 2: Asks 'LocationService' for the specific list of places.
-  /// STEP 3: Displays a selectable list to the user.
-  /// STEP 4: When picked, updates local state and tells the Map to fly to that place.
+  /// ask from locationservice.dart, display selectible sa user and tell map mo fly ddto.
   Future<void> _showLocationPicker(BuildContext context, String type) async {
     List<String> items = [];
     String title = '';
     bool isLoading = true;
 
-    // Logic to determine which list to fetch based on previous selections.
     if (type == 'island') {
       items = ['Luzon', 'Visayas', 'Mindanao'];
       title = 'Select Island';
@@ -416,7 +644,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
       title = 'Select Barangay';
     }
 
-    // DATA FLOW: Calling external services to populate the selection list.
+    // Calling external services to provide the selection list.
     if (isLoading) {
       if (type == 'region') {
         final fetched = await _locationSvc.getRegionsByIsland(_selectedIsland!);
@@ -462,7 +690,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
 
     if (!mounted) return;
 
-    // GUI: Present the choices to the user.
+    // Present the choices to the user.
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -514,7 +742,6 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                 return ListTile(
                   title: Text(item),
                   onTap: () {
-                    // STEP: Update the local state with the user's choice.
                     setState(() {
                       if (type == 'island') {
                         _selectedIsland = item;
@@ -533,7 +760,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                       }
                     });
                     Navigator.pop(context);
-                    // STEP: Immediately move the map to this new area.
+                    //Immediately move the map to this area.
                     _updateMapLocation(type, item);
                   },
                 );
@@ -546,12 +773,6 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     );
   }
 
-  /// DATA FLOW: Converting a text location into Map coordinates.
-  /// 1. Receives the area name (e.g., "Cebu City").
-  /// 2. Formats it into a searchable address string.
-  /// 3. Sends it to 'ApiService.getCoordinatesFromAddress'.
-  /// 4. Receives back a Lat/Lng.
-  /// 5. Updates state to move the Map camera.
   Future<void> _updateMapLocation(String type, String itemName) async {
     String query = '';
     double targetZoom = 12.0;
@@ -592,25 +813,3 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
     }
   }
 }
-
-/// FILE: find_blood_bank_screen.dart
-///
-/// DESCRIPTION:
-/// This screen is the main interface for users to locate blood banks and hospitals.
-/// It provides both a List View and a Map View, with advanced filtering by
-/// geographical location (Island, Region, City, Barangay) and name search.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamHospitals': A real-time stream of all active hospitals.
-///    - 'LocationService': Provides the lists of Islands, Regions, Cities, etc., for the filter chips.
-///    - 'ApiService.getCoordinatesFromAddress': Fetches Lat/Lng to move the map when a location is selected.
-/// 2. PROCESSING:
-///    - Local State Management: Tracks search queries, selected filters, and Map/List toggle.
-///    - Filtering Logic: Client-side filtering of the hospital stream based on the 'searchQuery'.
-///    - Coordinate Conversion: When a user selects a City, it asks the API for coordinates to center the map there.
-/// 3. SENDS DATA TO:
-///    - 'HospitalMapView': Passes the filtered list of hospitals and map center to the custom map widget.
-///    - Hospital Detail Modal: Displays specific hospital data when a user taps a card or marker.
-/// 4. OUTPUTS/GUI:
-///    - A searchable, filterable list of cards or interactive map pins.

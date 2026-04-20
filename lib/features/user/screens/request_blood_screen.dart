@@ -32,7 +32,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     super.initState();
   }
 
-  /// 1,
+  ///
   void _submitRequest(AuthProvider auth) async {
     if (_selectedHospital == null || _selectedBloodType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +44,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     try {
       final api = ApiService();
 
-      //Create the data structure for the backend.
+      //Create the data structure for the backend. Model.
       final request = BloodRequestModel(
         userId: auth.user!.uid,
         userName: '${auth.user!.firstName} ${auth.user!.lastName}',
@@ -63,7 +63,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
 
       if (!mounted) return;
 
-      // GUI cleanup and feedback.
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -197,7 +196,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 onChanged: (v) => setState(() => _isSworn = v ?? false),
               ),
               const SizedBox(height: 32),
-              //Triggers the data submission.
+              //Triggers data submission.
               CustomButton(
                 label: 'Post Emergency Request',
                 onPressed: _isSworn ? () => _submitRequest(auth) : null,

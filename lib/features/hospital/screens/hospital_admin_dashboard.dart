@@ -14,7 +14,6 @@ class HospitalAdminDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // DATA SOURCE: Retrieving the linked hospital ID.
     final auth = context.read<AuthProvider>();
     final hospitalId = auth.user?.hospitalId;
     final DatabaseService db = DatabaseService();
@@ -22,7 +21,6 @@ class HospitalAdminDashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Hospital Admin Dashboard')),
       drawer: const HospitalAdminDrawer(),
-      // SECURITY GATE: Redirect if the admin isn't assigned to a collection yet.
       body: hospitalId == null || hospitalId.isEmpty
           ? const NoHospitalAssigned()
           : SingleChildScrollView(
@@ -37,7 +35,7 @@ class HospitalAdminDashboard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // --- SECTION: High-Level Stat Cards ---
+                  // High-Level Stat Cards ---
                   GridView.count(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
@@ -45,7 +43,7 @@ class HospitalAdminDashboard extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
-                      // DATA FLOW: Database -> Filter (Pending) -> Count.
+                      //Database -> Filter (Pending) -> Count.
                       _buildStatCard(
                         stream: db.streamHospitalRequests(hospitalId),
                         title: 'Pending Requests',
@@ -56,7 +54,7 @@ class HospitalAdminDashboard extends StatelessWidget {
                             .length
                             .toString(),
                       ),
-                      // DATA FLOW: Database -> Filter (Units < 5) -> Count.
+                      //  Database -> Filter (Units < 5) -> Count.
                       _buildStatCard(
                         stream: db.streamInventory(hospitalId),
                         title: 'Low Stock Alerts',
@@ -73,7 +71,6 @@ class HospitalAdminDashboard extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  // --- SECTION: Visual Inventory Bars ---
                   _buildInventorySummary(db, hospitalId),
                 ],
               ),
@@ -81,7 +78,7 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 
-  // --- UI HELPER: Reusable Stat Card with Stream Integration ---
+  // ui helper
   Widget _buildStatCard<T>({
     required Stream<T> stream,
     required String title,
@@ -125,7 +122,7 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 
-  // --- UI COMPONENT: The Inventory Bar Chart ---
+  // The Inventory Bar Chart ---
   Widget _buildInventorySummary(DatabaseService db, String hospitalId) {
     return StreamBuilder<List<InventoryModel>>(
       stream: db.streamInventory(hospitalId),
@@ -190,25 +187,3 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 }
-
-/// FILE: hospital_admin_dashboard.dart
-///
-/// DESCRIPTION:
-/// The landing page for Hospital Administrators. It provides a real-time
-/// executive summary of their site's health, including critical alerts
-/// for pending emergency requests and low blood inventory.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Retrieves the 'hospitalId' for the logged-in admin.
-///    - 'DatabaseService': Streams both 'blood_requests' and 'inventory'
-///       data for a single hospital.
-/// 2. PROCESSING:
-///    - Aggregation: Calculates the count of 'pending' requests from the full list.
-///    - Alert Logic: Identifies inventory items with less than 5 units remaining.
-///    - Progress Calculation: Maps stock levels (0-20 units) to a visual % (0-1.0).
-/// 3. SENDS DATA TO:
-///    - Navigation: Links to 'InventoryManagementScreen' and 'BloodRequestsListScreen'.
-/// 4. OUTPUTS/GUI:
-///    - Stat Cards: Large indicators for urgent actions.
-///    - Inventory Summary: Visual progress bars for quick stock inspection.

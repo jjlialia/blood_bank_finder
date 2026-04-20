@@ -15,8 +15,7 @@ def get_service(db=Depends(get_db)):
 @router.post("/{hospital_id}", response_model=InventoryResponse)
 async def add_inventory(hospital_id: str, inventory: InventoryCreate, service: FirestoreService = Depends(get_service)):
     """
-    RECEIVED FROM: (Legacy) Initial Setup.
-    SENT TO: `FirestoreService.update_inventory`.
+    r: (Legacy) Initial Setup. s: `FirestoreService.update_inventory`.
     """
     await service.update_inventory(hospital_id, inventory.blood_type, inventory.units)
     return {**inventory.dict(), "hospital_id": hospital_id}
@@ -25,8 +24,7 @@ async def add_inventory(hospital_id: str, inventory: InventoryCreate, service: F
 async def update_inventory(hospital_id: str, blood_type: str, units: float, 
                            service: FirestoreService = Depends(get_service)):
     """
-    RECEIVED FROM: InventoryManagementScreen.
-    SENT TO: `FirestoreService.update_inventory`.
+    r: InventoryManagementScreen. s: `FirestoreService.update_inventory`.
     """
     await service.update_inventory(hospital_id, blood_type, units)
     return {"blood_type": blood_type, "units": units, "last_updated": datetime.now()}
@@ -34,8 +32,7 @@ async def update_inventory(hospital_id: str, blood_type: str, units: float,
 @router.get("/{hospital_id}", response_model=List[InventoryResponse])
 async def get_inventory(hospital_id: str, service: FirestoreService = Depends(get_service)):
     """
-    RECEIVED FROM: InventoryManagementScreen.
-    SENT TO: `FirestoreService.get_inventory`.
+    r: InventoryManagementScreen. s: `FirestoreService.get_inventory`.
     """
     return await service.get_inventory(hospital_id)
 

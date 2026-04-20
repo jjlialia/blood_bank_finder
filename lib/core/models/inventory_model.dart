@@ -3,9 +3,7 @@ library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InventoryModel {
-  // E.g., "A+", "O-", "AB+".
   final String bloodType;
-  // Number of bags or units available.
   final int units;
   final DateTime lastUpdated;
 

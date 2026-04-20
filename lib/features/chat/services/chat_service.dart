@@ -10,16 +10,15 @@ class ChatService {
     return _firestore
         .collection('chats')
         .where('participants', arrayContains: userId)
-        // Removed .orderBy to prevent the Firebase Composite Index Error
         .snapshots()
         .map((snapshot) {
-           final rooms = snapshot.docs
-            .map((doc) => ChatRoom.fromFirestore(doc))
-            .toList();
-           
-           // Sort the chats locally in Dart
-           rooms.sort((a, b) => b.lastUpdateTime.compareTo(a.lastUpdateTime));
-           return rooms;
+          final rooms = snapshot.docs
+              .map((doc) => ChatRoom.fromFirestore(doc))
+              .toList();
+
+          //sorting
+          rooms.sort((a, b) => b.lastUpdateTime.compareTo(a.lastUpdateTime));
+          return rooms;
         });
   }
 
@@ -29,11 +28,12 @@ class ChatService {
         .collection('chats')
         .doc(chatId)
         .collection('messages')
-        .orderBy('timestamp', descending: true) // Most recent first
+        .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Message.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Message.fromFirestore(doc)).toList(),
+        );
   }
 
   // Send a message
@@ -61,8 +61,11 @@ class ChatService {
 
   // Initialize a new chat if it doesn't exist
   Future<String> createOrGetChat(
-      String currentUserId, String otherUserId, Map<String, dynamic>? names) async {
-    // Generate an ID (sort them to always be the same regardless of who starts)
+    String currentUserId,
+    String otherUserId,
+    Map<String, dynamic>? names,
+  ) async {
+    // Generate an ID
     final ids = [currentUserId, otherUserId];
     ids.sort();
     final chatId = ids.join('_');

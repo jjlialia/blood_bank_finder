@@ -11,14 +11,14 @@ import 'package:geocoding/geocoding.dart';
 class ApiService {
   // Use http://10.0.2.2:8000 for Android Emulator
   // Use http://localhost:8000 for Web/Desktop
-  // STEP: This allows the app to know where the "brain" (FastAPI) is located.
+  // allows the app to know where the "brain" (FastAPI) is located.
   static String get baseUrl {
     if (kIsWeb) return 'http://127.0.0.1:8000';
     return 'http://10.0.2.2:8000';
   }
 
   // --- Blood Requests ---
-  //receive gikan sa blood request og donate blood
+  //receive gikan sa blood request og donate blood screens
   //ihatag padung sa backend para ma save sa database
   // mo post sa blood request
   Future<void> createBloodRequest(BloodRequestModel request) async {
@@ -33,10 +33,6 @@ class ApiService {
     }
   }
 
-  /// DATA SOURCE: HospitalAdminRequestsScreen (UI Action).
-  /// DATA JOURNEY: Flutter -> FastAPI (/blood-requests/{id}/status) -> Firestore.
-  /// STEP 1: Receives 'requestId' and the new 'status'.
-  /// STEP 2: Sends a PATCH request to trigger the status update and user notification.
   Future<void> updateRequestStatus(
     String requestId,
     String status, {
@@ -58,10 +54,7 @@ class ApiService {
 
   // --- Inventory ---
 
-  /// DATA SOURCE: InventoryManagementScreen (UI TextField).
-  /// DATA JOURNEY: Flutter -> FastAPI (/hospitals/{id}/inventory/) -> Firestore Transaction.
-  /// STEP 1: Receives hospital ID, blood type, and the new unit count.
-  /// STEP 2: Sends a PUT request to perform a safe inventory update.
+  /// r: InventoryManagementScreen (UI TextField).
   Future<void> updateInventory(
     String hospitalId,
     String bloodType,
@@ -82,9 +75,7 @@ class ApiService {
   // --- Users ---
 
   /// gkan SignupScreen og profile screen.
-  /// DATA JOURNEY: Flutter -> FastAPI (/users/) -> Firestore.
-  /// STEP 1: Receives a 'UserModel' after Firebase Auth creation.
-  /// STEP 2: Sends a POST request to save the full profile to the backend db.
+  ///r: usermodel s: Post request dayun sa backend
   Future<void> saveUser(UserModel user) async {
     final response = await http.post(
       Uri.parse('$baseUrl/users/'),
@@ -133,8 +124,7 @@ class ApiService {
 
   // --- Hospitals ---
 
-  /// DATA SOURCE: ManageHospitalsScreen (Registration Form).
-  /// DATA JOURNEY: Flutter -> FastAPI (/hospitals/) -> Firestore.
+  ///r:profile screen and from manage hospital screen screen
   Future<void> addHospital(HospitalModel hospital) async {
     final response = await http.post(
       Uri.parse('$baseUrl/hospitals/'),
@@ -147,8 +137,7 @@ class ApiService {
     }
   }
 
-  /// DATA SOURCE: ManageHospitalsScreen (Edit Mode).
-  /// DATA JOURNEY: Flutter -> FastAPI (/hospitals/{id}) -> Firestore.
+  /// r: ManageHospitalsScreen (Edit Mode). s: FastAPI (/hospitals/{id}) -> Firestore.
   Future<void> updateHospital(String id, HospitalModel hospital) async {
     final response = await http.put(
       Uri.parse('$baseUrl/hospitals/$id'),
@@ -161,8 +150,7 @@ class ApiService {
     }
   }
 
-  /// DATA SOURCE: ManageHospitalsScreen (Delete Icon).
-  /// DATA JOURNEY: Flutter -> FastAPI (/hospitals/{id}) -> Firestore.
+  /// r: ManageHospitalsScreen (Delete Icon).
   Future<void> deleteHospital(String id) async {
     final response = await http.delete(Uri.parse('$baseUrl/hospitals/$id'));
 
@@ -171,11 +159,8 @@ class ApiService {
     }
   }
 
-  /// STEP 1: Receives a text address (e.g., "123 Main St, City").
-  /// STEP 2: On Web, it calls the FastAPI backend's '/geocoding' endpoint to
-  ///         securely convert the address without exposing API keys in the JS bundle.
-  /// STEP 3: On Mobile, it uses the 'geocoding' package to talk to system services.
-  /// OUTPUT: Returns a 'Location' object (Latitude & Longitude) so the app can place a pin on the map.
+  /// Receives a text address ("123 Main St, City").
+  /// Returns Latitude & Longitude to pin on the map.
   Future<Location?> getCoordinatesFromAddress(String address) async {
     if (kIsWeb) {
       try {
@@ -213,29 +198,3 @@ class ApiService {
     return null;
   }
 }
-
-/// FILE: api_service.dart
-///
-/// DESCRIPTION:
-/// This file serves as the central communication hub between the Flutter frontend and the FastAPI backend.
-/// It manages all outbound HTTP requests for data persistence and administrative actions that require
-/// server-side logic (like banning users or updating roles).
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - UI Screens (e.g., RequestBloodScreen, DonateBloodScreen, ManageHospitalsScreen) in the form of
-///      Model objects (UserModel, BloodRequestModel, HospitalModel) or primitive types (strings, IDs).
-/// 2. PROCESSING:
-///    - Encodes data into JSON format using 'jsonEncode'.
-///    - Constructs dynamic URLs with query parameters for specific API endpoints.
-///    - Handles platform-specific base URLs (AVD vs. Web).
-/// 3. SENDS DATA TO:
-///    - FastAPI Backend (running on localhost:8000 or 10.0.2.2:8000).
-/// 4. OUTPUTS/RESPONSES:
-///    - Returns 'void' for most operations, throwing 'Exception' if the server returns a non-success status code.
-///    - Returns 'Location' objects for geocoding requests.
-///
-/// KEY COMPONENTS:
-/// - baseUrl: Determines the API's root address based on the running platform.
-/// - CRUD Operations: Methods for creating, updating, and deleting blood requests, users, and hospitals.
-/// - Geocoding: Converts physical addresses to geographic coordinates (lat/lng) for map integration.

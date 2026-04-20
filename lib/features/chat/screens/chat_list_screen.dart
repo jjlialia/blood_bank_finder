@@ -12,8 +12,11 @@ class ChatListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final isSuperAdmin = auth.user?.role == 'superadmin';
-    final isHospitalAdmin = auth.user?.role == 'admin' && auth.user?.hospitalId != null;
-    final participantId = isSuperAdmin ? 'superadmin' : (isHospitalAdmin ? auth.user!.hospitalId! : auth.user?.uid);
+    final isHospitalAdmin =
+        auth.user?.role == 'admin' && auth.user?.hospitalId != null;
+    final participantId = isSuperAdmin
+        ? 'superadmin'
+        : (isHospitalAdmin ? auth.user!.hospitalId! : auth.user?.uid);
     final chatService = ChatService();
 
     if (participantId == null) {
@@ -23,11 +26,11 @@ class ChatListScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Messages'),
-      ),
+      appBar: AppBar(title: const Text('Messages')),
       body: StreamBuilder<List<ChatRoom>>(
-        stream: chatService.getChatRoomsStream(participantId),
+        stream: chatService.getChatRoomsStream(
+          participantId,
+        ), //para ma pakita ang tanang nakachat nmo.
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -58,9 +61,9 @@ class ChatListScreen extends StatelessWidget {
                 (id) => id != participantId,
                 orElse: () => 'Unknown',
               );
-              
+
               // Try to get their name from participantNames, fallback to "User"
-              final otherParticipantName = room.participantNames != null 
+              final otherParticipantName = room.participantNames != null
                   ? room.participantNames![otherParticipantId] ?? 'User'
                   : 'User';
 
@@ -68,7 +71,9 @@ class ChatListScreen extends StatelessWidget {
                 leading: CircleAvatar(
                   backgroundColor: Theme.of(context).primaryColor,
                   child: Text(
-                    otherParticipantName.isNotEmpty ? otherParticipantName[0].toUpperCase() : '?',
+                    otherParticipantName.isNotEmpty
+                        ? otherParticipantName[0].toUpperCase()
+                        : '?',
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),

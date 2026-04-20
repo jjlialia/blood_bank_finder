@@ -24,13 +24,11 @@ async def list_requests(hospital_id: Optional[str] = None, service: FirestoreSer
     # This endpoint is dual-purpose: Super Admin (all) or Hospital Admin (one site).
     if hospital_id:
         """
-        RECEIVED FROM: HospitalAdmin Dashboard (Provider).
-        SENT TO: `FirestoreService.list_hospital_requests`.
+        r: HospitalAdmin Dashboard (Provider) and HospitalAdminRequestsScreen and blood_request_list_screen.dart. s: `FirestoreService.list_hospital_requests`.
         """
         return await service.list_hospital_requests(hospital_id)
     """
-    RECEIVED FROM: Super Admin History Screen.
-    SENT TO: `FirestoreService.list_all_requests`.
+    r: Super Admin History Screen. s: `FirestoreService.list_all_requests`.
     """
     return await service.list_all_requests()
 
@@ -42,8 +40,7 @@ async def update_status(
     service: FirestoreService = Depends(get_service)
 ):
     """
-    RECEIVED FROM: HospitalAdmin Dashboard (Action Button).
-    SENT TO: `FirestoreService.update_request_status` -> Firestore & Notifications.
+    r: HospitalAdmin Dashboard (Action Button) and HospitalAdminRequestsScreen and blood_request_list_screen.dart. s: `FirestoreService.update_request_status` -> Firestore & Notifications.
     """
     await service.update_request_status(request_id, status, admin_message)
     return {"message": "Request status updated"}

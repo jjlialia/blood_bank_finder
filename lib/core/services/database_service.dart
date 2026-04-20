@@ -47,10 +47,9 @@ class DatabaseService {
 
   // --- Hospitals Repository ---
 
-  /// DATA SOURCE: 'hospitals' collection (Firestore).
-  /// DATA DESTINATION: FindBloodBankScreen / ManageHospitalsScreen.
-  /// STEP 1: Receives optional filters (Island, Region, City, etc.).
-  /// STEP 2: Builds and executes a Firestore Query.
+  ///r:'hospitals' collection (Firestore).
+  ///s: FindBloodBankScreen / ManageHospitalsScreen/hospital_picker_sheet.dart
+  ///Builds and executes a Firestore Query.
   Stream<List<HospitalModel>> streamHospitals({
     String? islandGroup,
     String? region,
@@ -94,8 +93,7 @@ class DatabaseService {
 
   // --- Blood Requests Repository ---
 
-  /// DATA SOURCE: 'blood_requests' collection (Firestore).
-  /// DATA DESTINATION: Super Admin Dashboard / HistoryScreen.
+  /// r: 'blood_requests' collection (Firestore). s: Super Admin Dashboard / HistoryScreen.
   Stream<List<BloodRequestModel>> streamAllBloodRequests() {
     return _db
         .collection('blood_requests')
@@ -108,8 +106,7 @@ class DatabaseService {
         });
   }
 
-  /// DATA SOURCE: 'blood_requests' collection (Firestore Filtered).
-  /// DATA DESTINATION: HospitalAdminDashboard.
+  /// r: 'blood_requests' collection (Firestore Filtered). s: blood_request_list_screen.dart and HospitalAdminDashboard.
   Stream<List<BloodRequestModel>> streamHospitalRequests(String hospitalId) {
     return _db
         .collection('blood_requests')
@@ -135,8 +132,7 @@ class DatabaseService {
 
   // --- Inventory Repository ---
 
-  /// DATA SOURCE: 'hospitals/{id}/inventory' collection (Firestore).
-  /// DATA DESTINATION: InventoryManagementScreen.
+  /// r: 'hospitals/{id}/inventory' collection (Firestore). s: InventoryManagementScreen.dart.
   Stream<List<InventoryModel>> streamInventory(String hospitalId) {
     return _db
         .collection('hospitals')

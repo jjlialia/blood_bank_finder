@@ -71,7 +71,7 @@ class UserModel {
     );
   }
 
-  /// STEP: Converting the object back into a Map for Firestore.
+  /// Converting the object back into a Map for Firestore.
   /// Used for direct writes to the 'users' collection.
   Map<String, dynamic> toMap() {
     return {
@@ -95,7 +95,7 @@ class UserModel {
     };
   }
 
-  /// STEP: Converting the object into a JSON-compatible Map for the FastAPI backend.
+  /// Converting the object into a JSON-compatible Map for the FastAPI backend.
   /// Unlike 'toMap', this uses ISO8601 strings for dates instead of Timestamps.
   Map<String, dynamic> toJson() {
     return {
@@ -119,25 +119,3 @@ class UserModel {
     };
   }
 }
-
-/// FILE: user_model.dart
-///
-/// DESCRIPTION:
-/// This file defines the 'UserModel' class, which represents a user in the system.
-/// It acts as a structured "container" for all user-related data, such as profile info,
-/// roles (Admin/User), and location.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - Firestore (via 'fromMap'): Raw data from the database is converted into this object.
-///    - UI Forms: When a user signs up or updates their profile, a new 'UserModel' is created.
-/// 2. PROCESSING:
-///    - Validates and provides default values (e.g., 'isBanned' defaults to false).
-///    - Converts Firestore Timestamps into standard Dart DateTime objects.
-/// 3. SENDS DATA TO:
-///    - Firestore (via 'toMap'): For direct database writes.
-///    - FastAPI (via 'toJson'): For server-side updates like banning or role changes.
-///    - UI Screens: To display user info (e.g., ProfileScreen, Dashboard).
-///
-/// OUTPUTS:
-/// - A structured object that ensures consistency across the entire app.

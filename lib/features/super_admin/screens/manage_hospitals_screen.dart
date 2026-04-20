@@ -17,13 +17,12 @@ class ManageHospitalsScreen extends StatefulWidget {
 }
 
 class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
-  // SERVICES: The tools used to talk to the database and external APIs.
   final DatabaseService _db = DatabaseService();
   final ApiService _api = ApiService();
   final LocationService _locationSvc = LocationService();
   final BackfillService _backfillSvc = BackfillService();
 
-  bool _isSyncing = false; // Tracks if the global data sync is running.
+  bool _isSyncing = false;
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -32,7 +31,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
       appBar: AppBar(
         title: const Text('Manage Hospitals'),
         actions: [
-          // STEP: Sync button to update any hospitals that might have missing location metadata.
+          //Sync button to update any hospitals that might have missing location metadata.
           if (_isSyncing)
             const Center(
               child: Padding(
@@ -69,7 +68,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
       ),
       drawer: const SuperAdminDrawer(),
       body: StreamBuilder<List<HospitalModel>>(
-        // DATA FLOW: Streaming ALL hospitals (active and inactive) for admin management.
         stream: _db.streamHospitals(allowAll: true),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -100,13 +98,12 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // GUI: User clicks Edit to open the form with existing data.
+                      // Edit to open the form with existing data.
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () =>
                             _showHospitalDialog(hospital: hospital),
                       ),
-                      // GUI: User clicks Delete to permanently remove the record.
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () =>
@@ -129,7 +126,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  /// GUI STEP: Shows a detailed read-only view of a hospital.
+  ///read-only view of a hospital.
   void _showHospitalDetails(HospitalModel hospital) {
     showModalBottomSheet(
       context: context,
@@ -236,10 +233,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  /// DATA FLOW: Removal of a hospital.
-  /// 1. Admin confirms deletion.
-  /// 2. Calls 'api.deleteHospital(id)'.
-  /// 3. FASTAPI -> Firestore: Deletes the document.
+  //Calls 'api.deleteHospital(id)'.
   void _confirmDelete(String id, String name) {
     showDialog(
       context: context,
@@ -270,14 +264,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  /// CORE LOGIC: The Hospital Registration/Edit Form.
-  /// This is where the most complex data flow happens:
-  /// 1. INPUT: User types name, email, address.
-  /// 2. INPUT: User selects location (Island -> Region -> City -> Barangay).
-  /// 3. DATA FETCH: Each dropdown selection calls 'LocationService' to get the next list (e.g., Cities in a Region).
-  /// 4. AUTO-FETCH: "Fetch Coordinates" button calls 'ApiService.getCoordinatesFromAddress'
-  ///    to transform the text address into Lat/Lng for the map.
-  /// 5. SUBMIT: Aggregates all data into a 'HospitalModel' and sends it to FastAPI.
   void _showHospitalDialog({HospitalModel? hospital}) {
     final isEditing = hospital != null;
     final nameController = TextEditingController(text: hospital?.name);
@@ -313,12 +299,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          /**
-           * STEP: Initialization logic for the cascading location dropdowns.
-           * If we are editing an existing hospital, we must pre-load the Regions, 
-           * Cities, and Barangays that match its current location so the 
-           * dropdowns show the correct selected values immediately.
-           */
           if (!initialized) {
             initialized = true;
             if (isEditing && selectedIsland != null) {
@@ -328,7 +308,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                   isLoadingCities = true;
                 });
 
-                // DATA FETCH: Get all regions and cities for the selected Island Group.
                 final fetchedRegions = await _locationSvc.getRegionsByIsland(
                   selectedIsland!,
                 );
@@ -343,7 +322,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                   isLoadingCities = false;
                 });
 
-                // DATA FETCH: If a city is already selected, fetch its specific Barangays.
                 if (selectedCity != null) {
                   final cityMatch = fetchedCities.firstWhere(
                     (c) => c['name'] == selectedCity,
@@ -446,7 +424,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // REGION DROPDOWN: Populated after Island selection.
                         if (selectedIsland != null)
                           Column(
                             children: [
@@ -502,7 +479,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                             ],
                           ),
 
-                        // CITY DROPDOWN: Populated after Region selection.
                         if (cities.isNotEmpty || isLoadingCities)
                           Column(
                             children: [
@@ -618,7 +594,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // COORDINATES: Manual entry or auto-fetched via the 'Search' button.
+                        // COORDINATES Manual entry or auto-fetched via the 'Search' button.
                         Row(
                           children: [
                             Expanded(
@@ -656,7 +632,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                         ),
                         const SizedBox(height: 8),
 
-                        // GEOCREATION ACTION: Calls 'ApiService.getCoordinatesFromAddress' with the formatted address.
+                        // GEOCREATION ACTIO
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
@@ -737,12 +713,6 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // FINAL SUBMIT: Sends the completed 'HospitalModel' to the backend.
-                  /**
-                   * ACTION: Submit the form.
-                   * RECEIVED FROM: User inputs in text fields and dropdowns.
-                   * SENT TO: `ApiService.addHospital` or `ApiService.updateHospital`.
-                   */
                   SizedBox(
                     width: double.infinity,
                     height: 50,

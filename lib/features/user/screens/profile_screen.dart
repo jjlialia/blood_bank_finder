@@ -21,7 +21,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
   bool _isLoading = false;
 
-  // CONTROLLERS: Hold the user's INPUT before it is sent to the server.
   late TextEditingController _firstNameCtrl;
   late TextEditingController _lastNameCtrl;
   late TextEditingController _mobileCtrl;
@@ -31,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Load existing data from the AuthProvider into the GUI controllers.
+    // Load from the AuthProvider into the GUI controllers.
     final user = context.read<AuthProvider>().user;
     _firstNameCtrl = TextEditingController(text: user?.firstName ?? '');
     _lastNameCtrl = TextEditingController(text: user?.lastName ?? '');
@@ -50,10 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  ///Profile Update
-  /// i validate sa formfields first, og gibag o ang saunang text giilis sa bag o gikan sa controllers
-  /// 3. SENDS: Call 'api.saveUser(updatedUser)'.
-  /// 4. UI: Shows 'isLoading' during the network call and closes edit mode on success.
   Future<void> _saveProfile(UserModel currentUser) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -150,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // --- READ MODE: Showing User DATA ---
+                    // READ MODE
                     if (!_isEditing) ...[
                       Text(
                         '${user.firstName} ${user.lastName}',
@@ -176,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         user.role.toUpperCase(),
                       ),
                     ]
-                    // --- EDIT MODE: Receiving User INPUT ---
+                    // EDIT MODE:
                     else ...[
                       const SizedBox(height: 10),
                       TextFormField(
@@ -231,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         validator: (v) => v!.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 24),
-                      // SAVE BUTTON, trigger to backend
+                      // SAVE BUTTON
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -261,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
 
                     const SizedBox(height: 40),
-                    // LOGOUT: Destroys the local data flow session.
+                    // LOGOUT
                     if (!_isEditing)
                       SizedBox(
                         width: double.infinity,
@@ -322,25 +317,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-/// FILE: profile_screen.dart
-///
-/// DESCRIPTION:
-/// This screen allows users to view and manage their personal profile.
-/// It toggles between a read-only display mode and an interactive edit mode.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Provides the 'UserModel' for the currently logged-in user.
-/// 2. PROCESSING:
-///    - Initialization: Populates text controllers with the current user's data on startup.
-///    - Edit/Cancel Logic: Manages state to show/hide input fields and reset them if the user cancels.
-///    - Profile Update Construction: Creates a new 'UserModel' mapping the original
-///      immutable fields (ID, role, email) with the new values from the text fields.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.saveUser': Sends the updated profile to the FastAPI backend.
-///    - 'AuthProvider.logout': Clears the local session and redirects to the login screen.
-/// 4. OUTPUTS/GUI:
-///    - A profile header with avatar.
-///    - A list of cards (read mode) or a form with TextFields (edit mode).
-///    - Toast notifications for success/failure of the save operation.

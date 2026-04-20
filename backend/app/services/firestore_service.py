@@ -23,7 +23,6 @@ class FirestoreService:
         
         if doc.exists:
             existing_data = doc.to_dict()
-            # PRESERVE: Do not let the client overwrite these administrative fields.
             user_data['role'] = existing_data.get('role', 'user')
             user_data['isBanned'] = existing_data.get('isBanned', False)
             user_data['hospitalId'] = existing_data.get('hospitalId')
@@ -62,7 +61,7 @@ class FirestoreService:
     # Handled by routers/hospitals.py
 
     async def add_hospital(self, hospital_data: dict) -> str:
-        """Registers a new site. DATA SOURCE: ManageHospitalsScreen."""
+        """Registers a new site. r: ManageHospitalsScreen."""
         _, doc_ref = self.db.collection('hospitals').add(hospital_data)
         return doc_ref.id
 
@@ -190,19 +189,11 @@ class FirestoreService:
     # Handled by routers/inventory.py
 
     async def update_inventory(self, hospital_id: str, blood_type: str, units: float):
-        """
-        DATA FLOW: SAFE UPDATE TRANSACTIONS.
-        1. RECEIVES: Hospital ID, Blood Type (e.g., 'O+'), and new Units count.
-        2. PROCESSING: Uses a Firestore Transaction to ensure no two admins update 
-           the same stock simultaneously, preventing data loss.
-        3. DATA DESTINATION: 'hospitals/{id}/inventory/{type}' doc.
-        """
         try:
             doc_ref = self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type)
             
             @firestore.transactional
             def update_in_transaction(transaction):
-                # DATA FLOW: Read-Modify-Write (Safe from concurrent updates).
                 transaction.set(doc_ref, {
                     'blood_type': blood_type,
                     'units': units,

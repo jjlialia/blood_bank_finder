@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../core/services/location_service.dart';
 
 class PhLocationPicker extends StatefulWidget {
-  // Callback: Returns the human-readable text for the full address.
   final Function(String? island, String? region, String? city, String? barangay)
   onLocationChanged;
 
@@ -17,7 +16,6 @@ class PhLocationPicker extends StatefulWidget {
 class _PhLocationPickerState extends State<PhLocationPicker> {
   final LocationService _locationSvc = LocationService();
 
-  // STATE: Holding the current selections (names and internal codes).
   String? _selectedIsland;
   String? _selectedRegion;
   String? _selectedCity;
@@ -35,7 +33,6 @@ class _PhLocationPickerState extends State<PhLocationPicker> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // STEP 1: Island Selection (Manual)
         DropdownButtonFormField<String>(
           initialValue: _selectedIsland,
           decoration: const InputDecoration(labelText: 'Island Group'),
@@ -45,7 +42,6 @@ class _PhLocationPickerState extends State<PhLocationPicker> {
             'Mindanao',
           ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: (v) async {
-            // Logic: Wipe child state and trigger next fetch.
             widget.onLocationChanged(v, null, null, null);
             setState(() {
               _selectedIsland = v;
@@ -68,7 +64,6 @@ class _PhLocationPickerState extends State<PhLocationPicker> {
         ),
         const SizedBox(height: 16),
 
-        // STEP 2: Region Selection (Fetched based on Island)
         if (_isLoadingRegions)
           const LinearProgressIndicator()
         else if (_selectedIsland != null)
@@ -107,7 +102,6 @@ class _PhLocationPickerState extends State<PhLocationPicker> {
           ),
         const SizedBox(height: 16),
 
-        // STEP 3: City Selection (Fetched based on Region)
         if (_isLoadingCities)
           const LinearProgressIndicator()
         else if (_selectedRegion != null)
@@ -151,7 +145,6 @@ class _PhLocationPickerState extends State<PhLocationPicker> {
           ),
         const SizedBox(height: 16),
 
-        // STEP 4: Barangay Selection (Fetched based on City)
         if (_isLoadingBarangays)
           const LinearProgressIndicator()
         else if (_selectedCity != null)
@@ -177,7 +170,6 @@ class _PhLocationPickerState extends State<PhLocationPicker> {
                 (c) => c['code'] == _selectedCity,
               )['name'];
               setState(() => _selectedBarangay = v);
-              // CORE OUTPUT: Full location string emitted.
               widget.onLocationChanged(
                 _selectedIsland,
                 regionName,

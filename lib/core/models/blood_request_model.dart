@@ -3,28 +3,27 @@ library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BloodRequestModel {
-  // Unique ID for the specific request.
+  // Unique ID for specific request.
   final String? id;
-  // The person making the request/donation.
+  // The person making  request/donation.
   final String userId;
   final String userName;
 
-  // The action type: 'Request' (Patient Needs) vs 'Donate' (Donor Gives).
+  //'Request' (Patient Needs) vs 'Donate' (Donor Gives).
   final String type;
   final String bloodType;
 
-  // Current state: 'pending', 'approved', 'completed', or 'rejected'.
+  //'pending', 'approved', 'completed', or 'rejected'.
   final String status;
 
-  // The hospital where the request is handled.
   final String hospitalId;
   final String hospitalName;
 
   final String contactNumber;
-  final double quantity; // E.g., 500ml or 1 unit.
+  final double quantity;
   final DateTime createdAt;
 
-  // Optional feedback from an admin (e.g., "Bring your ID").
+  // Optional feedback from an admin
   final String? adminMessage;
 
   BloodRequestModel({

@@ -254,9 +254,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                       : null,
                 );
                 if (context.mounted) Navigator.pop(context);
-              } catch (e) {
-                /* Error handeled by ApiService logic */
-              }
+              } catch (e) {}
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,

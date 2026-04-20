@@ -25,7 +25,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   final _contactController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  //These must all be TRUE to proceed.
+  // must be all TRUE to proceed.
   bool _isSworn = false;
   bool _ageOk = false;
   bool _weightOk = false;
@@ -43,7 +43,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         type: StepperType.vertical,
         currentStep: _currentStep,
         onStepContinue: () {
-          //  Validation for the Eligibility Quiz.
+          //  Validation for Eligibility Quiz.
           if (_currentStep == 0) {
             if (!(_ageOk && _weightOk && _travelOk && _medsOk && _wellOk)) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -55,7 +55,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               return;
             }
           }
-          // Validation Gate for the Details Form.
+          // Validation Gate for Details Form.
           if (_currentStep == 3) {
             if (!_formKey.currentState!.validate()) return;
           }
@@ -136,7 +136,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               children: [
                 InkWell(
                   onTap: () {
-                    // STEP: Opens a sub-sheet that fetches hospital data from Firestore.
+                    // Opens sub-sheet nga gakuha hospital data sa Firestore.
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,

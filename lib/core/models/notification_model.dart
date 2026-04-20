@@ -8,7 +8,6 @@ class NotificationModel {
   // The person who should receive this alert.
   final String userId;
   final String message;
-  // Tracks if the user has clicked on/seen the notification.
   final bool isRead;
   final DateTime createdAt;
 

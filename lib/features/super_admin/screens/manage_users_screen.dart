@@ -18,7 +18,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   final DatabaseService _db = DatabaseService();
   final ApiService _api = ApiService();
 
-  // STATE: Query string for real-time list filtering.
   String _searchQuery = '';
 
   @override
@@ -45,7 +44,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
           ),
           Expanded(
             child: StreamBuilder<List<UserModel>>(
-              // STEP: Subscribing to the master user list.
               stream: _db.streamAllUsers(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -55,7 +53,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   return const Center(child: Text('No users found.'));
                 }
 
-                // DATA PROCESSING: Filtering the list locally in the GUI logic.
                 final users = snapshot.data!.where((u) {
                   final fullName = '${u.firstName} ${u.lastName}'.toLowerCase();
                   return fullName.contains(_searchQuery) ||
@@ -66,7 +63,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   itemCount: users.length,
                   itemBuilder: (context, index) {
                     final user = users[index];
-                    // SECURITY: Prevent Super Admins from editing each other here.
+                    // Prevent Super Admins from editing each other here.
                     if (user.role == 'superadmin')
                       return const SizedBox.shrink();
 
@@ -82,12 +79,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // ACTION: Opens the role assignment modal.
+                          //Opens the role assignment modal.
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.blue),
                             onPressed: () => _showEditRoleDialog(user),
                           ),
-                          // ACTION: Quick Ban Toggle via API.
+                          // Quick Ban Toggle via API.
                           Switch(
                             value: !user.isBanned,
                             activeThumbColor: Colors.green,
@@ -116,9 +113,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  /// UI COMPONENT: Role & Hospital Assignment Dialog.
-  /// Logic: Receives a 'user' object and allows modifying their core roles.
-  /// DATA SOURCE: 'DatabaseService.streamHospitals' for the dropdown list.
+  ///r: 'DatabaseService.streamHospitals' for the dropdown list.
   void _showEditRoleDialog(UserModel user) {
     String selectedRole = user.role;
     String? selectedHospitalId = user.hospitalId;
@@ -151,7 +146,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   }
                 },
               ),
-              // DATA FLOW: If the user is promoted to Admin, show the hospital picker.
+              // If the user is promoted to Admin, show the hospital picker.
               if (selectedRole == 'admin') ...[
                 const SizedBox(height: 16),
                 StreamBuilder<List<HospitalModel>>(
@@ -190,7 +185,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // ACTION: Dispatch promotion to the Backend API.
+                //
                 await _api.updateUserRole(
                   user.uid,
                   selectedRole,
@@ -210,29 +205,3 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 }
-
-/// FILE: manage_users_screen.dart
-///
-/// DESCRIPTION:
-/// A directory and management console for Super Admins to oversee all users.
-/// Supports searching, banning/unbanning accounts, and promoting users
-/// to Hospital Admin roles with specific site assignments.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamAllUsers': Fetches a live list of every
-///      registered account in the system.
-///    - 'DatabaseService.streamHospitals': Populates the "Assign Hospital"
-///      dropdown for admins.
-/// 2. PROCESSING:
-///    - Search Filtering: Re-renders the list based on name or email matches
-///      in the text controller.
-///    - Security Logic: Explicitly hides other 'superadmin' accounts from
-///      the list to prevent self-deletion or unauthorized changes.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.toggleUserBan': Communicates with FastAPI to lock/unlock accounts.
-///    - 'ApiService.updateUserRole': Promotes or demotes users and links them
-///      to a hospital ID.
-/// 4. OUTPUTS/GUI:
-///    - Searchable list with ban switches and edit dialogs.
-///    - Dynamic role-editing modal that adjusts fields based on selected role.

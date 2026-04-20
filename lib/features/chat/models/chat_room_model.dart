@@ -5,7 +5,8 @@ class ChatRoom {
   final List<String> participants;
   final String lastMessage;
   final DateTime lastUpdateTime;
-  final Map<String, dynamic>? participantNames;
+  final Map<String, dynamic>?
+  participantNames; //para name sa participant ang ipakita
 
   ChatRoom({
     required this.id,
@@ -21,7 +22,8 @@ class ChatRoom {
       id: doc.id,
       participants: List<String>.from(data['participants'] ?? []),
       lastMessage: data['lastMessage'] ?? '',
-      lastUpdateTime: (data['lastUpdateTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastUpdateTime:
+          (data['lastUpdateTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
       participantNames: data['participantNames'] as Map<String, dynamic>?,
     );
   }
