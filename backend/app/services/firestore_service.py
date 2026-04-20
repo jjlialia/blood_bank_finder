@@ -189,21 +189,36 @@ class FirestoreService:
     # Handled by routers/inventory.py
 
     async def update_inventory(self, hospital_id: str, blood_type: str, units: float):
+        """
+        Updates stock for a single blood type and syncs the summary list 
+        'availableBloodTypes' on the main hospital document for efficient searching.
+        """
         try:
-            doc_ref = self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type)
-            
-            @firestore.transactional
-            def update_in_transaction(transaction):
-                transaction.set(doc_ref, {
-                    'blood_type': blood_type,
-                    'units': units,
-                    'last_updated': datetime.now()
-                }, merge=True)
+            # 1. Update the sub-collection document
+            inv_ref = self.db.collection('hospitals').document(hospital_id).collection('inventory').document(blood_type)
+            inv_ref.set({
+                'blood_type': blood_type,
+                'units': units,
+                'last_updated': datetime.now()
+            }, merge=True)
 
-            transaction = self.db.transaction()
-            update_in_transaction(transaction)
+            # 2. Recalculate available blood types (those with units > 0)
+            inventory_stream = self.db.collection('hospitals').document(hospital_id).collection('inventory').stream()
+            available_types = []
+            for doc in inventory_stream:
+                data = doc.to_dict()
+                if data.get('units', 0) > 0:
+                    # Prefer the stored blood_type field, fallback to doc ID
+                    available_types.append(data.get('blood_type', doc.id))
+            
+            # 3. Update the summary field on the main hospital document
+            self.db.collection('hospitals').document(hospital_id).update({
+                'availableBloodTypes': available_types
+            })
+            
+            return True
         except Exception as e:
-            print(f"Error updating inventory: {e}")
+            print(f"Error updating inventory and syncing: {e}")
             raise
 
     async def get_inventory(self, hospital_id: str) -> List[dict]:

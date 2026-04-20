@@ -30,6 +30,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
   String? _selectedRegion;
   String? _selectedCity;
   String? _selectedBarangay;
+  String? _selectedBloodType; // Filter for specific availability
   bool _isMapView = false; // Toggles if list or map
   LatLng? _mapCenter;
   double _mapZoom = 12;
@@ -84,7 +85,44 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // FILTERS
+                // BLOOD TYPE FILTERS
+                const SizedBox(height: 12),
+                const Text(
+                  'Availability Filter:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
+                          .map((type) => Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: _buildFilterChip(
+                                  label: type,
+                                  isSelected: _selectedBloodType == type,
+                                  onTap: () {
+                                    setState(() {
+                                      if (_selectedBloodType == type) {
+                                        _selectedBloodType = null;
+                                      } else {
+                                        _selectedBloodType = type;
+                                      }
+                                    });
+                                  },
+                                ),
+                              ))
+                          .toList()
+                    ].expand((i) => i).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // LOCATION FILTERS
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -134,11 +172,18 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                 }
 
                 final hospitals = (snapshot.data ?? [])
-                    .where(
-                      (h) => h.name.toLowerCase().contains(
-                        _searchQuery.toLowerCase(),
-                      ),
-                    )
+                    .where((h) {
+                      // Text Search check
+                      final matchesSearch = h.name.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          );
+                      
+                      // Blood Type Availability check
+                      final matchesBlood = _selectedBloodType == null ||
+                          h.availableBloodTypes.contains(_selectedBloodType);
+                      
+                      return matchesSearch && matchesBlood;
+                    })
                     .toList();
 
                 if (hospitals.isEmpty) {

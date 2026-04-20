@@ -160,7 +160,7 @@ class DatabaseService {
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
-              .map((doc) => InventoryModel.fromMap(doc.data()))
+              .map((doc) => InventoryModel.fromMap(doc.data(), doc.id))
               .toList();
         });
   }

@@ -14,10 +14,10 @@ class InventoryModel {
   });
 
   /// STEP: Converts raw Firestore data into an 'InventoryModel'.
-  factory InventoryModel.fromMap(Map<String, dynamic> data) {
+  factory InventoryModel.fromMap(Map<String, dynamic> data, [String? documentId]) {
     return InventoryModel(
-      bloodType: data['blood_type'] ?? '',
-      units: data['units'] ?? 0,
+      bloodType: data['blood_type'] ?? documentId ?? '',
+      units: (data['units'] ?? 0).toInt(),
       lastUpdated: (data['last_updated'] as Timestamp).toDate(),
     );
   }
