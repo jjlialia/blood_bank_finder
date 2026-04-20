@@ -30,6 +30,14 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
   @override
   void initState() {
     super.initState();
+    // Pre-fill the blood type from the logged-in user's profile.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userBloodGroup =
+          context.read<AuthProvider>().user?.bloodGroup ?? '';
+      if (userBloodGroup.isNotEmpty && mounted) {
+        setState(() => _selectedBloodType = userBloodGroup);
+      }
+    });
   }
 
   ///

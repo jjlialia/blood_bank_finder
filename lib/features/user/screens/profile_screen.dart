@@ -134,16 +134,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Theme.of(context).primaryColor,
-                      child: const Icon(
-                        Icons.person,
-                        size: 60,
-                        color: Colors.white,
-                      ),
+                    Stack(
+                      alignment: Alignment.bottomCenter,
+                      clipBehavior: Clip.none,
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Theme.of(context).primaryColor,
+                          child: const Icon(
+                            Icons.person,
+                            size: 60,
+                            color: Colors.white,
+                          ),
+                        ),
+                        // Blood-type badge pinned at the bottom of the avatar
+                        if (user.bloodGroup.isNotEmpty)
+                          Positioned(
+                            bottom: -14,
+                            child: _BloodTypeBadge(bloodType: user.bloodGroup),
+                          ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
 
                     // READ MODE
                     if (!_isEditing) ...[
@@ -157,11 +169,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: const TextStyle(color: Colors.grey),
                       ),
                       const SizedBox(height: 30),
-                      _buildProfileItem(
-                        Icons.bloodtype,
-                        'Blood Group',
-                        user.bloodGroup,
-                      ),
+                      // Blood group shown as a card banner instead of a plain row
+                      _buildBloodGroupCard(user.bloodGroup),
                       _buildProfileItem(Icons.phone, 'Contact', user.mobile),
                       _buildProfileItem(Icons.location_city, 'City', user.city),
                       _buildProfileItem(Icons.home, 'Address', user.address),
@@ -313,6 +322,105 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Full-width banner that makes the blood group unmissable on the profile.
+  Widget _buildBloodGroupCard(String bloodType) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFCC0000), Color(0xFFFF4444)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.bloodtype, color: Colors.white, size: 28),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Blood Type',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              Text(
+                bloodType.isEmpty ? 'Not Set' : bloodType,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'Registered',
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Reusable pill badge — shown on the avatar in the Profile screen
+/// and in the UserDrawer header.
+class _BloodTypeBadge extends StatelessWidget {
+  final String bloodType;
+  const _BloodTypeBadge({required this.bloodType});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFCC0000), Color(0xFFFF4444)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withValues(alpha: 0.5),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        bloodType,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
       ),
     );
   }
