@@ -106,18 +106,37 @@ class DatabaseService {
         });
   }
 
+  /// r: 'blood_requests' collection (Firestore Filtered). s: MyRequestsScreen (user history).
+  /// Streams all requests/donations submitted by a specific user, newest first.
+  Stream<List<BloodRequestModel>> streamUserRequests(String userId) {
+    return _db
+        .collection('blood_requests')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      final list = snapshot.docs
+          .map((doc) => BloodRequestModel.fromMap(doc.data(), doc.id))
+          .toList();
+      // Client-side sort to avoid requiring a composite index
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
+  }
+
   /// r: 'blood_requests' collection (Firestore Filtered). s: blood_request_list_screen.dart and HospitalAdminDashboard.
   Stream<List<BloodRequestModel>> streamHospitalRequests(String hospitalId) {
     return _db
         .collection('blood_requests')
         .where('hospitalId', isEqualTo: hospitalId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => BloodRequestModel.fromMap(doc.data(), doc.id))
-              .toList();
-        });
+      final list = snapshot.docs
+          .map((doc) => BloodRequestModel.fromMap(doc.data(), doc.id))
+          .toList();
+      // Client-side sort to avoid requiring a composite index
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
   }
 
   /// DATA SOURCE: 'hospitals' collection (Firestore).
@@ -154,13 +173,15 @@ class DatabaseService {
     return _db
         .collection('notifications')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => NotificationModel.fromMap(doc.data(), doc.id))
-              .toList();
-        });
+      final list = snapshot.docs
+          .map((doc) => NotificationModel.fromMap(doc.data(), doc.id))
+          .toList();
+      // Client-side sort to avoid requiring a composite index
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list;
+    });
   }
 }
 

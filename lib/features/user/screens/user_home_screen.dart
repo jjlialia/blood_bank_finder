@@ -1,11 +1,15 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/models/blood_request_model.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/database_service.dart';
 import '../widgets/user_drawer.dart';
 import 'find_blood_bank_screen.dart';
 import 'donate_blood_screen.dart';
+import 'my_requests_screen.dart';
 import 'request_blood_screen.dart';
 import 'notifications_screen.dart';
 import '../../chat/screens/chat_list_screen.dart';
@@ -231,15 +235,23 @@ class UserHomeScreen extends StatelessWidget {
                         const Color(0xFFFFF8E1),
                         const RequestBloodScreen(),
                       ),
+                      const SizedBox(width: 16),
+                      _buildQuickAction(
+                        context,
+                        'My History',
+                        Icons.history_outlined,
+                        const Color(0xFFE8F5E9),
+                        const MyRequestsScreen(),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),
-                  //Recent Activity Preview
+                  // Recent Activity Preview (live)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Latest Notifications',
+                        'Recent Activity',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -248,7 +260,7 @@ class UserHomeScreen extends StatelessWidget {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const NotificationsScreen(),
+                            builder: (context) => const MyRequestsScreen(),
                           ),
                         ),
                         child: Text(
@@ -259,19 +271,52 @@ class UserHomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Displaying static examples of recent alerts.
-                  _buildNotificationPreview(
-                    context,
-                    'Blood Request Approved',
-                    'Your request for O+ at City Hospital has been approved.',
-                    Icons.check_circle_outline,
-                  ),
-                  _buildNotificationPreview(
-                    context,
-                    'New Donation Drive',
-                    'A new donation drive is happening this weekend!',
-                    Icons.notifications_active_outlined,
-                  ),
+                  // Live StreamBuilder: shows the 2 most recent requests/donations
+                  if (user != null)
+                    StreamBuilder<List<BloodRequestModel>>(
+                      stream: DatabaseService().streamUserRequests(user!.uid),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        final items = (snapshot.data ?? []).take(2).toList();
+                        if (items.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border:
+                                  Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.history_toggle_off_outlined,
+                                  color: theme.primaryColor
+                                      .withValues(alpha: 0.4),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'No activity yet. Make a request or donate!',
+                                  style: TextStyle(
+                                      color: Colors.black45, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return Column(
+                          children: items
+                              .map((r) => _buildRequestPreview(context, r))
+                              .toList(),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -329,41 +374,102 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  //UI HELPER:preview row for notification
-  Widget _buildNotificationPreview(
-    BuildContext context,
-    String title,
-    String body,
-    IconData icon,
-  ) {
+  // UI HELPER: compact card for a real blood request / donation
+  Widget _buildRequestPreview(BuildContext context, BloodRequestModel r) {
+    final theme = Theme.of(context);
+    final isRequest = r.type.toLowerCase() == 'request';
+
+    Color statusColor;
+    Color statusBg;
+    IconData statusIcon;
+    switch (r.status.toLowerCase()) {
+      case 'approved':
+      case 'completed':
+        statusColor = const Color(0xFF2E7D32);
+        statusBg = const Color(0xFFE8F5E9);
+        statusIcon = Icons.check_circle_outline;
+        break;
+      case 'rejected':
+        statusColor = const Color(0xFFC62828);
+        statusBg = const Color(0xFFFFEBEE);
+        statusIcon = Icons.cancel_outlined;
+        break;
+      default:
+        statusColor = const Color(0xFFF57F17);
+        statusBg = const Color(0xFFFFF8E1);
+        statusIcon = Icons.hourglass_top_outlined;
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 1.5,
+      shadowColor: Colors.black12,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Theme.of(context).primaryColor),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
-        subtitle: Text(
-          body,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: const Icon(Icons.chevron_right, size: 20),
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+          MaterialPageRoute(builder: (_) => const MyRequestsScreen()),
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: theme.primaryColor.withValues(alpha: 0.08),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              r.bloodType,
+              style: TextStyle(
+                color: theme.primaryColor,
+                fontWeight: FontWeight.w900,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                isRequest ? 'Blood Request' : 'Donation',
+                style: const TextStyle(
+                    fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: statusBg,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(statusIcon, size: 12, color: statusColor),
+                  const SizedBox(width: 3),
+                  Text(
+                    r.status[0].toUpperCase() + r.status.substring(1),
+                    style: TextStyle(
+                        color: statusColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        subtitle: Text(
+          '${r.hospitalName} · ${DateFormat('MMM d, y').format(r.createdAt)}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        trailing: const Icon(Icons.chevron_right, size: 20),
       ),
     );
   }
 }
+

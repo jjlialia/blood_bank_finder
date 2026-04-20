@@ -5,6 +5,7 @@ import 'package:blood_bank_finder/features/auth/screens/login_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/user_home_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/profile_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/notifications_screen.dart';
+import 'package:blood_bank_finder/features/user/screens/my_requests_screen.dart';
 import 'package:blood_bank_finder/features/chat/screens/chat_room_screen.dart';
 import 'package:blood_bank_finder/features/chat/services/chat_service.dart';
 
@@ -57,6 +58,19 @@ class UserDrawer extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const NotificationsScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('My Requests'),
+            onTap: () {
+              Navigator.pop(context); // Close drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyRequestsScreen(),
                 ),
               );
             },

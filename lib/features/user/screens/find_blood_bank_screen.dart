@@ -230,6 +230,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
           controller: scrollController,
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── drag handle ──────────────────────────────────────────
@@ -250,8 +251,9 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                 children: [
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor:
-                        Theme.of(context).primaryColor.withValues(alpha: 0.12),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.12),
                     child: Icon(
                       Icons.local_hospital,
                       color: Theme.of(context).primaryColor,
@@ -261,10 +263,9 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   Expanded(
                     child: Text(
                       h.name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -331,14 +332,19 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
 
                     // Sort blood types in a predictable clinical order
                     const order = [
-                      'A+', 'A-', 'B+', 'B-',
-                      'AB+', 'AB-', 'O+', 'O-'
+                      'A+',
+                      'A-',
+                      'B+',
+                      'B-',
+                      'AB+',
+                      'AB-',
+                      'O+',
+                      'O-',
                     ];
                     inventory.sort((a, b) {
                       final ai = order.indexOf(a.bloodType);
                       final bi = order.indexOf(b.bloodType);
-                      return (ai == -1 ? 99 : ai)
-                          .compareTo(bi == -1 ? 99 : bi);
+                      return (ai == -1 ? 99 : ai).compareTo(bi == -1 ? 99 : bi);
                     });
 
                     // Find the most-recent lastUpdated timestamp
@@ -359,36 +365,38 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                            childAspectRatio: 2.6,
-                          ),
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                                childAspectRatio: 2.6,
+                              ),
                           itemCount: inventory.length,
                           itemBuilder: (context, i) {
                             final item = inventory[i];
                             final available = item.units > 0;
-                            final isLow =
-                                item.units > 0 && item.units <= 5;
+                            final isLow = item.units > 0 && item.units <= 5;
                             final color = available
                                 ? (isLow
-                                    ? Colors.orange.shade600
-                                    : Colors.green.shade600)
+                                      ? Colors.orange.shade600
+                                      : Colors.green.shade600)
                                 : Colors.red.shade400;
                             final bgColor = available
                                 ? (isLow
-                                    ? Colors.orange.shade50
-                                    : Colors.green.shade50)
+                                      ? Colors.orange.shade50
+                                      : Colors.green.shade50)
                                 : Colors.red.shade50;
 
                             return Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: bgColor,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                    color: color.withValues(alpha: 0.4)),
+                                  color: color.withValues(alpha: 0.4),
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -412,9 +420,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    available
-                                        ? '${item.units} u'
-                                        : 'None',
+                                    available ? '${item.units} u' : 'None',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -441,7 +447,9 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                         Text(
                           'Updated: $updatedStr',
                           style: const TextStyle(
-                              fontSize: 11, color: Colors.grey),
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     );
@@ -488,11 +496,9 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                     final chatId = await chatService.createOrGetChat(
                       auth.user!.uid,
                       h.id!,
-                      {
-                        auth.user!.uid: auth.user!.firstName,
-                        h.id!: h.name
-                      },
+                      {auth.user!.uid: auth.user!.firstName, h.id!: h.name},
                     );
+                    // Close bottom sheet
                     if (!context.mounted) return;
                     Navigator.pop(ctx);
                     Navigator.push(
@@ -522,6 +528,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   child: const Text('Close'),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
