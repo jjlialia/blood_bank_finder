@@ -424,7 +424,7 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                                 ? (isLow
                                       ? Colors.orange.shade600
                                       : Colors.green.shade600)
-                                : Colors.red.shade400;
+                                : Colors.red.shade700;
                             final bgColor = available
                                 ? (isLow
                                       ? Colors.orange.shade50

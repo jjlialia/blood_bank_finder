@@ -26,6 +26,10 @@ class BloodRequestModel {
   // Optional feedback from an admin
   final String? adminMessage;
 
+  // Appointment details
+  final String? preferredDate;
+  final String? preferredTime;
+
   BloodRequestModel({
     this.id,
     required this.userId,
@@ -39,6 +43,8 @@ class BloodRequestModel {
     required this.quantity,
     required this.createdAt,
     this.adminMessage,
+    this.preferredDate,
+    this.preferredTime,
   });
 
   ///  gkan sa firebase padung sa app. if mobasa para masabtan og ma show sa screen.
@@ -59,6 +65,8 @@ class BloodRequestModel {
       quantity: (data['quantity'] ?? 0.0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       adminMessage: data['adminMessage'],
+      preferredDate: data['preferredDate'],
+      preferredTime: data['preferredTime'],
     );
   }
 
@@ -77,6 +85,8 @@ class BloodRequestModel {
       'quantity': quantity,
       'createdAt': Timestamp.fromDate(createdAt),
       'adminMessage': adminMessage,
+      'preferredDate': preferredDate,
+      'preferredTime': preferredTime,
     };
   }
 
@@ -95,6 +105,8 @@ class BloodRequestModel {
       'quantity': quantity,
       'createdAt': createdAt.toIso8601String(),
       'adminMessage': adminMessage,
+      'preferredDate': preferredDate,
+      'preferredTime': preferredTime,
     };
   }
 }

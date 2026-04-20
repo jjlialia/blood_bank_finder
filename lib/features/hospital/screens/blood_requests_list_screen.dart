@@ -118,9 +118,10 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                subtitle: Text(
-                                  'Type: ${req.type} | Units: ${req.quantity}',
-                                ),
+                                  subtitle: Text(
+                                    'Type: ${req.type} | Units: ${req.quantity}'
+                                    '${(req.type == 'Donate' && req.preferredDate != null) ? '\nAppointment: ${req.preferredDate} ${req.preferredTime}' : ''}',
+                                  ),
                                 trailing: Chip(
                                   label: Text(
                                     req.status.toUpperCase(),
@@ -195,6 +196,14 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
               _detailRow(Icons.category, 'Request Type', req.type),
               _detailRow(Icons.water_drop, 'Units Needed', '${req.quantity}'),
               _detailRow(Icons.phone, 'Contact Number', req.contactNumber),
+              if (req.type == 'Donate' && req.preferredDate != null) ...[
+                _detailRow(Icons.event, 'Preferred Date', req.preferredDate!),
+                _detailRow(
+                  Icons.schedule,
+                  'Preferred Time',
+                  req.preferredTime ?? 'Any Time',
+                ),
+              ],
               const Divider(height: 32),
               const Text(
                 'Update Status & Notify User',

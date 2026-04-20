@@ -20,21 +20,20 @@ class UserDrawer extends StatelessWidget {
       child: Column(
         children: [
           UserAccountsDrawerHeader(
-            accountName: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            accountName: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
               children: [
                 Text(
                   '${user?.firstName ?? ''} ${user?.lastName ?? ''}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 16,
                     color: Colors.white,
                   ),
                 ),
                 if (user?.bloodGroup.isNotEmpty == true)
                   Container(
-                    margin: const EdgeInsets.only(top: 4),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 2,

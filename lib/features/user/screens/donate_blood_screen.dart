@@ -25,6 +25,9 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   final _contactController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+
   // must be all TRUE to proceed.
   bool _isSworn = false;
   bool _ageOk = false;
@@ -60,7 +63,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
             if (!_formKey.currentState!.validate()) return;
           }
 
-          if (_currentStep < 4) {
+          if (_currentStep < 5) {
             setState(() => _currentStep++);
           } else {
             // Submit the gathered data to the server.
@@ -230,10 +233,59 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ),
             ),
           ),
+          // Appointment Scheduling.
+          Step(
+            title: const Text('Schedule Appointment'),
+            isActive: _currentStep >= 4,
+            content: Column(
+              children: [
+                ListTile(
+                  title: const Text('Preferred Date'),
+                  subtitle: Text(
+                    _selectedDate == null
+                        ? 'Not selected'
+                        : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                  ),
+                  leading: const Icon(Icons.calendar_today),
+                  trailing: ElevatedButton(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(const Duration(days: 1)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 30)),
+                      );
+                      if (picked != null) setState(() => _selectedDate = picked);
+                    },
+                    child: const Text('Pick Date'),
+                  ),
+                ),
+                ListTile(
+                  title: const Text('Preferred Time'),
+                  subtitle: Text(
+                    _selectedTime == null
+                        ? 'Not selected'
+                        : _selectedTime!.format(context),
+                  ),
+                  leading: const Icon(Icons.access_time),
+                  trailing: ElevatedButton(
+                    onPressed: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: const TimeOfDay(hour: 9, minute: 0),
+                      );
+                      if (picked != null) setState(() => _selectedTime = picked);
+                    },
+                    child: const Text('Pick Time'),
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Legal Declaration.
           Step(
             title: const Text('Declaration'),
-            isActive: _currentStep >= 4,
+            isActive: _currentStep >= 5,
             content: CheckboxListTile(
               title: const Text(
                 'I swear that the information provided is true.',
@@ -248,10 +300,14 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   }
 
   void _submitDonation(AuthProvider auth) async {
-    if (!_isSworn || _selectedHospital == null || _selectedBloodType == null) {
+    if (!_isSworn ||
+        _selectedHospital == null ||
+        _selectedBloodType == null ||
+        _selectedDate == null ||
+        _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please complete all steps and sign the declaration'),
+          content: Text('Please complete all steps including appointment'),
         ),
       );
       return;
@@ -270,6 +326,9 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         contactNumber: _contactController.text,
         quantity: double.tryParse(_unitsController.text) ?? 1.0,
         createdAt: DateTime.now(),
+        preferredDate:
+            '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+        preferredTime: _selectedTime!.format(context),
       );
 
       await api.createBloodRequest(request);
