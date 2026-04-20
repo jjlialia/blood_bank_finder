@@ -1,26 +1,3 @@
-"""
-FILE: firestore_service.py
-
-DESCRIPTION:
-This is the "Engine Room" of the backend. It contains the actual logic for 
-reading from and writing to the Firebase Firestore database. Every operation 
-the API performs eventually calls a method in this class.
-
-DATA FLOW OVERVIEW:
-1. RECEIVES DATA FROM: 
-   - Backend Routers (e.g., 'routers/users.py') in the form of Python dictionaries.
-2. PROCESSING:
-   - Database Operations: CRUD (Create, Read, Update, Delete) using the 
-     Google Cloud Firestore SDK.
-   - Reactive Logic: E.g., When a blood request is approved, this service 
-     automatically generates a notification for the user.
-   - Transactions: Ensuring inventory updates are "Atomic" (safe from overlaps).
-3. SENDS DATA TO:
-   - Firebase Firestore: The cloud database where data is permanently stored.
-4. OUTPUTS:
-   - Database results (dictionaries or lists of dictionaries) back to the routers.
-"""
-
 from google.cloud import firestore
 from datetime import datetime
 from typing import List, Optional
@@ -39,8 +16,7 @@ class FirestoreService:
 
     async def create_or_update_user(self, user_id: str, user_data: dict):
         """
-        Saves or updates  user profile. 
-        nagamit sa signup og profile screen
+        r:users.py s:firestore
         """
         doc_ref = self.db.collection('users').document(user_id)
         doc = doc_ref.get()
@@ -132,7 +108,7 @@ class FirestoreService:
     # Handled by routers/requests.py
 
     async def create_blood_request(self, request_data: dict) -> str:
-        """Submits a new Request or Donation. DATA SOURCE: DonateBloodScreen / RequestBloodScreen."""
+        """new Request or Donation.r DonateBloodScreen / RequestBloodScreen."""
         _, doc_ref = self.db.collection('blood_requests').add(request_data)
         return doc_ref.id
 
@@ -158,11 +134,9 @@ class FirestoreService:
 
     async def update_request_status(self, request_id: str, status: str, admin_message: Optional[str] = None):
         """
-        CORE LOGIC: Status Lifecycle & Automated Notifications.
-        1. DATA INPUT: Admin selects 'approved', 'rejected', etc.
-        2. DATABASE: Updates the 'blood_requests' document.
-        3. TRIGGER: Based on the new status, it automatically builds a 'Notification' object.
-        4. DATA DESTINATION: Creates a new record in the 'notifications' collection for the user.
+        Admin selects 'approved', 'rejected', etc.
+        triggers automatically builds a 'Notification' object.
+        Creates a new record in the 'notifications' collection for the user.
         """
         doc_ref = self.db.collection('blood_requests').document(request_id)
         update_data = {'status': status}

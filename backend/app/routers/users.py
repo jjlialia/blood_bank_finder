@@ -14,16 +14,15 @@ def get_service(db=Depends(get_db)):
 @router.post("/", response_model=UserResponse)
 async def create_user(user: UserCreate, service: FirestoreService = Depends(get_service)):
     """
-    RECEIVED FROM: SignupScreen (Flutter) og profile screen
-    SENT TO: `FirestoreService.create_or_update_user` -> 'users' collection.
+    r:api_service.dart s:FirestoreService.create_or_update_user
     """
     return await service.create_or_update_user(user.uid, user.dict())
 
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str, service: FirestoreService = Depends(get_service)):
     """
-    RECEIVED FROM: AuthProvider (Flutter).
-    SENT TO: `FirestoreService.get_user`.
+    R: AuthProvider (Flutter).
+    S: `FirestoreService.get_user`.
     """
     user = await service.get_user(user_id)
     if not user:

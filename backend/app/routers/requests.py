@@ -14,8 +14,7 @@ def get_service(db=Depends(get_db)):
 @router.post("/", response_model=BloodRequestResponse)
 async def create_request(request: BloodRequestCreate, service: FirestoreService = Depends(get_service)):
     """
-    RECEIVED FROM: RequestBloodScreen / DonateBloodScreen.
-    SENT TO: `FirestoreService.create_blood_request` -> 'blood_requests' collection.
+    r : RequestBloodScreen / DonateBloodScreen. s: `FirestoreService.create_blood_request` -> 'blood_requests' collection.
     """
     request_id = await service.create_blood_request(request.dict())
     return {**request.dict(), "id": request_id}

@@ -46,12 +46,13 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  //login
   Future<String?> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 1. Admin Bypass Logic
+      // 1. Admin bypass
       if (email == 'admin@gmail.com' && password == '1234') {
         _user = UserModel(
           uid: 'superadmin_bypass',
@@ -76,16 +77,16 @@ class AuthProvider with ChangeNotifier {
         return null; // Success
       }
 
-      // 2. Normal Firebase Auth
+      // Firebase Auth
       UserCredential credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // 3. SECURE CHECK: Fetch Firestore details.
-      // NOTE: On Web, we add a tiny delay to ensure the Auth state has fully 
-      // propagated to the Firestore instance before requesting the document.
-      if (identical(0, 0.0)) { // Simple check for web (Dart2JS)
+      //Fetch Firestore details.
+      //delay for web para sure before fetching data
+      if (identical(0, 0.0)) {
+        // Simple check for web (Dart2JS)
         await Future.delayed(const Duration(milliseconds: 500));
       }
 
@@ -128,13 +129,14 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return e.toString();
     }
-  }
+  } //balik na sa login_screen.dart
 
   Future<void> logout() async {
     await _auth.signOut();
     _stopUserListener();
   }
 
+  //signup
   Future<String?> signup(Map<String, dynamic> data, String password) async {
     _isLoading = true;
     notifyListeners();

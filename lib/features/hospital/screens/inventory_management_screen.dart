@@ -14,12 +14,10 @@ class InventoryManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // DATA SOURCE: Getting the Hospital ID from the Auth state.
     final auth = context.read<AuthProvider>();
     final hospitalId = auth.user?.hospitalId;
     final DatabaseService db = DatabaseService();
 
-    // GUI: The standard list of blood groups to manage.
     final List<String> bloodTypes = [
       'A+',
       'A-',
@@ -34,19 +32,16 @@ class InventoryManagementScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Inventory Control')),
       drawer: const HospitalAdminDrawer(),
-      // SECURITY CHECK: Ensure the admin is actually linked to a hospital.
+      // security check
       body: hospitalId == null || hospitalId.isEmpty
           ? const NoHospitalAssigned()
           : StreamBuilder<List<InventoryModel>>(
-              // STEP: Creating a live pipe to the hospital's inventory collection.
               stream: db.streamInventory(hospitalId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                // DATA TRANSFORMATION: Converting the list from Firestore into a
-                // searchable Map for the UI.
                 final inventoryMap = {
                   for (var item in (snapshot.data ?? []))
                     item.bloodType: item.units,
@@ -84,11 +79,7 @@ class InventoryManagementScreen extends StatelessWidget {
                               isDense: true,
                               border: OutlineInputBorder(),
                             ),
-                            /**
-                             * ACTION: Update stock units.
-                             * RECEIVED FROM: User input in the numeric TextField.
-                             * SENT TO: `ApiService.updateInventory`.
-                             */
+
                             onSubmitted: (value) async {
                               final newUnits = double.tryParse(value);
                               if (newUnits != null && newUnits >= 0) {
@@ -137,27 +128,3 @@ class InventoryManagementScreen extends StatelessWidget {
     );
   }
 }
-
-/// FILE: inventory_management_screen.dart
-///
-/// DESCRIPTION:
-/// This screen provides Hospital Admins with direct control over their
-/// site's blood stock levels. It lists all standard blood groups and
-/// allows for precise unit updates via the FastAPI backend.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Retrieves the 'hospitalId' to identify which site's
-///      inventory to manage.
-///    - 'DatabaseService': Streams the current units for each blood type
-///      in real-time from Firestore.
-/// 2. PROCESSING:
-///    - Input Mapping: Matches the streamed inventory data to a static
-///      list of standard blood types (A+, O-, etc.).
-///    - Validation: Ensures new unit counts are valid numbers (>= 0).
-/// 3. SENDS DATA TO:
-///    - 'ApiService.updateInventory': Transmits the new stock level to the
-///      FastAPI backend, which performs a safe transactional update.
-/// 4. OUTPUTS/GUI:
-///    - A list of cards, each containing an editable 'Qty' text field.
-///    - Immediate feedback snackbars upon successful database updates.

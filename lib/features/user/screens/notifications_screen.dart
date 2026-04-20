@@ -10,7 +10,6 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // DATA SOURCE: Retrieving current user ID from state.
     final auth = context.read<AuthProvider>();
     final userId = auth.user?.uid;
     final theme = Theme.of(context);
@@ -20,15 +19,14 @@ class NotificationsScreen extends StatelessWidget {
       body: userId == null
           ? const Center(child: Text('Unauthorized'))
           : StreamBuilder<QuerySnapshot>(
-              // STEP: Creating a live pipe to the database.
-              // Logic: Give me only notifications where userId matches mine.
+              // Creating a live to the database.
+              // Give only notifications where userId matches mine.
               stream: FirebaseFirestore.instance
                   .collection('notifications')
                   .where('userId', isEqualTo: userId)
                   .orderBy('createdAt', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
-                // UI: Handling error states (e.g., connection lost).
                 if (snapshot.hasError) {
                   return Center(
                     child: Padding(
@@ -53,12 +51,10 @@ class NotificationsScreen extends StatelessWidget {
                   );
                 }
 
-                // UI: Loading state.
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                // UI: Empty state.
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(
                     child: Column(
@@ -79,7 +75,7 @@ class NotificationsScreen extends StatelessWidget {
                   );
                 }
 
-                // STEP: Rendering the list of alerts from the streamed data.
+                //Rendering the list of alerts from the streamed data.
                 return ListView.builder(
                   itemCount: snapshot.data!.docs.length,
                   itemBuilder: (context, index) {
@@ -89,7 +85,7 @@ class NotificationsScreen extends StatelessWidget {
                     final bool isRead = data['isRead'] ?? false;
 
                     return Card(
-                      // GUI: Visual cue for unread vs read notifications.
+                      // Visual cue for unread vs read notifications.
                       color: isRead ? Colors.white : Colors.red[50],
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -114,13 +110,13 @@ class NotificationsScreen extends StatelessWidget {
                           style: const TextStyle(fontSize: 12),
                         ),
                         onTap: () {
-                          // ACTION: Write data back to Firestore to update status.
+                          // Write data back to Firestore to update status.
                           FirebaseFirestore.instance
                               .collection('notifications')
                               .doc(snapshot.data!.docs[index].id)
                               .update({'isRead': true});
 
-                          // GUI: Show the detailed popup.
+                          //Show the detailed popup.
                           _showNotificationDetails(context, data);
                         },
                       ),
@@ -132,8 +128,8 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  /// UI COMPONENT: Details Popup.
-  /// Logic: Receives the map of notification data and renders it in a clean bottom sheet.
+  /// Details Popup.
+  ///Receives map of notification data and renders a clean bottom sheet.
   void _showNotificationDetails(
     BuildContext context,
     Map<String, dynamic> data,
@@ -183,7 +179,7 @@ class NotificationsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // DATA DISPLAY: The core message from the Admin/System.
+              //The core message from the Admin/System.
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -218,7 +214,7 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  // --- UI HELPER: Maps backend 'type' strings to GUI icons ---
+  // ui helper for type
   IconData _getIconForType(String? type) {
     switch (type) {
       case 'request_approved':
@@ -234,32 +230,10 @@ class NotificationsScreen extends StatelessWidget {
     }
   }
 
-  // --- UI HELPER: Converts Firestore Timestamp into a readable String ---
+  // Converts Firestore Timestamp into a readable String ---
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return '';
     final DateTime date = (timestamp as Timestamp).toDate();
     return '${date.day}/${date.month} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
-
-/// FILE: notifications_screen.dart
-///
-/// DESCRIPTION:
-/// This screen displays the user's Inbox for all system alerts.
-/// It primarily notifies users when their blood requests or donations
-/// are approved, rejected, or updated by hospital admins.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'FirebaseFirestore': Streams data in real-time from the 'notifications' collection.
-///    - 'AuthProvider': Provides the 'userId' used to filter the stream.
-/// 2. PROCESSING:
-///    - Real-time Streaming: Uses 'StreamBuilder' to update the UI the second a
-///      backend admin approves a request.
-///    - Mark-as-Read Logic: Updates the Firestore document field 'isRead' to true
-///      when the user taps an item.
-/// 3. SENDS DATA TO:
-///    - 'FirebaseFirestore': To update the 'isRead' status.
-/// 4. OUTPUTS/GUI:
-///    - A vertical list of alert cards with status-specific icons.
-///    - A bottom sheet 'Details' view for long messages or admin instructions.

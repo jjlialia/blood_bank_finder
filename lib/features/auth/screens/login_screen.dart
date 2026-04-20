@@ -19,21 +19,17 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // CONTROLLERS: Hold the user's typed credentials.
+  // Hold typed credentials.
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  /// CORE LOGIC: The Login Data Flow.
-  /// 1. Validates the text fields.
-  /// 2. Calls 'auth.login' which sends data: App -> FastAPI -> Firebase Auth.
-  /// 3. RECEIVES: Error message (if any) or a 'UserModel'.
-  /// 4. DECIDES: Where to go next based on the user's Role.
+  /// validates, auth.login - fastapi-firebase auth, error message ,usermodel, decide where to go on role.
   void _login() async {
     if (_formKey.currentState!.validate()) {
       final auth = context.read<AuthProvider>();
 
-      // STEP: Initiate the network request via the AuthProvider.
+      //network request by AuthProvider.
       final error = await auth.login(
         _emailController.text,
         _passwordController.text,
@@ -41,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      // STEP: Handle failures (e.g., wrong password).
+      //falure handling
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error), backgroundColor: Colors.red),
@@ -49,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // STEP: Evaluate the Role to determine the destination GUI.
+      // role to decide where to go
       Widget nextScreen;
       switch (auth.user?.role) {
         case 'superadmin':
@@ -64,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
       }
 
-      // FINAL STEP: Clear the navigation stack and show the dashboard.
+      //switch screen na according sa user role.
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => nextScreen),
@@ -103,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 48),
-                // INPUT: Email processing.
+                //Email
                 CustomTextField(
                   label: 'Email',
                   prefixIcon: Icons.email_outlined,
@@ -111,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) => v!.contains('@') ? null : 'Invalid email',
                 ),
-                // INPUT: Password processing.
+                // Password
                 CustomTextField(
                   label: 'Password',
                   prefixIcon: Icons.lock_outline,
@@ -121,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       v!.length >= 6 ? null : 'Password too short',
                 ),
                 const SizedBox(height: 24),
-                // ACTION: Triggers the _login data flow.
+                // action tiggerring _login data flow.
                 Consumer<AuthProvider>(
                   builder: (context, auth, _) => CustomButton(
                     label: 'Login',
@@ -172,24 +168,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-/// FILE: login_screen.dart
-///
-/// DESCRIPTION:
-/// This is the gateway for existing users to access the application.
-/// It provides a secure form for entering credentials and handles the
-/// redirect logic based on the user's assigned role.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - User Input: 'Email' and 'Password' text fields.
-///    - 'AuthProvider': Provides the status of the login attempt and the final 'UserModel'.
-/// 2. PROCESSING:
-///    - Validation: Ensures email format and password length are correct before sending.
-///    - Role-Based Navigation: After a successful login, it checks 'auth.user?.role'
-///      to decide whether to show the User Home, Hospital Admin, or Super Admin dashboard.
-/// 3. SENDS DATA TO:
-///    - 'AuthProvider.login': Passes credentials to the provider, which calls the FastAPI backend.
-/// 4. OUTPUTS/GUI:
-///    - Interactive form with validation feedback.
-///    - Navigation to the appropriate dashboard upon success.

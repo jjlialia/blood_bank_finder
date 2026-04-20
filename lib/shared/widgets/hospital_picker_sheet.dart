@@ -18,7 +18,6 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
   final DatabaseService _db = DatabaseService();
   final LocationService _locationSvc = LocationService();
 
-  // STATE: Holding GUI filters.
   String _searchQuery = '';
   String? _selectedIsland;
   String? _selectedRegion;
@@ -31,11 +30,16 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
 
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
-      builder: (context, scrollController) => Column(
-        children: [
-          // --- GUI: Header and Filters ---
-          Container(
-            padding: const EdgeInsets.all(16),
+      builder: (context, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            //Header and Filters
+            Container(
+              padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 const Text(
@@ -43,7 +47,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                // INPUT: Search by name.
+                //Search by name.
                 TextField(
                   onChanged: (v) => setState(() => _searchQuery = v),
                   decoration: InputDecoration(
@@ -52,7 +56,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // GUI: Geography Filter Chips.
+                //  Geography Filter Chips.
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -74,6 +78,12 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                         isSelected: _selectedCity != null,
                         onTap: () => _showLocationPicker(context, 'city'),
                       ),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(
+                        label: _selectedBarangay ?? 'Barangay',
+                        isSelected: _selectedBarangay != null,
+                        onTap: () => _showLocationPicker(context, 'barangay'),
+                      ),
                     ],
                   ),
                 ),
@@ -81,10 +91,10 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
             ),
           ),
 
-          // --- ACTION: The Resulting List ---
+          // action: The Resulting List
           Expanded(
             child: StreamBuilder<List<HospitalModel>>(
-              // STEP: Subscribing to a dynamically filtered Firestore stream.
+              //Subscribing to a dynamically filtered Firestore stream.
               stream: _db.streamHospitals(
                 islandGroup: _selectedIsland,
                 region: _selectedRegion,
@@ -95,7 +105,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                 if (snapshot.connectionState == ConnectionState.waiting)
                   return const Center(child: CircularProgressIndicator());
 
-                // PROCESSING: Name filtering on top of the geographic stream.
+                // processing: Name filtering on top of the geographic stream.
                 final hospitals = (snapshot.data ?? [])
                     .where(
                       (h) => h.name.toLowerCase().contains(
@@ -122,7 +132,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                       ),
                       subtitle: Text('${h.barangay}, ${h.city}'),
                       onTap: () {
-                        // CORE OUTPUT: Returning data to the parent.
+                        //Returning data to the parent.
                         widget.onHospitalSelected(h);
                         Navigator.pop(context);
                       },
@@ -134,13 +144,169 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
           ),
         ],
       ),
+      ),
     );
   }
 
   // --- UI HELPER: Location Modal Selector ---
   // Note: Internal logic omitted for brevity, handles LocationService orchestration.
   Future<void> _showLocationPicker(BuildContext context, String type) async {
-    /* Dynamic location selection logic here */
+    List<String> items = [];
+    String title = '';
+    bool isLoading = true;
+
+    if (type == 'island') {
+      items = ['Luzon', 'Visayas', 'Mindanao'];
+      title = 'Select Island';
+      isLoading = false;
+    } else if (type == 'region') {
+      if (_selectedIsland == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select an Island first')),
+        );
+        return;
+      }
+      title = 'Select Region';
+    } else if (type == 'city') {
+      if (_selectedRegion == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a Region first')),
+        );
+        return;
+      }
+      title = 'Select City';
+    } else if (type == 'barangay') {
+      if (_selectedCity == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a City first')),
+        );
+        return;
+      }
+      title = 'Select Barangay';
+    }
+
+    if (isLoading) {
+      if (type == 'region') {
+        final fetched = await _locationSvc.getRegionsByIsland(_selectedIsland!);
+        items = fetched.map((e) => e['name'] as String).toList();
+      } else if (type == 'city') {
+        final islandRegions = await _locationSvc.getRegionsByIsland(
+          _selectedIsland!,
+        );
+        final regMatch = islandRegions.firstWhere(
+          (r) => r['name'] == _selectedRegion,
+          orElse: () => {},
+        );
+        if (regMatch.isNotEmpty) {
+          final fetched = await _locationSvc.getCitiesAndMunicipalities(
+            regMatch['code'],
+          );
+          items = fetched.map((e) => e['name'] as String).toList();
+        }
+      } else if (type == 'barangay') {
+        final islandRegions = await _locationSvc.getRegionsByIsland(
+          _selectedIsland!,
+        );
+        final regMatch = islandRegions.firstWhere(
+          (r) => r['name'] == _selectedRegion,
+          orElse: () => {},
+        );
+        if (regMatch.isNotEmpty) {
+          final regionCities = await _locationSvc.getCitiesAndMunicipalities(
+            regMatch['code'],
+          );
+          final cityMatch = regionCities.firstWhere(
+            (c) => c['name'] == _selectedCity,
+            orElse: () => {},
+          );
+          if (cityMatch.isNotEmpty) {
+            final fetched = await _locationSvc.getBarangays(cityMatch['code']);
+            items = fetched.map((e) => e['name'] as String).toList();
+          }
+        }
+      }
+      isLoading = false;
+    }
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const Divider(),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: items.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return ListTile(
+                    title: const Text('All / Clear'),
+                    onTap: () {
+                      setState(() {
+                        if (type == 'island') {
+                          _selectedIsland = null;
+                          _selectedRegion = null;
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        } else if (type == 'region') {
+                          _selectedRegion = null;
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        } else if (type == 'city') {
+                          _selectedCity = null;
+                          _selectedBarangay = null;
+                        } else {
+                          _selectedBarangay = null;
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                  );
+                }
+                final item = items[index - 1];
+                return ListTile(
+                  title: Text(item),
+                  onTap: () {
+                    setState(() {
+                      if (type == 'island') {
+                        _selectedIsland = item;
+                        _selectedRegion = null;
+                        _selectedCity = null;
+                        _selectedBarangay = null;
+                      } else if (type == 'region') {
+                        _selectedRegion = item;
+                        _selectedCity = null;
+                        _selectedBarangay = null;
+                      } else if (type == 'city') {
+                        _selectedCity = item;
+                        _selectedBarangay = null;
+                      } else {
+                        _selectedBarangay = item;
+                      }
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
   }
 
   Widget _buildFilterChip({

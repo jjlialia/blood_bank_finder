@@ -15,7 +15,7 @@ class UserHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // DATA SOURCE: Listening to the AuthProvider for real-time user info.
+    // live. sa authprovider
     final auth = context.watch<AuthProvider>();
     final theme = Theme.of(context);
     final user = auth.user;
@@ -24,17 +24,15 @@ class UserHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
-          // GUI: Quick access to messages
+          //message shortcut
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const ChatListScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const ChatListScreen()),
             ),
           ),
-          // GUI: Quick access to the notifications history.
+          // notification shortcut
           IconButton(
             icon: const Icon(Icons.notifications_none),
             onPressed: () => Navigator.push(
@@ -52,7 +50,7 @@ class UserHomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- SECTION: Branded Banner & Greeting ---
+            // Banner and Greeting
             Stack(
               children: [
                 Image.asset(
@@ -75,7 +73,7 @@ class UserHomeScreen extends StatelessWidget {
                     );
                   },
                 ),
-                // GUI: Dark gradient to make white text readable over the image.
+                //Dark gradient, white text
                 Container(
                   width: double.infinity,
                   height: 220,
@@ -91,7 +89,7 @@ class UserHomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // DATA DISPLAY: Showing the user's name from the AuthProvider.
+                // Showing the users name from the AuthProvider.
                 Positioned(
                   top: 40,
                   left: 24,
@@ -135,7 +133,7 @@ class UserHomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- SECTION: Call-to-Action (Donation) ---
+                  // Call-to-Action (Donation)
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -208,7 +206,7 @@ class UserHomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // --- SECTION: Quick Actions Selection ---
+                  // Quick Actions Selection
                   Text(
                     'Quick Actions',
                     style: theme.textTheme.titleLarge?.copyWith(
@@ -236,7 +234,7 @@ class UserHomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 32),
-                  // --- SECTION: Recent Activity Preview ---
+                  //Recent Activity Preview
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -261,7 +259,7 @@ class UserHomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // MOCK GUI: Displaying static examples of recent alerts.
+                  // Displaying static examples of recent alerts.
                   _buildNotificationPreview(
                     context,
                     'Blood Request Approved',
@@ -283,7 +281,7 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  // --- UI HELPER: Builds a interactive card for a main feature ---
+  //UI HELPER: interactive card
   Widget _buildQuickAction(
     BuildContext context,
     String label,
@@ -331,7 +329,7 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  // --- UI HELPER: Builds a condensed preview row for a notification ---
+  //UI HELPER:preview row for notification
   Widget _buildNotificationPreview(
     BuildContext context,
     String title,
@@ -369,26 +367,3 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 }
-
-/// FILE: user_home_screen.dart
-///
-/// DESCRIPTION:
-/// The primary dashboard for regular users. It serves as a central hub
-/// for the app's main functionalities, providing high-level summaries
-/// and quick access to critical features like donating or requesting blood.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Fetches the current user's name for the personalized greeting.
-///    - 'Notifications': (Future proofing) Previews the latest alerts.
-/// 2. PROCESSING:
-///    - UI State Management: Uses 'context.watch<AuthProvider>()' to rebuild
-///      instantly if user details change.
-///    - Layout Construction: Combines a promotional banner, a donation CTA card,
-///      and a grid of quick actions.
-/// 3. SENDS DATA TO:
-///    - Navigation: Sub-screens like 'FindBloodBankScreen', 'DonateBloodScreen',
-///      and 'RequestBloodScreen'.
-/// 4. OUTPUTS/GUI:
-///    - A rich, scrollable dashboard with visual status indicators.
-///    - Handlers for deep-linking into specific app features.

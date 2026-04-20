@@ -80,16 +80,14 @@ class UserDrawer extends StatelessWidget {
               final auth = context.read<AuthProvider>();
               final currentUser = auth.user;
               if (currentUser == null) return;
-              
+
               final chatService = ChatService();
-              final chatId = await chatService.createOrGetChat(
-                currentUser.uid,
-                'superadmin',
-                {
-                  currentUser.uid: '${currentUser.firstName} ${currentUser.lastName}',
-                  'superadmin': 'System Admin',
-                }
-              );
+              final chatId = await chatService
+                  .createOrGetChat(currentUser.uid, 'superadmin', {
+                    currentUser.uid:
+                        '${currentUser.firstName} ${currentUser.lastName}',
+                    'superadmin': 'System Admin',
+                  });
               if (!context.mounted) return;
               Navigator.pop(context); // Close drawer
               Navigator.push(

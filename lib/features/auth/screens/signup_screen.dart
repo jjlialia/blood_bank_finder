@@ -18,7 +18,7 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  //i store diri ang data sa user.
+  //holder
   final Map<String, dynamic> _formData = {
     'gender': 'Male',
     'bloodGroup': 'A+',
@@ -28,14 +28,13 @@ class _SignupScreenState extends State<SignupScreen> {
     'barangay': null,
   };
 
-  /// i validate and form then mo save sa _formData.
-  /// ang auth provider ang mo handle sa pag save sa data sa firebase.
+  /// validate, save, authprovider, error, navigate.
   void _signup() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final auth = context.read<AuthProvider>();
 
-      //gi send na sa authprovider and data sa formkey og password. maghuwat if okay or naay error para i show.
+      //authprovider
       final error = await auth.signup(_formData, _formData['password']);
 
       if (!mounted) return;

@@ -21,7 +21,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   final DatabaseService _db = DatabaseService();
   final ApiService _api = ApiService();
 
-  // STATE: Controls which requests are visible in the GUI.
+  //Controls what requests are visible in the GUI.
   String _selectedFilter = 'All';
   final List<String> _filters = [
     'All',
@@ -33,7 +33,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // DATA SOURCE: Context retrieval.
     final auth = context.read<AuthProvider>();
     final hospitalId = auth.user?.hospitalId;
 
@@ -47,7 +46,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                 _buildFilterRow(),
                 Expanded(
                   child: StreamBuilder<List<BloodRequestModel>>(
-                    // STEP: Live stream of requests filtered by THIS hospital.
+                    // STREAM
                     stream: _db.streamHospitalRequests(hospitalId),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -57,7 +56,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                         return const Center(child: CircularProgressIndicator());
                       }
 
-                      // DATA PROCESSING: Client-side filtering based on UI chips.
+                      // Client-side filtering based on UI chips.
                       final allRequests = snapshot.data ?? [];
                       final filteredRequests = _selectedFilter == 'All'
                           ? allRequests
@@ -82,7 +81,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                         itemBuilder: (context, index) {
                           final req = filteredRequests[index];
 
-                          // GUI ACTION: Quick Swipe to Approve/Reject.
+                          // Quick Swipe to Approve/Reject.
                           return Dismissible(
                             key: Key(req.id ?? index.toString()),
                             background: _swipeBg(
@@ -147,7 +146,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  // --- UI HELPER: The horizontal filter bar ---
   Widget _buildFilterRow() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -170,9 +168,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  /// UI COMPONENT: Detailed Request View.
-  /// Logic: Displays full data for a request and provides a form to update status.
-  /// DATA SOURCE: 'req' object passed from the list builder.
   void _showDetailedRequestView(BuildContext context, BloodRequestModel req) {
     showModalBottomSheet(
       context: context,
@@ -214,7 +209,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  // --- UI COMPONENT: Status Update Form ---
+  //Status Update Section
   Widget _buildUpdateStatusSection(
     BuildContext context,
     BloodRequestModel req,
@@ -250,7 +245,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
           ElevatedButton(
             onPressed: () async {
               try {
-                // CORE LOGIC: Saves the status and triggers a push alert to the user.
+                //Saves status and triggers alert to the user.
                 await _api.updateRequestStatus(
                   req.id!,
                   selectedStatus,
@@ -274,7 +269,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  // --- UI HELPERS ---
+  //ui helper
   Widget _swipeBg(Color color, IconData icon, Alignment align) {
     return Container(
       color: color,
@@ -329,27 +324,3 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 }
-
-/// FILE: blood_requests_list_screen.dart
-///
-/// DESCRIPTION:
-/// This screen is the command center for Hospital Admins managing patient
-/// requests and donor pledges. It allows for advanced filtering and
-/// provides a workflow for updating the status of individual requests.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'AuthProvider': Identifies the hospital context.
-///    - 'DatabaseService': Streams all requests where 'hospitalId' matches.
-/// 2. PROCESSING:
-///    - Local Filtering: Sorts requests by status (Pending, On Progress, etc.)
-///      in the GUI without a new database call.
-///    - Status Lifecycle: Defines the path of a request: Pending -> Progress -> Completed/Rejected.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.updateRequestStatus': Sends the chosen status and an optional
-///      admin note to the backend.
-///    - Automated Triggers: Note that updating status here automatically triggers
-///      a notification sent to the user (handled by the backend service).
-/// 4. OUTPUTS/GUI:
-///    - Filterable list with status Chips and swipe actions.
-///    - A comprehensive "Detailed View" bottom sheet with transaction history.

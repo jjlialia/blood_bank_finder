@@ -4,14 +4,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class LocationService {
-  // The external "brain" for Philippine geography.
+  // ang external brain for Philippine geography.
   static const String baseUrl = 'https://psgc.cloud/api/v2';
 
   // In-memory cache to prevent the app from asking the internet for the same thing twice.
   final Map<String, List<Map<String, dynamic>>> _cache = {};
 
-  // Updated with 10-digit PSGC codes for psgc.cloud v2.
-  // STEP: This mapping tells the app which Region Codes belong to which Island Group.
   static const Map<String, List<String>> islandGroupMapping = {
     'Luzon': [
       '1300000000', // NCR
@@ -38,26 +36,20 @@ class LocationService {
     ],
   };
 
-  /// DATA SOURCE: PSGC Cloud API (/regions).
-  /// DATA DESTINATION: Internal Cache / `getRegionsByIsland`.
-  /// STEP: Fetches all 17 regions of the Philippines.
+  /// r:  PSGC Cloud API (/regions). s: Internal Cache / `getRegionsByIsland`.
   Future<List<Map<String, dynamic>>> getRegions() async {
     return _fetchData('/regions');
   }
 
-  /// DATA SOURCE: `getRegions` / `islandGroupMapping`.
-  /// DATA DESTINATION: UI Dropdowns (Signup/Hospitals).
-  /// STEP 1: Receives the island name (Luzon, Visayas, or Mindanao).
-  /// STEP 2: Fetches ALL regions and filters them.
+  ///r: `getRegions` / `islandGroupMapping`.s: UI Dropdowns (Signup/Hospitals).
+  /// rr: (Luzon, Visayas, or Mindanao).
   Future<List<Map<String, dynamic>>> getRegionsByIsland(String island) async {
     final allRegions = await getRegions();
     final allowedCodes = islandGroupMapping[island] ?? [];
     return allRegions.where((r) => allowedCodes.contains(r['code'])).toList();
   }
 
-  /// DATA SOURCE: PSGC Cloud API (/cities-municipalities).
-  /// DATA DESTINATION: UI Dropdowns / `BackfillService`.
-  /// STEP: A helper method that finds all cities belonging to a specific island.
+  /// r: PSGC Cloud API (/cities-municipalities). s: UI Dropdowns / `BackfillService`.
   Future<List<Map<String, dynamic>>> getCitiesByIsland(String island) async {
     final regions = await getRegionsByIsland(island);
     final regionCodes = regions.map((r) => r['code']).toList();
@@ -70,10 +62,7 @@ class LocationService {
         .toList();
   }
 
-  /// DATA SOURCE: PSGC Cloud API (/regions/{code}/cities-municipalities).
-  /// DATA DESTINATION: UI Dropdowns (Cascading Logic).
-  /// STEP 1: Receives a 'regionCode'.
-  /// STEP 2: Fetches only the cities within that region.
+  /// r: PSGC Cloud API (/regions/{code}/cities-municipalities). s: UI Dropdowns (Cascading Logic).
   Future<List<Map<String, dynamic>>> getCitiesAndMunicipalities(
     String regionCode,
   ) async {
@@ -82,10 +71,7 @@ class LocationService {
     );
   }
 
-  /// DATA SOURCE: PSGC Cloud API (/cities-municipalities/{code}/barangays).
-  /// DATA DESTINATION: UI Dropdowns (Cascading Logic).
-  /// STEP 1: Receives a 'cityCode'.
-  /// STEP 2: Fetches the most granular location data: the Barangays.
+  /// r: PSGC Cloud API (/cities-municipalities/{code}/barangays). s: UI Dropdowns (Cascading Logic).
   Future<List<Map<String, dynamic>>> getBarangays(String cityCode) async {
     return _fetchData(
       '/cities-municipalities/$cityCode/barangays?per_page=500',
@@ -93,8 +79,7 @@ class LocationService {
   }
 
   /// CORE LOGIC: The private worker method for all API calls.
-  /// 1. DATA SOURCE: `_cache` (In-memory) OR PSGC Cloud API.
-  /// 2. DATA DESTINATION: `_cache` (Persistence) and the requesting Method.
+  /// r: `_cache` (In-memory) OR PSGC Cloud API. s: `_cache` (Persistence) and the requesting Method.
   Future<List<Map<String, dynamic>>> _fetchData(String endpoint) async {
     if (_cache.containsKey(endpoint)) {
       return _cache[endpoint]!;
@@ -126,28 +111,3 @@ class LocationService {
     }
   }
 }
-
-/// FILE: location_service.dart
-///
-/// DESCRIPTION:
-/// This file handles the retrieval of administrative geographical data (Regions, Cities, Barangays)
-/// specifically for the Philippines using the PSGC (Philippine Standard Geographic Code) API.
-/// It is used for filtering hospitals and donors by location.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - The PSGC Cloud API (https://psgc.cloud/api/v2).
-/// 2. PROCESSING:
-///    - Fetches raw JSON data for regions, cities, and municipalities.
-///    - Filters regions based on Island Group (Luzon, Visayas, Mindanao) using hardcoded PSGC codes.
-///    - Caches results in-memory ('_cache') to avoid redundant network calls and speed up the UI.
-///    - Sorts all lists alphabetically by name for a better user experience in dropdowns.
-/// 3. SENDS DATA TO:
-///    - UI Screens with location dropdowns (e.g., FindBloodBankScreen, ProfileScreen, ManageHospitalsScreen).
-/// 4. OUTPUTS/RESPONSES:
-///    - Returns 'List<Map<String, dynamic>>' containing geographic details (name, code, etc.).
-///
-/// KEY COMPONENTS:
-/// - islandGroupMapping: A dictionary that links major islands (Luzon/Visayas/Mindanao) to their respective region PSGC codes.
-/// - _cache: A simple in-memory map to store previous API responses.
-/// - getBarangays: The most granular level of location filtering in the app.
