@@ -80,12 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                Icon(
-                  Icons.bloodtype,
-                  size: 80,
-                  color: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 60),
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.displayLarge,

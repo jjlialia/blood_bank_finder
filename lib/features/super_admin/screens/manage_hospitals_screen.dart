@@ -24,6 +24,8 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
 
   bool _isSyncing = false;
   final _formKey = GlobalKey<FormState>();
+  String _searchQuery = '';
+  String _statusFilter = 'All'; // All, Active, Inactive
 
   @override
   Widget build(BuildContext context) {
@@ -67,55 +69,54 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
         ],
       ),
       drawer: const SuperAdminDrawer(),
-      body: StreamBuilder<List<HospitalModel>>(
-        stream: _db.streamHospitals(allowAll: true),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No hospitals registered.'));
-          }
+      body: Column(
+        children: [
+          _buildSearchAndFilter(),
+          Expanded(
+            child: StreamBuilder<List<HospitalModel>>(
+              stream: _db.streamHospitals(allowAll: true),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No hospitals registered.'));
+                }
 
-          final hospitals = snapshot.data!;
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: hospitals.length,
-            itemBuilder: (context, index) {
-              final hospital = hospitals[index];
-              return Card(
-                elevation: 2,
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  title: Text(
-                    hospital.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    '${hospital.city} | ${hospital.contactNumber}',
-                  ),
-                  onTap: () => _showHospitalDetails(hospital),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Edit to open the form with existing data.
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () =>
-                            _showHospitalDialog(hospital: hospital),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () =>
-                            _confirmDelete(hospital.id!, hospital.name),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                // Apply client-side search and filtering
+                final hospitals = snapshot.data!.where((h) {
+                  final matchesSearch =
+                      h.name.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      ) ||
+                      h.city.toLowerCase().contains(_searchQuery.toLowerCase());
+
+                  final matchesStatus =
+                      _statusFilter == 'All' ||
+                      (_statusFilter == 'Active' && h.isActive) ||
+                      (_statusFilter == 'Inactive' && !h.isActive);
+
+                  return matchesSearch && matchesStatus;
+                }).toList();
+
+                if (hospitals.isEmpty) {
+                  return const Center(
+                    child: Text('No matching hospitals found.'),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: hospitals.length,
+                  itemBuilder: (context, index) {
+                    final hospital = hospitals[index];
+                    return _buildHospitalCard(hospital);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showHospitalDialog(),
@@ -126,77 +127,161 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  ///read-only view of a hospital.
-  void _showHospitalDetails(HospitalModel hospital) {
+  Widget _buildSearchAndFilter() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          TextField(
+            onChanged: (v) => setState(() => _searchQuery = v),
+            decoration: InputDecoration(
+              hintText: 'Search hospital name or city...',
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: ['All', 'Active', 'Inactive'].map((filter) {
+              final isSelected = _statusFilter == filter;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: ChoiceChip(
+                  label: Text(filter),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    if (val) setState(() => _statusFilter = filter);
+                  },
+                  selectedColor: Theme.of(
+                    context,
+                  ).primaryColor.withValues(alpha: 0.2),
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey[700],
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHospitalDetails(HospitalModel hospital) =>
+      _displayHospitalModal(hospital);
+
+  void _displayHospitalModal(HospitalModel hospital) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      hospital.name,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hospital.name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Hospital ID: ${hospital.id?.substring(0, 8)}...',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
+                  _statusBadge(hospital.isActive),
                 ],
               ),
-              const Divider(height: 32),
-              _detailRow(Icons.email, 'Email', hospital.email),
-              _detailRow(
-                Icons.location_on,
-                'Location',
-                '${hospital.barangay}, ${hospital.city}, ${hospital.islandGroup}',
-              ),
-              _detailRow(Icons.map, 'Address', hospital.address),
-              _detailRow(Icons.phone, 'Contact', hospital.contactNumber),
-              _detailRow(
-                Icons.bloodtype,
-                'Available Blood Types',
-                hospital.availableBloodTypes.isEmpty
-                    ? 'None'
-                    : hospital.availableBloodTypes.join(', '),
-              ),
-              _detailRow(
-                hospital.isActive ? Icons.check_circle : Icons.cancel,
-                'Status',
-                hospital.isActive ? 'Active' : 'Inactive',
-                color: hospital.isActive ? Colors.green : Colors.red,
-              ),
-              _detailRow(
-                Icons.calendar_today,
-                'Registered On',
-                hospital.createdAt.toString().split(' ')[0],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showHospitalDialog(hospital: hospital);
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit Hospital Info'),
+              const SizedBox(height: 32),
+              _detailSection('Location Information', [
+                _detailItem(
+                  Icons.location_on_outlined,
+                  'Address',
+                  hospital.address,
                 ),
-              ),
-              const SizedBox(height: 16),
+                _detailItem(
+                  Icons.map_outlined,
+                  'City/Region',
+                  '${hospital.city}, ${hospital.region}',
+                ),
+                _detailItem(
+                  Icons.explore_outlined,
+                  'Coordinates',
+                  '${hospital.latitude}, ${hospital.longitude}',
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _detailSection('Contact Details', [
+                _detailItem(
+                  Icons.phone_outlined,
+                  'Phone',
+                  hospital.contactNumber,
+                ),
+                _detailItem(Icons.email_outlined, 'Email', hospital.email),
+              ]),
+              const SizedBox(height: 24),
+              _detailSection('Inventory Snapshot', [
+                _detailItem(
+                  Icons.bloodtype_outlined,
+                  'Available Types',
+                  hospital.availableBloodTypes.isEmpty
+                      ? 'No stock information available'
+                      : hospital.availableBloodTypes.join(', '),
+                ),
+              ]),
             ],
           ),
         ),
@@ -204,29 +289,194 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  Widget _detailRow(IconData icon, String label, String value, {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 22, color: color ?? Theme.of(context).primaryColor),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                    fontWeight: FontWeight.bold,
+  Widget _buildHospitalCard(HospitalModel hospital) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(top: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
+      child: InkWell(
+        onTap: () => _displayHospitalModal(hospital),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.local_hospital,
+                      color: Theme.of(context).primaryColor,
+                    ),
                   ),
-                ),
-                Text(value, style: const TextStyle(fontSize: 16)),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hospital.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          hospital.city,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _statusBadge(hospital.isActive),
+                ],
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Divider(height: 1),
+              ),
+              Row(
+                children: [
+                  _infoItem(Icons.phone_outlined, hospital.contactNumber),
+                  const Spacer(),
+                  _inventorySnapshot(hospital.availableBloodTypes.length),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => _showHospitalDialog(hospital: hospital),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('Edit'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () =>
+                        _confirmDelete(hospital.id!, hospital.name),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Remove'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statusBadge(bool isActive) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.green[50] : Colors.red[50],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        isActive ? 'ACTIVE' : 'INACTIVE',
+        style: TextStyle(
+          color: isActive ? Colors.green[700] : Colors.red[700],
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _infoItem(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey[600]),
+        const SizedBox(width: 4),
+        Text(text, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _inventorySnapshot(int typesCount) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.bloodtype_outlined, size: 14, color: Colors.blue),
+          const SizedBox(width: 4),
+          Text(
+            '$typesCount Types Available',
+            style: const TextStyle(
+              color: Colors.blue,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailSection(String title, List<Widget> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            color: Colors.grey[500],
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...items,
+      ],
+    );
+  }
+
+  Widget _detailItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.blue),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey[600], fontSize: 10),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -772,32 +1022,3 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 }
-
-/// FILE: manage_hospitals_screen.dart
-///
-/// DESCRIPTION:
-/// This screen is the exclusive control panel for Super Admins to manage the
-/// directory of hospitals and blood banks in the system. It supports full
-/// CRUD (Create, Read, Update, Delete) operations and data synchronization.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamHospitals(allowAll: true)': A stream of ALL hospitals,
-///       including those marked as inactive.
-///    - 'LocationService': Populates the cascading dropdowns (Island -> Region -> City)
-///       in the registration form.
-///    - 'ApiService.getCoordinatesFromAddress': Automatically finds Lat/Lng for a hospital
-///       based on its typed address.
-/// 2. PROCESSING:
-///    - Form Handling: Manages a complex, multi-field form for hospital details.
-///    - Cascading Dropdowns: Dynamically loads Regions when an Island is picked, and
-///      Cities when a Region is picked.
-///    - Geocoding: Converts user-entered addresses into map coordinates before saving.
-/// 3. SENDS DATA TO:
-///    - 'ApiService.addHospital' / 'updateHospital': Sends the validated data to the
-///      FastAPI backend for Firestore persistence.
-///    - 'ApiService.deleteHospital': Removes a hospital record from the system.
-///    - 'BackfillService.syncAllHospitals': Triggers a global data verification/sync.
-/// 4. OUTPUTS/GUI:
-///    - A list of hospital cards with inline Edit/Delete actions.
-///    - A bottom-sheet modal for adding or modifying hospital records.

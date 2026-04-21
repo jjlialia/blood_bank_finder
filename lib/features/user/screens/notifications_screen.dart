@@ -2,6 +2,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
 
@@ -12,10 +13,13 @@ class NotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
     final userId = auth.user?.uid;
-    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        centerTitle: true,
+        elevation: 0,
+      ),
       body: userId == null
           ? const Center(child: Text('Unauthorized'))
           : StreamBuilder<QuerySnapshot>(
@@ -78,47 +82,125 @@ class NotificationsScreen extends StatelessWidget {
                 //Rendering the list of alerts from the streamed data.
                 return ListView.builder(
                   itemCount: snapshot.data!.docs.length,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   itemBuilder: (context, index) {
-                    final data =
-                        snapshot.data!.docs[index].data()
-                            as Map<String, dynamic>;
+                    final doc = snapshot.data!.docs[index];
+                    final data = doc.data() as Map<String, dynamic>;
                     final bool isRead = data['isRead'] ?? false;
+                    final String type = data['type'] ?? 'default';
+                    final accentColor = _getColorForType(type);
 
-                    return Card(
-                      // Visual cue for unread vs read notifications.
-                      color: isRead ? Colors.white : Colors.red[50],
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: ListTile(
-                        leading: Icon(
-                          _getIconForType(data['type']),
-                          color: theme.primaryColor,
+                    return GestureDetector(
+                      onTap: () {
+                        FirebaseFirestore.instance
+                            .collection('notifications')
+                            .doc(doc.id)
+                            .update({'isRead': true});
+                        _showNotificationDetails(context, data);
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isRead ? Colors.black.withValues(alpha: 0.02) : accentColor.withValues(alpha: 0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border: isRead ? Border.all(color: Colors.grey[100]!) : Border.all(color: accentColor.withValues(alpha: 0.1)),
                         ),
-                        title: Text(
-                          data['title'] ?? 'Notification',
-                          style: TextStyle(
-                            fontWeight: isRead
-                                ? FontWeight.normal
-                                : FontWeight.bold,
+                        child: IntrinsicHeight(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 5,
+                                decoration: BoxDecoration(
+                                  color: isRead ? Colors.grey[300] : accentColor,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    bottomLeft: Radius.circular(20),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: accentColor.withValues(alpha: 0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          _getIconForType(type),
+                                          color: accentColor,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Text(
+                                                  _formatRelativeTime(data['createdAt']),
+                                                  style: TextStyle(
+                                                    color: Colors.grey[400],
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w900,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                                if (!isRead)
+                                                  Container(
+                                                    width: 8,
+                                                    height: 8,
+                                                    decoration: BoxDecoration(
+                                                      color: accentColor,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              data['title'] ?? 'Notification',
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                                                color: isRead ? Colors.black87 : Colors.black,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              data['body'] ?? '',
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[600],
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        subtitle: Text(data['body'] ?? ''),
-                        trailing: Text(
-                          _formatDate(data['createdAt']),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        onTap: () {
-                          // Write data back to Firestore to update status.
-                          FirebaseFirestore.instance
-                              .collection('notifications')
-                              .doc(snapshot.data!.docs[index].id)
-                              .update({'isRead': true});
-
-                          //Show the detailed popup.
-                          _showNotificationDetails(context, data);
-                        },
                       ),
                     );
                   },
@@ -134,6 +216,8 @@ class NotificationsScreen extends StatelessWidget {
     BuildContext context,
     Map<String, dynamic> data,
   ) {
+    final accentColor = _getColorForType(data['type']);
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -182,36 +266,82 @@ class NotificationsScreen extends StatelessWidget {
               //The core message from the Admin/System.
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
+                  color: accentColor.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.1)),
                 ),
-                child: Text(
-                  data['body'] ?? 'No additional details provided.',
-                  style: const TextStyle(fontSize: 16, height: 1.5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'STATUS UPDATE',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      data['body'] ?? 'No addition details provided.',
+                      style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
+                    backgroundColor: Colors.black87,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text('Close'),
+                  child: const Text('Acknowledged', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Color _getColorForType(String? type) {
+    switch (type) {
+      case 'request_approved':
+        return Colors.green;
+      case 'request_rejected':
+        return Colors.red;
+      case 'request_on_progress':
+        return Colors.blue;
+      case 'new_donation':
+        return Colors.purple;
+      default:
+        return Colors.blueGrey;
+    }
+  }
+
+  String _formatRelativeTime(dynamic timestamp) {
+    if (timestamp == null) return '';
+    final DateTime date = (timestamp as Timestamp).toDate();
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 1) return 'JUST NOW';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}M AGO';
+    if (diff.inHours < 24) return '${diff.inHours}H AGO';
+    return DateFormat('MMM d').format(date).toUpperCase();
   }
 
   // ui helper for type

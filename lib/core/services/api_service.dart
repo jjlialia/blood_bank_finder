@@ -7,6 +7,7 @@ import '../models/blood_request_model.dart';
 import '../models/hospital_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ApiService {
   // Use http://10.0.2.2:8000 for Android Emulator
@@ -123,6 +124,16 @@ class ApiService {
   }
 
   // --- Hospitals ---
+  
+  /// Utility to initiate a phone call using url_launcher
+  Future<void> callUser(String contactNumber) async {
+    final Uri telUri = Uri.parse('tel:$contactNumber');
+    if (await canLaunchUrl(telUri)) {
+      await launchUrl(telUri);
+    } else {
+      throw 'Could not launch $telUri';
+    }
+  }
 
   ///r:profile screen and from manage hospital screen screen
   Future<void> addHospital(HospitalModel hospital) async {
