@@ -212,6 +212,15 @@ class _RequestCard extends StatelessWidget {
                                   letterSpacing: -0.2,
                                 ),
                               ),
+                              if (item.type == 'Request' && item.patientName != null)
+                                Text(
+                                  'PATIENT: ${item.patientName}',
+                                  style: TextStyle(
+                                    color: Colors.red[900],
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               FutureBuilder<HospitalModel?>(
                                 future: DatabaseService().getHospital(item.hospitalId),
                                 builder: (context, snapshot) {
@@ -241,6 +250,20 @@ class _RequestCard extends StatelessWidget {
                           '${item.quantity.toInt()} Unit(s)',
                           style: TextStyle(color: Colors.grey[700], fontSize: 13, fontWeight: FontWeight.w600),
                         ),
+                        if (item.type == 'Request' && item.urgency == 'Emergency') ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'EMERGENCY',
+                              style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                         const Spacer(),
                         if (item.preferredDate != null)
                           Row(

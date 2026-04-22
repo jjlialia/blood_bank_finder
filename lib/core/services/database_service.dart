@@ -139,6 +139,16 @@ class DatabaseService {
     });
   }
 
+  /// DATA SOURCE: 'blood_requests' collection (Firestore).
+  /// DATA DESTINATION: NotificationsScreen / DetailedView.
+  Future<BloodRequestModel?> getRequest(String id) async {
+    final doc = await _db.collection('blood_requests').doc(id).get();
+    if (doc.exists && doc.data() != null) {
+      return BloodRequestModel.fromMap(doc.data()!, doc.id);
+    }
+    return null;
+  }
+
   /// DATA SOURCE: 'hospitals' collection (Firestore).
   /// DATA DESTINATION: ProfileScreen / HospitalDetails.
   Future<HospitalModel?> getHospital(String id) async {

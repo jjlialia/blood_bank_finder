@@ -10,6 +10,10 @@ class NotificationModel {
   final String message;
   final bool isRead;
   final DateTime createdAt;
+  final String? type;
+  final String? title;
+  final String? body;
+  final String? requestId;
 
   NotificationModel({
     this.id,
@@ -17,6 +21,10 @@ class NotificationModel {
     required this.message,
     required this.isRead,
     required this.createdAt,
+    this.type,
+    this.title,
+    this.body,
+    this.requestId,
   });
 
   /// STEP: Reconstructs a 'NotificationModel' from database data.
@@ -30,6 +38,10 @@ class NotificationModel {
       message: data['message'] ?? '',
       isRead: data['isRead'] ?? false,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      type: data['type'],
+      title: data['title'],
+      body: data['body'],
+      requestId: data['requestId'],
     );
   }
 
@@ -40,6 +52,10 @@ class NotificationModel {
       'message': message,
       'isRead': isRead,
       'createdAt': Timestamp.fromDate(createdAt),
+      'type': type,
+      'title': title,
+      'body': body,
+      'requestId': requestId,
     };
   }
 }

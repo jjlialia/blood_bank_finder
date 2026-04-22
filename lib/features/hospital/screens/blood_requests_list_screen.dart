@@ -205,9 +205,9 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              isDonation ? 'BLOOD DONATION' : 'URGENT REQUEST',
+                                              isDonation ? 'BLOOD DONATION' : (req.urgency?.toUpperCase() ?? 'REQUEST'),
                                               style: TextStyle(
-                                                color: accentColor,
+                                                color: req.urgency == 'Emergency' ? Colors.red : accentColor,
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w900,
                                                 letterSpacing: 1.0,
@@ -256,11 +256,17 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                               _buildProfileCard(userProfile, req),
                               const SizedBox(height: 24),
 
-                              // --- REQUEST SPECIFICS ---
                               _sectionTitle('Transaction Details'),
                               const SizedBox(height: 12),
                               _buildDetailsCard(req, isDonation, accentColor),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 24),
+
+                              if (!isDonation) ...[
+                                _sectionTitle('Medical Context'),
+                                const SizedBox(height: 12),
+                                _buildMedicalContextCard(req),
+                                const SizedBox(height: 32),
+                              ],
 
                               // --- MANAGEMENT HUD ---
                               _sectionTitle('Process Case'),
@@ -378,34 +384,67 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Expanded(
-                              child: Text(
-                                req.userName,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: accentColor.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                req.bloodType,
-                                style: TextStyle(
-                                  color: accentColor,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                             Expanded(
+                               child: Column(
+                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                 children: [
+                                   Text(
+                                     !isDonation && req.patientName != null && req.patientName!.isNotEmpty
+                                         ? 'PATIENT: ${req.patientName}'
+                                         : req.userName,
+                                     style: const TextStyle(
+                                       fontSize: 18,
+                                       fontWeight: FontWeight.bold,
+                                       letterSpacing: -0.5,
+                                     ),
+                                   ),
+                                   if (!isDonation)
+                                     Text(
+                                       'Requested by ${req.userName}',
+                                       style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                                     ),
+                                 ],
+                               ),
+                             ),
+                             Container(
+                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                               decoration: BoxDecoration(
+                                 color: accentColor.withValues(alpha: 0.08),
+                                 borderRadius: BorderRadius.circular(8),
+                               ),
+                               child: Text(
+                                 req.bloodType,
+                                 style: TextStyle(
+                                   color: accentColor,
+                                   fontWeight: FontWeight.w900,
+                                   fontSize: 14,
+                                 ),
+                               ),
+                             ),
+                           ],
+                         ),
+                         if (!isDonation && req.urgency == 'Emergency') ...[
+                           const SizedBox(height: 8),
+                           Container(
+                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                             decoration: BoxDecoration(
+                               color: Colors.red[700],
+                               borderRadius: BorderRadius.circular(8),
+                             ),
+                             child: const Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 Icon(Icons.flash_on, color: Colors.white, size: 12),
+                                 SizedBox(width: 4),
+                                 Text(
+                                   'EMERGENCY PRIORITY',
+                                   style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+                                 ),
+                               ],
+                             ),
+                           ),
+                         ],
+                         const SizedBox(height: 12),
                         Row(
                           children: [
                             Icon(Icons.water_drop_outlined, size: 14, color: Colors.grey[600]),
@@ -415,7 +454,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                               style: TextStyle(color: Colors.grey[700], fontSize: 13, fontWeight: FontWeight.w500),
                             ),
                             const Spacer(),
-                            if (isDonation && req.preferredDate != null)
+                            if (req.preferredDate != null)
                               Row(
                                 children: [
                                   const Icon(Icons.event_available, size: 14, color: Colors.green),
@@ -552,7 +591,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
           _detailRow(Icons.water_drop, 'Case Quantity', '${req.quantity} Units', color: color),
           const Divider(height: 24),
           _detailRow(Icons.phone, 'Direct Contact', req.contactNumber),
-          if (isDonation && req.preferredDate != null) ...[
+          if (req.preferredDate != null) ...[
             const Divider(height: 24),
             _detailRow(Icons.event, 'Requested Appointment', req.preferredDate!),
             const Divider(height: 24),
@@ -560,6 +599,28 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
           ],
           const Divider(height: 24),
           _detailRow(Icons.calendar_today, 'Original Submission', _formatDate(req.createdAt, full: true)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMedicalContextCard(BloodRequestModel req) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        children: [
+          _detailRow(Icons.personal_video_outlined, 'Patient Name', req.patientName ?? 'N/A'),
+          const Divider(height: 24),
+          _detailRow(Icons.emergency_outlined, 'Urgency Level', req.urgency ?? 'Regular'),
+          const Divider(height: 24),
+          _detailRow(Icons.meeting_room_outlined, 'Hospital Ward / Room', req.hospitalWard ?? 'Not specified'),
+          const Divider(height: 24),
+          _detailRow(Icons.medical_services_outlined, 'Reason / Diagnosis', req.medicalReason ?? 'No reason provided'),
         ],
       ),
     );

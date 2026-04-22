@@ -25,6 +25,10 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
   HospitalModel? _selectedHospital;
   final _unitsController = TextEditingController(text: '1.0');
   final _contactController = TextEditingController();
+  final _patientNameController = TextEditingController();
+  final _wardController = TextEditingController();
+  final _reasonController = TextEditingController();
+  String _selectedUrgency = 'Regular';
   bool _isSworn = false;
 
   @override
@@ -64,6 +68,10 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
         contactNumber: _contactController.text,
         quantity: double.tryParse(_unitsController.text) ?? 1.0,
         createdAt: DateTime.now(),
+        patientName: _patientNameController.text,
+        urgency: _selectedUrgency,
+        hospitalWard: _wardController.text,
+        medicalReason: _reasonController.text,
       );
 
       //Send the package over the network.
@@ -184,6 +192,75 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 24),
+              // --- PATIENT DETAILS SECTION ---
+              Row(
+                children: [
+                  Icon(Icons.person_pin_outlined, size: 20, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    'PATIENT DETAILS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: theme.primaryColor,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const SizedBox(height: 16),
+              CustomTextField(
+                label: 'Patient Full Name',
+                controller: _patientNameController,
+                prefixIcon: Icons.person_outline,
+                validator: (v) => v == null || v.isEmpty ? 'Patient name required' : null,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedUrgency,
+                items: ['Regular', 'Scheduled', 'Emergency']
+                    .map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e.toUpperCase(),
+                            style: TextStyle(
+                              color: e == 'Emergency' ? Colors.red[700] : Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (v) => setState(() => _selectedUrgency = v!),
+                decoration: const InputDecoration(
+                  labelText: 'Urgency Level',
+                  prefixIcon: Icon(Icons.priority_high),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Ward / Room #',
+                      controller: _wardController,
+                      prefixIcon: Icons.meeting_room_outlined,
+                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              CustomTextField(
+                label: 'Reason / Diagnosis',
+                controller: _reasonController,
+                prefixIcon: Icons.medical_services_outlined,
+                maxLines: 2,
+                validator: (v) => v == null || v.isEmpty ? 'Diagnosis required' : null,
+              ),
+              const SizedBox(height: 16),
               CustomTextField(
                 label: 'Contact Details',
                 controller: _contactController,

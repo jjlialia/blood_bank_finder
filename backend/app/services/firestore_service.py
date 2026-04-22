@@ -167,6 +167,10 @@ class FirestoreService:
                 title = "Request Rejected"
                 body = f"Sorry, your {request_data['type']} for {request_data['bloodType']} at {request_data['hospitalName']} was rejected."
                 notif_type = "request_rejected"
+            
+            # Append appointment info if available
+            if request_data.get('preferredDate'):
+                body += f"\n\nSchedule: {request_data['preferredDate']} at {request_data.get('preferredTime', 'Any Time')}"
 
             if title:
                 # Append the custom admin message if provided.
@@ -175,6 +179,7 @@ class FirestoreService:
                 
                 notification_data = {
                     'userId': request_data['userId'],
+                    'requestId': request_id,
                     'message': body,
                     'isRead': False,
                     'createdAt': datetime.now(),

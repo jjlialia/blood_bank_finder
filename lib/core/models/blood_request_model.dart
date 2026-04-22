@@ -30,6 +30,13 @@ class BloodRequestModel {
   final String? preferredDate;
   final String? preferredTime;
 
+  // New Medical/Production Fields
+  final String? patientName;
+  final String? urgency; // 'Emergency', 'Regular', 'Scheduled'
+  final String? hospitalWard;
+  final String? medicalReason;
+  final String? lastDonationDate;
+
   BloodRequestModel({
     this.id,
     required this.userId,
@@ -45,6 +52,11 @@ class BloodRequestModel {
     this.adminMessage,
     this.preferredDate,
     this.preferredTime,
+    this.patientName,
+    this.urgency,
+    this.hospitalWard,
+    this.medicalReason,
+    this.lastDonationDate,
   });
 
   ///  gkan sa firebase padung sa app. if mobasa para masabtan og ma show sa screen.
@@ -67,6 +79,11 @@ class BloodRequestModel {
       adminMessage: data['adminMessage'],
       preferredDate: data['preferredDate'],
       preferredTime: data['preferredTime'],
+      patientName: data['patientName'],
+      urgency: data['urgency'] ?? 'Regular',
+      hospitalWard: data['hospitalWard'],
+      medicalReason: data['medicalReason'],
+      lastDonationDate: data['lastDonationDate'],
     );
   }
 
@@ -87,6 +104,11 @@ class BloodRequestModel {
       'adminMessage': adminMessage,
       'preferredDate': preferredDate,
       'preferredTime': preferredTime,
+      'patientName': patientName,
+      'urgency': urgency,
+      'hospitalWard': hospitalWard,
+      'medicalReason': medicalReason,
+      'lastDonationDate': lastDonationDate,
     };
   }
 
@@ -107,6 +129,11 @@ class BloodRequestModel {
       'adminMessage': adminMessage,
       'preferredDate': preferredDate,
       'preferredTime': preferredTime,
+      'patientName': patientName,
+      'urgency': urgency,
+      'hospitalWard': hospitalWard,
+      'medicalReason': medicalReason,
+      'lastDonationDate': lastDonationDate,
     };
   }
 }

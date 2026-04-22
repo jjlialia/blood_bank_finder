@@ -35,6 +35,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   bool _travelOk = false;
   bool _medsOk = false;
   bool _wellOk = false;
+  DateTime? _lastDonationDate;
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +107,25 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
                   title: const Text('Are you feeling well today?'),
                   value: _wellOk,
                   onChanged: (v) => setState(() => _wellOk = v ?? false),
+                ),
+                const Divider(),
+                ListTile(
+                  title: const Text('Last Donation Date (Optional)'),
+                  subtitle: Text(_lastDonationDate == null
+                      ? 'Select if you have donated before'
+                      : '${_lastDonationDate!.day}/${_lastDonationDate!.month}/${_lastDonationDate!.year}'),
+                  trailing: TextButton(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().subtract(const Duration(days: 90)),
+                        firstDate: DateTime.now().subtract(const Duration(days: 365 * 2)),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) setState(() => _lastDonationDate = picked);
+                    },
+                    child: const Text('Pick Date'),
+                  ),
                 ),
               ],
             ),
@@ -329,6 +349,9 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         preferredDate:
             '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
         preferredTime: _selectedTime!.format(context),
+        lastDonationDate: _lastDonationDate != null
+            ? '${_lastDonationDate!.day}/${_lastDonationDate!.month}/${_lastDonationDate!.year}'
+            : null,
       );
 
       await api.createBloodRequest(request);

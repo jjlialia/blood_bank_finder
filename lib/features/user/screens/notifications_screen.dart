@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/models/blood_request_model.dart';
+import '../../../core/services/database_service.dart';
 import '../../../core/providers/auth_provider.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -88,6 +90,7 @@ class NotificationsScreen extends StatelessWidget {
                     final data = doc.data() as Map<String, dynamic>;
                     final bool isRead = data['isRead'] ?? false;
                     final String type = data['type'] ?? 'default';
+                    final String body = data['body'] ?? '';
                     final accentColor = _getColorForType(type);
 
                     return GestureDetector(
@@ -182,8 +185,8 @@ class NotificationsScreen extends StatelessWidget {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              data['body'] ?? '',
-                                              maxLines: 2,
+                                              body.contains('Schedule:') ? body.replaceAll('\n\n', '\n') : body,
+                                              maxLines: 3,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
                                                 fontSize: 13,
@@ -217,6 +220,7 @@ class NotificationsScreen extends StatelessWidget {
     Map<String, dynamic> data,
   ) {
     final accentColor = _getColorForType(data['type']);
+    final String body = data['body'] ?? 'No additional details provided.';
 
     showModalBottomSheet(
       context: context,
@@ -232,87 +236,189 @@ class NotificationsScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    _getIconForType(data['type']),
-                    color: Theme.of(context).primaryColor,
-                    size: 32,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getIconForType(data['type']),
+                      color: accentColor,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Text(
-                      data['title'] ?? 'Notification Details',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data['title'] ?? 'Notification Details',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        Text(
+                          'Received: ${_formatDate(data['createdAt'])}',
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, size: 20),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
-              const Divider(height: 32),
-              Text(
-                'Date Received: ${_formatDate(data['createdAt'])}',
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               //The core message from the Admin/System.
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.03),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: accentColor.withValues(alpha: 0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey[100]!),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'STATUS UPDATE',
-                      style: TextStyle(
-                        color: accentColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: accentColor,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'OFFICIAL UPDATE',
+                          style: TextStyle(
+                            color: accentColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
-                      data['body'] ?? 'No addition details provided.',
-                      style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87),
+                      body,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black87,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Acknowledged', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+
+              // --- CASE SUMMARY CARD (Hospital Style) ---
+              if (data['requestId'] != null)
+                FutureBuilder<BloodRequestModel?>(
+                  future: DatabaseService().getRequest(data['requestId']),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: LinearProgressIndicator());
+                    }
+                    final req = snapshot.data;
+                    if (req == null) return const SizedBox.shrink();
+
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.assignment_outlined, size: 16, color: Colors.blueGrey[700]),
+                              const SizedBox(width: 8),
+                              Text(
+                                'CASE SUMMARY',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.blueGrey[700],
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          _detailRow(Icons.person_outline, 'Patient', req.patientName ?? 'N/A'),
+                          _detailRow(Icons.water_drop_outlined, 'Blood Type', req.bloodType),
+                          _detailRow(Icons.layers_outlined, 'Quantity', '${req.quantity.toInt()} Units'),
+                          _detailRow(
+                            Icons.emergency_outlined,
+                            'Urgency',
+                            req.urgency ?? 'Regular',
+                            valueColor: req.urgency == 'Emergency' ? Colors.red[700] : null,
+                          ),
+                          if (req.hospitalWard != null)
+                            _detailRow(Icons.meeting_room_outlined, 'Location', req.hospitalWard!),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 12),
+          Text(
+            '$label:',
+            style: TextStyle(color: Colors.grey[500], fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: valueColor ?? Colors.black87,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

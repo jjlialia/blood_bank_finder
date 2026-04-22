@@ -69,6 +69,15 @@ class BloodRequestBase(BaseModel):
     hospitalName: str
     contactNumber: str
     quantity: float
+    # New medical fields
+    patientName: Optional[str] = None
+    urgency: Optional[str] = "Regular" # 'Emergency', 'Regular', 'Scheduled'
+    hospitalWard: Optional[str] = None
+    medicalReason: Optional[str] = None
+    lastDonationDate: Optional[str] = None
+    # Appointment details (synced with Flutter)
+    preferredDate: Optional[str] = None
+    preferredTime: Optional[str] = None
     adminMessage: Optional[str] = None # Added to store feedback from Hospital Admins.
     createdAt: datetime = Field(default_factory=datetime.now)
 
@@ -103,6 +112,7 @@ class NotificationBase(BaseModel):
     type: Optional[str] = None
     title: Optional[str] = None
     body: Optional[str] = None
+    requestId: Optional[str] = None
 
 class NotificationCreate(NotificationBase):
     pass
