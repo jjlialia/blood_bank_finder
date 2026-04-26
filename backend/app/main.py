@@ -25,6 +25,8 @@ app.include_router(requests.router)      # Handles the core blood request/donati
 app.include_router(inventory.router)     # Handles stock level updates.
 app.include_router(notifications.router) # Handles alert creation.
 app.include_router(geocoding.router)    # Handles backend-side coordinate lookups.
+from app.routers import auth
+app.include_router(auth.router)          # Handles OTP verification.
 
 # ROOT ENDPOINT: A simple "I'm alive" check.
 @app.get("/")

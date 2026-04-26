@@ -8,6 +8,7 @@ import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/location_picker.dart';
 import 'landing_screen.dart';
 import '../../user/screens/user_home_screen.dart';
+import 'otp_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -29,14 +30,18 @@ class _SignupScreenState extends State<SignupScreen> {
     'barangay': null,
   };
 
-  /// validate, save, authprovider, error, navigate.
+  /// validate, save, otp, navigate to otpscreen.
   void _signup() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       final auth = context.read<AuthProvider>();
 
-      //authprovider
-      final error = await auth.signup(_formData, _formData['password']);
+      // 1. Send OTP first
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sending verification code...')),
+      );
+
+      final error = await auth.sendOtp(_formData['email']);
 
       if (!mounted) return;
 
@@ -47,14 +52,38 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
-      //if walay error sa babaw i false na ni para dli kabalik ang user og adto na sa home screen.
-      // Go to LandingScreen as requested ("after login/signout")
-      Navigator.pushAndRemoveUntil(
+      // 2. Navigate to OTP Screen
+      Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const LandingScreen()),
-        (route) => false,
+        MaterialPageRoute(
+          builder: (context) => OtpScreen(
+            email: _formData['email'],
+            onVerified: _completeSignup,
+          ),
+        ),
       );
     }
+  }
+
+  void _completeSignup() async {
+    final auth = context.read<AuthProvider>();
+    final error = await auth.signup(_formData, _formData['password']);
+
+    if (!mounted) return;
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    // Go to LandingScreen as requested ("after login/signout")
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LandingScreen()),
+      (route) => false,
+    );
   }
 
   @override

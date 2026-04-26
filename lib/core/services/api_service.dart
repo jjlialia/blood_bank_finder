@@ -208,4 +208,31 @@ class ApiService {
     }
     return null;
   }
+
+  // --- Auth & OTP ---
+
+  Future<void> sendOtp(String email) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/send-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send OTP: ${response.body}');
+    }
+  }
+
+  Future<void> verifyOtp(String email, String otp) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'otp': otp}),
+    );
+
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body);
+      throw Exception(data['detail'] ?? 'Verification failed');
+    }
+  }
 }

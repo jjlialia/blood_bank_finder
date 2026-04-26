@@ -208,4 +208,23 @@ class AuthProvider with ChangeNotifier {
       return e.toString();
     }
   }
+
+  // OTP Flow
+  Future<String?> sendOtp(String email) async {
+    try {
+      await _api.sendOtp(email);
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> verifyOtp(String email, String otp) async {
+    try {
+      await _api.verifyOtp(email, otp);
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 }

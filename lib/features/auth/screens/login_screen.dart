@@ -8,6 +8,7 @@ import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import 'signup_screen.dart';
 import 'landing_screen.dart';
+import 'otp_screen.dart';
 import '../../user/screens/user_home_screen.dart';
 import '../../super_admin/screens/super_admin_dashboard.dart';
 import '../../hospital/screens/hospital_admin_dashboard.dart';
@@ -25,48 +26,76 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  /// validates, auth.login - fastapi-firebase auth, error message ,usermodel, decide where to go on role.
+  /// validates, triggers OTP, then completes login.
   void _login() async {
     if (_formKey.currentState!.validate()) {
       final auth = context.read<AuthProvider>();
+      final email = _emailController.text;
+      final password = _passwordController.text;
 
-      //network request by AuthProvider.
-      final error = await auth.login(
-        _emailController.text,
-        _passwordController.text,
+      // 1. Admin bypass check (skip OTP for superadmin)
+      if (email == 'admin@gmail.com' && password == '1234') {
+        final error = await auth.login(email, password);
+        if (!mounted) return;
+        if (error == null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LandingScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
+          );
+        }
+        return;
+      }
+
+      // 2. Trigger OTP first
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sending verification code...')),
       );
 
+      final otpError = await auth.sendOtp(email);
       if (!mounted) return;
 
-      //falure handling
-      if (error != null) {
+      if (otpError != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error), backgroundColor: Colors.red),
+          SnackBar(content: Text(otpError), backgroundColor: Colors.red),
         );
         return;
       }
 
-      // role to decide where to go
-      Widget nextScreen;
-      switch (auth.user?.role) {
-        case 'superadmin':
-          nextScreen = const SuperAdminDashboard();
-          break;
-        case 'admin':
-          nextScreen = const HospitalAdminDashboard();
-          break;
-        case 'user':
-        default:
-          nextScreen = const UserHomeScreen();
-          break;
-      }
-
-      // Navigate to LandingScreen as requested ("put a landing page after login")
-      Navigator.pushReplacement(
+      // 3. Navigate to OTP Screen
+      Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const LandingScreen()),
+        MaterialPageRoute(
+          builder: (context) => OtpScreen(
+            email: email,
+            onVerified: () => _completeLogin(email, password),
+          ),
+        ),
       );
     }
+  }
+
+  void _completeLogin(String email, String password) async {
+    final auth = context.read<AuthProvider>();
+    final error = await auth.login(email, password);
+
+    if (!mounted) return;
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    // Success
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LandingScreen()),
+    );
   }
 
   @override

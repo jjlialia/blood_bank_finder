@@ -109,6 +109,21 @@ class FirestoreService:
     async def create_blood_request(self, request_data: dict) -> str:
         """new Request or Donation.r DonateBloodScreen / RequestBloodScreen."""
         _, doc_ref = self.db.collection('blood_requests').add(request_data)
+        
+        # Trigger Email Notification for creation
+        try:
+            from app.services.email_service import EmailService
+            email_svc = EmailService()
+            user_doc = self.db.collection('users').document(request_data['userId']).get()
+            if user_doc.exists:
+                user_email = user_doc.to_dict().get('email')
+                if user_email:
+                    title = "Request Received"
+                    body = f"Your {request_data['type']} for {request_data['bloodType']} has been successfully sent to {request_data['hospitalName']}.\n\nYou will be notified when the hospital updates its status."
+                    email_svc.send_notification_email(user_email, title, body)
+        except Exception as e:
+            print(f"Error sending creation email: {e}")
+
         return doc_ref.id
 
     async def list_all_requests(self) -> List[dict]:
@@ -190,6 +205,18 @@ class FirestoreService:
                 # DATA DESTINATION: 'notifications' collection in Firestore.
                 self.db.collection('notifications').add(notification_data)
 
+                # Trigger Email Notification for status update
+                try:
+                    from app.services.email_service import EmailService
+                    email_svc = EmailService()
+                    user_doc = self.db.collection('users').document(request_data['userId']).get()
+                    if user_doc.exists:
+                        user_email = user_doc.to_dict().get('email')
+                        if user_email:
+                            email_svc.send_notification_email(user_email, title, body)
+                except Exception as e:
+                    print(f"Error sending status update email: {e}")
+
     # --- INVENTORY SECTION ---
     # Handled by routers/inventory.py
 
@@ -248,3 +275,31 @@ class FirestoreService:
             data['id'] = doc.id
             notifications.append(data)
         return notifications
+
+    # --- OTP SECTION ---
+
+    async def store_otp(self, email: str, otp: str):
+        """Stores an OTP code in Firestore with an expiration timestamp."""
+        expires_at = datetime.now().timestamp() + 600  # 10 minutes from now
+        self.db.collection('otp_verifications').document(email).set({
+            'otp': otp,
+            'expiresAt': expires_at,
+            'createdAt': datetime.now()
+        })
+
+    async def verify_otp(self, email: str, otp: str) -> bool:
+        """Checks if the OTP is valid and hasn't expired."""
+        doc = self.db.collection('otp_verifications').document(email).get()
+        if not doc.exists:
+            return False
+        
+        data = doc.to_dict()
+        if data['otp'] != otp:
+            return False
+            
+        if datetime.now().timestamp() > data['expiresAt']:
+            return False
+            
+        # Optional: Delete after success to prevent reuse
+        self.db.collection('otp_verifications').document(email).delete()
+        return True
