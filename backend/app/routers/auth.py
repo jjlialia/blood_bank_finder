@@ -33,10 +33,10 @@ async def send_otp(
     otp = str(random.randint(100000, 999999))
     
     # Store in Firestore
-    await service.store_otp(request.email, otp)
+    await service.store_otp(request.email.lower(), otp)
     
     # Send email
-    success = email_service.send_otp_email(request.email, otp)
+    success = email_service.send_otp_email(request.email.lower(), otp)
     
     if not success:
         # We still return 200 for security but log failure internally
@@ -50,7 +50,7 @@ async def verify_otp(request: OtpVerify, service: FirestoreService = Depends(get
     """
     Verifies the OTP provided by the user.
     """
-    is_valid = await service.verify_otp(request.email, request.otp)
+    is_valid = await service.verify_otp(request.email.lower(), request.otp)
     
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")

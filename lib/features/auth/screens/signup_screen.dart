@@ -177,13 +177,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 label: 'Email',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
-                onSaved: (v) => _formData['email'] = v,
+                onSaved: (v) => _formData['email'] = v?.trim(),
               ),
               CustomTextField(
                 label: 'Password',
                 prefixIcon: Icons.lock_outline,
                 obscureText: true,
-                onSaved: (v) => _formData['password'] = v,
+                onSaved: (v) => _formData['password'] = v?.trim(),
               ),
               const SizedBox(height: 32),
               // pagclick sa signup button mogamit sa _signup method.

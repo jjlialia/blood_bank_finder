@@ -289,17 +289,24 @@ class FirestoreService:
 
     async def verify_otp(self, email: str, otp: str) -> bool:
         """Checks if the OTP is valid and hasn't expired."""
+        print(f"DEBUG: Verifying OTP for {email}. Input: {otp}")
         doc = self.db.collection('otp_verifications').document(email).get()
         if not doc.exists:
+            print(f"DEBUG: No OTP found in Firestore for {email}")
             return False
         
         data = doc.to_dict()
+        print(f"DEBUG: Found OTP: {data['otp']}, Expires At: {data['expiresAt']}, Now: {datetime.now().timestamp()}")
+
         if data['otp'] != otp:
+            print(f"DEBUG: OTP mismatch. Expected {data['otp']}, got {otp}")
             return False
             
         if datetime.now().timestamp() > data['expiresAt']:
+            print("DEBUG: OTP expired")
             return False
             
         # Optional: Delete after success to prevent reuse
         self.db.collection('otp_verifications').document(email).delete()
+        print("DEBUG: OTP verified successfully")
         return True

@@ -34,10 +34,13 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _verify() async {
+    if (_isLoading) return; // Prevent double submission
+
     String otp = _controllers.map((c) => c.text).join();
     if (otp.length < 6) return;
 
     setState(() => _isLoading = true);
+    FocusScope.of(context).unfocus(); // Hide keyboard
     
     final auth = context.read<AuthProvider>();
     final error = await auth.verifyOtp(widget.email, otp);
@@ -120,15 +123,21 @@ class _OtpScreenState extends State<OtpScreen> {
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         maxLength: 1,
-        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87, // Ensure text is visible
+        ),
         decoration: InputDecoration(
           counterText: '',
+          contentPadding: EdgeInsets.zero, // Center text vertically
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(8),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            borderSide:
+                BorderSide(color: Theme.of(context).primaryColor, width: 2),
             borderRadius: BorderRadius.circular(8),
           ),
         ),
@@ -137,9 +146,6 @@ class _OtpScreenState extends State<OtpScreen> {
             _focusNodes[index + 1].requestFocus();
           } else if (value.isEmpty && index > 0) {
             _focusNodes[index - 1].requestFocus();
-          }
-          if (index == 5 && value.isNotEmpty) {
-            _verify();
           }
         },
       ),

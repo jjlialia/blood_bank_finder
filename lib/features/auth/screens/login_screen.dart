@@ -30,8 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     if (_formKey.currentState!.validate()) {
       final auth = context.read<AuthProvider>();
-      final email = _emailController.text;
-      final password = _passwordController.text;
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
 
       // 1. Admin bypass check (skip OTP for superadmin)
       if (email == 'admin@gmail.com' && password == '1234') {
