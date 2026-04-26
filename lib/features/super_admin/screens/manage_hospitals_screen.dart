@@ -7,6 +7,9 @@ import '../../../core/services/api_service.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/services/backfill_service.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/models/audit_log_model.dart';
 import '../widgets/super_admin_drawer.dart';
 
 class ManageHospitalsScreen extends StatefulWidget {
@@ -495,9 +498,26 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final admin = context.read<AuthProvider>().user;
               final navigator = Navigator.of(context);
               final scaffoldMessenger = ScaffoldMessenger.of(context);
               await _api.deleteHospital(id);
+
+              // Audit Log
+              if (admin != null) {
+                await _db.logAction(AuditLogModel(
+                  id: '',
+                  action: 'HOSPITAL_DELETED',
+                  category: 'Admin',
+                  description: '${admin.firstName} removed hospital "$name".',
+                  userId: admin.uid,
+                  userName: '${admin.firstName} ${admin.lastName}',
+                  userRole: admin.role,
+                  timestamp: DateTime.now(),
+                  metadata: {'hospitalId': id, 'hospitalName': name},
+                ));
+              }
+
               if (mounted) {
                 navigator.pop();
                 scaffoldMessenger.showSnackBar(
@@ -986,6 +1006,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                         );
                         final navigator = Navigator.of(context);
                         final scaffoldMessenger = ScaffoldMessenger.of(context);
+                        final admin = context.read<AuthProvider>().user;
                         if (isEditing) {
                           await _api.updateHospital(
                             hospital.id!,
@@ -993,6 +1014,25 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
                           );
                         } else {
                           await _api.addHospital(updatedHospital);
+                        }
+
+                        // Audit Log
+                        if (admin != null) {
+                          await _db.logAction(AuditLogModel(
+                            id: '',
+                            action: isEditing ? 'HOSPITAL_UPDATED' : 'HOSPITAL_CREATED',
+                            category: 'Admin',
+                            description: '${admin.firstName} ${isEditing ? 'updated' : 'registered'} hospital "${updatedHospital.name}".',
+                            userId: admin.uid,
+                            userName: '${admin.firstName} ${admin.lastName}',
+                            userRole: admin.role,
+                            timestamp: DateTime.now(),
+                            metadata: {
+                              'hospitalId': isEditing ? hospital.id : null,
+                              'hospitalName': updatedHospital.name,
+                              'city': updatedHospital.city,
+                            },
+                          ));
                         }
                         if (mounted) {
                           navigator.pop();

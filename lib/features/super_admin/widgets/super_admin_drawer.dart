@@ -7,6 +7,7 @@ import 'package:blood_bank_finder/features/super_admin/screens/super_admin_dashb
 import 'package:blood_bank_finder/features/super_admin/screens/manage_hospitals_screen.dart';
 import 'package:blood_bank_finder/features/super_admin/screens/manage_users_screen.dart';
 import 'package:blood_bank_finder/features/super_admin/screens/global_log_screen.dart';
+import 'package:blood_bank_finder/features/super_admin/screens/audit_trail_screen.dart';
 import 'package:blood_bank_finder/features/chat/screens/chat_list_screen.dart';
 
 class SuperAdminDrawer extends StatelessWidget {
@@ -82,6 +83,14 @@ class SuperAdminDrawer extends StatelessWidget {
             onTap: () => Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const GlobalLogScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.security),
+            title: const Text('Security Audit'),
+            onTap: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AuditTrailScreen()),
             ),
           ),
           const Spacer(),

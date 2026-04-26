@@ -5,6 +5,9 @@ import '../../../core/models/user_model.dart';
 import '../../../core/models/hospital_model.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/services/api_service.dart';
+import 'package:provider/provider.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/models/audit_log_model.dart';
 import '../widgets/super_admin_drawer.dart';
 
 class ManageUsersScreen extends StatefulWidget {
@@ -286,7 +289,24 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               inactiveThumbColor: Colors.red,
               inactiveTrackColor: Colors.red.withOpacity(0.2),
               onChanged: (active) async {
+                final admin = context.read<AuthProvider>().user;
                 await _api.toggleUserBan(user.uid, !active);
+                
+                // Audit Log
+                if (admin != null) {
+                  await _db.logAction(AuditLogModel(
+                    id: '',
+                    action: active ? 'USER_UNBANNED' : 'USER_BANNED',
+                    category: 'Admin',
+                    description: '${admin.firstName} ${active ? 'unbanned' : 'banned'} ${user.firstName} ${user.lastName}.',
+                    userId: admin.uid,
+                    userName: '${admin.firstName} ${admin.lastName}',
+                    userRole: admin.role,
+                    timestamp: DateTime.now(),
+                    metadata: {'targetUserId': user.uid, 'targetEmail': user.email},
+                  ));
+                }
+
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -384,12 +404,32 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                //
+                final admin = context.read<AuthProvider>().user;
                 await _api.updateUserRole(
                   user.uid,
                   selectedRole,
                   hospitalId: selectedHospitalId,
                 );
+
+                // Audit Log
+                if (admin != null) {
+                  await _db.logAction(AuditLogModel(
+                    id: '',
+                    action: 'USER_ROLE_UPDATED',
+                    category: 'Admin',
+                    description: '${admin.firstName} changed ${user.firstName}\'s role to $selectedRole.',
+                    userId: admin.uid,
+                    userName: '${admin.firstName} ${admin.lastName}',
+                    userRole: admin.role,
+                    timestamp: DateTime.now(),
+                    metadata: {
+                      'targetUserId': user.uid,
+                      'newRole': selectedRole,
+                      'hospitalId': selectedHospitalId,
+                    },
+                  ));
+                }
+
                 if (!mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(

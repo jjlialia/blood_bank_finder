@@ -6,6 +6,7 @@ import '../models/hospital_model.dart';
 import '../models/blood_request_model.dart';
 import '../models/inventory_model.dart';
 import '../models/notification_model.dart';
+import '../models/audit_log_model.dart';
 
 class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -191,6 +192,33 @@ class DatabaseService {
       // Client-side sort to avoid requiring a composite index
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;
+    });
+  }
+
+  // --- Audit Logs Repository ---
+
+  /// DATA SOURCE: 'audit_logs' collection (Firestore).
+  /// STEP 1: Receives an AuditLogModel.
+  /// STEP 2: Adds the log to the 'audit_logs' collection.
+  Future<void> logAction(AuditLogModel log) async {
+    try {
+      await _db.collection('audit_logs').add(log.toMap());
+    } catch (e) {
+      print('Error logging action: $e');
+    }
+  }
+
+  /// DATA SOURCE: 'audit_logs' collection (Firestore Stream).
+  /// Streams all audit logs, newest first.
+  Stream<List<AuditLogModel>> streamAuditLogs() {
+    return _db
+        .collection('audit_logs')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => AuditLogModel.fromMap(doc.data(), doc.id))
+          .toList();
     });
   }
 }

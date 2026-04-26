@@ -6,6 +6,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/database_service.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/models/inventory_model.dart';
+import '../../../core/models/audit_log_model.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
 
@@ -91,6 +92,27 @@ class InventoryManagementScreen extends StatelessWidget {
                                     type,
                                     newUnits,
                                   );
+
+                                  // Audit Log
+                                  final user = auth.user;
+                                  if (user != null) {
+                                    await db.logAction(AuditLogModel(
+                                      id: '',
+                                      action: 'INVENTORY_UPDATED',
+                                      category: 'Inventory',
+                                      description: '${user.firstName} updated $type stock to $newUnits units.',
+                                      userId: user.uid,
+                                      userName: '${user.firstName} ${user.lastName}',
+                                      userRole: user.role,
+                                      timestamp: DateTime.now(),
+                                      metadata: {
+                                        'hospitalId': hospitalId,
+                                        'bloodType': type,
+                                        'newUnits': newUnits,
+                                        'oldUnits': units,
+                                      },
+                                    ));
+                                  }
 
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(

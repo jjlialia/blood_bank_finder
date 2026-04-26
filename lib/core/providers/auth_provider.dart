@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
+import '../models/audit_log_model.dart';
 import '../services/database_service.dart';
 import '../services/api_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
@@ -117,6 +118,18 @@ class AuthProvider with ChangeNotifier {
       _user = userData;
       _startUserListener(userData.uid);
 
+      // Audit Log: Login
+      await _db.logAction(AuditLogModel(
+        id: '',
+        action: 'USER_LOGIN',
+        category: 'Auth',
+        description: '${userData.firstName} ${userData.lastName} logged in.',
+        userId: userData.uid,
+        userName: '${userData.firstName} ${userData.lastName}',
+        userRole: userData.role,
+        timestamp: DateTime.now(),
+      ));
+
       _isLoading = false;
       notifyListeners();
       return null; // Success
@@ -169,6 +182,18 @@ class AuthProvider with ChangeNotifier {
       await _api.saveUser(newUser);
       _user = newUser;
       _startUserListener(newUser.uid);
+
+      // Audit Log: Signup
+      await _db.logAction(AuditLogModel(
+        id: '',
+        action: 'USER_SIGNUP',
+        category: 'Auth',
+        description: 'New account created for ${newUser.email}.',
+        userId: newUser.uid,
+        userName: '${newUser.firstName} ${newUser.lastName}',
+        userRole: newUser.role,
+        timestamp: DateTime.now(),
+      ));
 
       _isLoading = false;
       notifyListeners();

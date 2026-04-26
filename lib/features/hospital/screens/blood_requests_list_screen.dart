@@ -13,6 +13,7 @@ import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/models/inventory_model.dart';
+import '../../../core/models/audit_log_model.dart';
 
 class BloodRequestsListScreen extends StatefulWidget {
   const BloodRequestsListScreen({super.key});
@@ -316,14 +317,34 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     return Dismissible(
       key: Key(req.id ?? index.toString()),
       background: _swipeBg(Colors.green, Icons.check, Alignment.centerLeft),
-      secondaryBackground: _swipeBg(Colors.red, Icons.close, Alignment.centerRight),
       confirmDismiss: (direction) async {
+        final admin = context.read<AuthProvider>().user;
         final newStatus = direction == DismissDirection.startToEnd ? 'completed' : 'rejected';
         await _api.updateRequestStatus(
           req.id!,
           newStatus,
           adminMessage: 'Status updated via swipe.',
         );
+
+        // Audit Log
+        if (admin != null) {
+          await _db.logAction(AuditLogModel(
+            id: '',
+            action: 'REQUEST_STATUS_UPDATED',
+            category: 'Admin',
+            description: '${admin.firstName} ${newStatus == 'completed' ? 'approved/completed' : 'rejected'} ${req.userName}\'s ${req.type.toLowerCase()}.',
+            userId: admin.uid,
+            userName: '${admin.firstName} ${admin.lastName}',
+            userRole: admin.role,
+            timestamp: DateTime.now(),
+            metadata: {
+              'requestId': req.id,
+              'newStatus': newStatus,
+              'targetUser': req.userName,
+              'method': 'swipe',
+            },
+          ));
+        }
         return true;
       },
       child: GestureDetector(
@@ -714,6 +735,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () async {
+              final admin = context.read<AuthProvider>().user;
               try {
                 //Saves status and triggers alert to the user.
                 await _api.updateRequestStatus(
@@ -723,6 +745,27 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                       ? messageController.text
                       : null,
                 );
+
+                // Audit Log
+                if (admin != null) {
+                  await _db.logAction(AuditLogModel(
+                    id: '',
+                    action: 'REQUEST_STATUS_UPDATED',
+                    category: 'Admin',
+                    description: '${admin.firstName} updated ${req.userName}\'s ${req.type.toLowerCase()} status to $selectedStatus.',
+                    userId: admin.uid,
+                    userName: '${admin.firstName} ${admin.lastName}',
+                    userRole: admin.role,
+                    timestamp: DateTime.now(),
+                    metadata: {
+                      'requestId': req.id,
+                      'newStatus': selectedStatus,
+                      'targetUser': req.userName,
+                      'adminMessage': messageController.text,
+                    },
+                  ));
+                }
+
                 if (context.mounted) Navigator.pop(context);
               } catch (e) {
                 debugPrint('Error updating request status: $e');
