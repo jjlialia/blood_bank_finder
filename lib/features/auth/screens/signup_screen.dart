@@ -213,7 +213,7 @@ class _SignupScreenState extends State<SignupScreen> {
 ///    - Validation: Ensures all required fields (identity, location, credentials) are filled.
 /// 3. SENDS DATA TO:
 ///    - 'AuthProvider.signup': Sends the full profile map to the provider, which
-///      calls the FastAPI backend to create both the Auth account and Firestore doc.
+///      calls the backend to create both the Auth account and Firestore doc.
 /// 4. OUTPUTS/GUI:
 ///    - A long, scrollable form divided into 'Personal', 'Location', and 'Account' sections.
 ///    - Direct navigation to the 'UserHomeScreen' upon successful registration.

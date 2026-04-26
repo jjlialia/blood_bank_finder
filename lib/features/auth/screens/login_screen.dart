@@ -133,29 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: const Text('Don\'t have an account? Sign Up'),
                 ),
-                // --- DEBUG TOOLS: For faster testing during development ---
-                const SizedBox(height: 40),
-                const Divider(),
-                const SizedBox(height: 8),
-                Text(
-                  'Demo Shortcuts:',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () =>
-                          _emailController.text = 'admin@blood.com',
-                      child: const Text('Admin'),
-                    ),
-                    TextButton(
-                      onPressed: () =>
-                          _emailController.text = 'hospital@blood.com',
-                      child: const Text('Hospital'),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),

@@ -12,7 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 class ApiService {
   // Use http://10.0.2.2:8000 for Android Emulator
   // Use http://localhost:8000 for Web/Desktop
-  // allows the app to know where the "brain" (FastAPI) is located.
+  // allows the app to know where the "brain" (backend) is located.
   static String get baseUrl {
     if (kIsWeb) return 'http://127.0.0.1:8000';
     return 'http://10.0.2.2:8000';
@@ -90,7 +90,7 @@ class ApiService {
   }
 
   /// DATA SOURCE: ManageUsersScreen (Admin Toggle).
-  /// DATA JOURNEY: Flutter -> FastAPI (/users/{uid}/ban) -> Firestore.
+  /// DATA JOURNEY: Flutter -> Backend (/users/{uid}/ban) -> Firestore.
   Future<void> toggleUserBan(String uid, bool isBanned) async {
     final response = await http.patch(
       Uri.parse('$baseUrl/users/$uid/ban?is_banned=$isBanned'),
@@ -103,7 +103,7 @@ class ApiService {
   }
 
   /// DATA SOURCE: UserRolesScreen (Admin Action).
-  /// DATA JOURNEY: Flutter -> FastAPI (/users/{uid}/role) -> Firestore.
+  /// DATA JOURNEY: Flutter -> Backend (/users/{uid}/role) -> Firestore.
   Future<void> updateUserRole(
     String uid,
     String role, {
@@ -148,7 +148,7 @@ class ApiService {
     }
   }
 
-  /// r: ManageHospitalsScreen (Edit Mode). s: FastAPI (/hospitals/{id}) -> Firestore.
+  /// r: ManageHospitalsScreen (Edit Mode). s: Backend (/hospitals/{id}) -> Firestore.
   Future<void> updateHospital(String id, HospitalModel hospital) async {
     final response = await http.put(
       Uri.parse('$baseUrl/hospitals/$id'),

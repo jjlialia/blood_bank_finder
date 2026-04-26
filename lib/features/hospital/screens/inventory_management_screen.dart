@@ -114,17 +114,15 @@ class InventoryManagementScreen extends StatelessWidget {
                                     ));
                                   }
 
-                                  if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
+                                      const SnackBar(
                                         content: Text(
-                                          'Updated $type to $newUnits via FastAPI',
+                                          'Inventory updated successfully',
                                         ),
-                                        duration: const Duration(seconds: 1),
+                                        duration: Duration(seconds: 1),
                                         backgroundColor: Colors.green,
                                       ),
                                     );
-                                  }
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(

@@ -191,6 +191,14 @@ class HospitalAdminDashboard extends StatelessWidget {
         r.createdAt.day == date.day
       ).length;
     }
+    // Calculate max to scale chart
+    int maxCount = 0;
+    for (var count in requestCounts.values) {
+      if (count > maxCount) maxCount = count;
+    }
+    for (var count in donationCounts.values) {
+      if (count > maxCount) maxCount = count;
+    }
 
     return Container(
       height: 220,
@@ -209,7 +217,7 @@ class HospitalAdminDashboard extends StatelessWidget {
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
-          maxY: 10, // Adjust based on data if needed
+          maxY: (maxCount < 5) ? 5 : (maxCount + 2).toDouble(),
           barTouchData: BarTouchData(enabled: true),
           titlesData: FlTitlesData(
             show: true,
