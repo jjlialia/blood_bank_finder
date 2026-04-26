@@ -637,9 +637,11 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
         children: [
           _detailRow(Icons.personal_video_outlined, 'Patient Name', req.patientName ?? 'N/A'),
           const Divider(height: 24),
+          _detailRow(Icons.local_hospital_outlined, 'Admitted Hospital', req.patientHospital ?? 'Not specified'),
+          const Divider(height: 24),
           _detailRow(Icons.emergency_outlined, 'Urgency Level', req.urgency ?? 'Regular'),
           const Divider(height: 24),
-          _detailRow(Icons.meeting_room_outlined, 'Hospital Ward / Room', req.hospitalWard ?? 'Not specified'),
+          _detailRow(Icons.meeting_room_outlined, 'Hospital Ward / Room', (req.hospitalWard == null || req.hospitalWard!.isEmpty) ? 'Not specified' : req.hospitalWard!),
           const Divider(height: 24),
           _detailRow(Icons.medical_services_outlined, 'Reason / Diagnosis', req.medicalReason ?? 'No reason provided'),
         ],

@@ -11,6 +11,7 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String?)? onSaved;
   final void Function(String)? onChanged;
+  final String? hintText;
   final int maxLines;
 
   const CustomTextField({
@@ -23,6 +24,7 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.onSaved,
     this.onChanged,
+    this.hintText,
     this.maxLines = 1,
   });
 
@@ -41,6 +43,7 @@ class CustomTextField extends StatelessWidget {
         maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
           prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
           // Note: Border and styling are inherited from the global Theme in main.dart.
         ),

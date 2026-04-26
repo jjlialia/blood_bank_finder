@@ -32,6 +32,7 @@ class BloodRequestModel {
 
   // New Medical/Production Fields
   final String? patientName;
+  final String? patientHospital; // NEW
   final String? urgency; // 'Emergency', 'Regular', 'Scheduled'
   final String? hospitalWard;
   final String? medicalReason;
@@ -53,6 +54,7 @@ class BloodRequestModel {
     this.preferredDate,
     this.preferredTime,
     this.patientName,
+    this.patientHospital,
     this.urgency,
     this.hospitalWard,
     this.medicalReason,
@@ -80,6 +82,7 @@ class BloodRequestModel {
       preferredDate: data['preferredDate'],
       preferredTime: data['preferredTime'],
       patientName: data['patientName'],
+      patientHospital: data['patientHospital'],
       urgency: data['urgency'] ?? 'Regular',
       hospitalWard: data['hospitalWard'],
       medicalReason: data['medicalReason'],
@@ -105,6 +108,7 @@ class BloodRequestModel {
       'preferredDate': preferredDate,
       'preferredTime': preferredTime,
       'patientName': patientName,
+      'patientHospital': patientHospital,
       'urgency': urgency,
       'hospitalWard': hospitalWard,
       'medicalReason': medicalReason,
@@ -130,6 +134,7 @@ class BloodRequestModel {
       'preferredDate': preferredDate,
       'preferredTime': preferredTime,
       'patientName': patientName,
+      'patientHospital': patientHospital,
       'urgency': urgency,
       'hospitalWard': hospitalWard,
       'medicalReason': medicalReason,

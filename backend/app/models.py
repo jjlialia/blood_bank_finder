@@ -71,6 +71,7 @@ class BloodRequestBase(BaseModel):
     quantity: float
     # New medical fields
     patientName: Optional[str] = None
+    patientHospital: Optional[str] = None # NEW: Specify where the patient is admitted.
     urgency: Optional[str] = "Regular" # 'Emergency', 'Regular', 'Scheduled'
     hospitalWard: Optional[str] = None
     medicalReason: Optional[str] = None

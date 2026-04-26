@@ -26,6 +26,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
   final _unitsController = TextEditingController(text: '1.0');
   final _contactController = TextEditingController();
   final _patientNameController = TextEditingController();
+  final _patientHospitalController = TextEditingController(); // NEW
   final _wardController = TextEditingController();
   final _reasonController = TextEditingController();
   String _selectedUrgency = 'Regular';
@@ -69,6 +70,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
         quantity: double.tryParse(_unitsController.text) ?? 1.0,
         createdAt: DateTime.now(),
         patientName: _patientNameController.text,
+        patientHospital: _patientHospitalController.text,
         urgency: _selectedUrgency,
         hospitalWard: _wardController.text,
         medicalReason: _reasonController.text,
@@ -240,14 +242,21 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              CustomTextField(
+                label: 'Admitted Hospital (Optional)',
+                controller: _patientHospitalController,
+                prefixIcon: Icons.local_hospital_outlined,
+                hintText: 'Where is the patient admitted?',
+              ),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: CustomTextField(
-                      label: 'Ward / Room #',
+                      label: 'Patient Location (Ward/Room)',
                       controller: _wardController,
                       prefixIcon: Icons.meeting_room_outlined,
-                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                      hintText: 'e.g. ICU, Room 302, or ER',
                     ),
                   ),
                 ],
