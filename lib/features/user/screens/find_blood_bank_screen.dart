@@ -2,6 +2,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/models/hospital_model.dart';
 import '../../../core/models/inventory_model.dart';
 import '../../../core/services/database_service.dart';
@@ -34,6 +35,30 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
   bool _isMapView = false; // Toggles if list or map
   LatLng? _mapCenter;
   double _mapZoom = 12;
+  Position? _userPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    _initLocation();
+  }
+
+  Future<void> _initLocation() async {
+    final pos = await _locationSvc.getCurrentPosition();
+    if (mounted) {
+      setState(() => _userPosition = pos);
+    }
+  }
+
+  double _calculateDistance(double lat, double lng) {
+    if (_userPosition == null) return 0;
+    const distance = Distance();
+    return distance.as(
+      LengthUnit.Kilometer,
+      LatLng(_userPosition!.latitude, _userPosition!.longitude),
+      LatLng(lat, lng),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,16 +200,26 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                     .where((h) {
                       // Text Search check
                       final matchesSearch = h.name.toLowerCase().contains(
-                            _searchQuery.toLowerCase(),
-                          );
-                      
+                        _searchQuery.toLowerCase(),
+                      );
+
                       // Blood Type Availability check
-                      final matchesBlood = _selectedBloodType == null ||
+                      final matchesBlood =
+                          _selectedBloodType == null ||
                           h.availableBloodTypes.contains(_selectedBloodType);
-                      
+
                       return matchesSearch && matchesBlood;
                     })
                     .toList();
+
+                // SORT BY DISTANCE if GPS is available
+                if (_userPosition != null) {
+                  hospitals.sort((a, b) {
+                    final distA = _calculateDistance(a.latitude, a.longitude);
+                    final distB = _calculateDistance(b.latitude, b.longitude);
+                    return distA.compareTo(distB);
+                  });
+                }
 
                 if (hospitals.isEmpty) {
                   // Even if empty we  how empty Map.
@@ -229,7 +264,21 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text(h.city),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(h.city),
+                                if (_userPosition != null)
+                                  Text(
+                                    '${_calculateDistance(h.latitude, h.longitude).toStringAsFixed(1)} km away',
+                                    style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                            ),
                             trailing: const Icon(
                               Icons.arrow_forward_ios,
                               size: 16,
@@ -306,11 +355,25 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      h.name,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          h.name,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (_userPosition != null)
+                          Text(
+                            '${_calculateDistance(h.latitude, h.longitude).toStringAsFixed(1)} km away',
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],

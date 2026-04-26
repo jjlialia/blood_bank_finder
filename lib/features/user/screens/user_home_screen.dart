@@ -274,7 +274,7 @@ class UserHomeScreen extends StatelessWidget {
                   // Live StreamBuilder: shows the 2 most recent requests/donations
                   if (user != null)
                     StreamBuilder<List<BloodRequestModel>>(
-                      stream: DatabaseService().streamUserRequests(user!.uid),
+                      stream: DatabaseService().streamUserRequests(user.uid),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -290,21 +290,23 @@ class UserHomeScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Colors.grey.shade50,
                               borderRadius: BorderRadius.circular(16),
-                              border:
-                                  Border.all(color: Colors.grey.shade200),
+                              border: Border.all(color: Colors.grey.shade200),
                             ),
                             child: Row(
                               children: [
                                 Icon(
                                   Icons.history_toggle_off_outlined,
-                                  color: theme.primaryColor
-                                      .withValues(alpha: 0.4),
+                                  color: theme.primaryColor.withValues(
+                                    alpha: 0.4,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 const Text(
                                   'No activity yet. Make a request or donate!',
                                   style: TextStyle(
-                                      color: Colors.black45, fontSize: 13),
+                                    color: Colors.black45,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ],
                             ),
@@ -435,7 +437,9 @@ class UserHomeScreen extends StatelessWidget {
               child: Text(
                 isRequest ? 'Blood Request' : 'Donation',
                 style: const TextStyle(
-                    fontWeight: FontWeight.w700, fontSize: 14),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
             ),
             Container(
@@ -452,9 +456,10 @@ class UserHomeScreen extends StatelessWidget {
                   Text(
                     r.status[0].toUpperCase() + r.status.substring(1),
                     style: TextStyle(
-                        color: statusColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700),
+                      color: statusColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -472,4 +477,3 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 }
-

@@ -188,9 +188,7 @@ class _ManageHospitalsScreenState extends State<ManageHospitalsScreen> {
     );
   }
 
-  void _showHospitalDetails(HospitalModel hospital) =>
-      _displayHospitalModal(hospital);
-
+  
   void _displayHospitalModal(HospitalModel hospital) {
     showModalBottomSheet(
       context: context,

@@ -26,7 +26,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    
 
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
