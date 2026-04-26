@@ -241,52 +241,76 @@ class _FindBloodBankScreenState extends State<FindBloodBankScreen> {
                   index: _isMapView ? 1 : 0,
                   children: [
                     // LIST VIEW
-                    ListView.builder(
-                      itemCount: hospitals.length,
-                      itemBuilder: (context, index) {
-                        final h = hospitals[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).primaryColor,
-                              child: const Icon(
-                                Icons.local_hospital,
-                                color: Colors.white,
-                              ),
-                            ),
-                            title: Text(
-                              h.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    Column(
+                      children: [
+                        if (_userPosition != null && hospitals.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Row(
                               children: [
-                                Text(h.city),
-                                if (_userPosition != null)
-                                  Text(
-                                    '${_calculateDistance(h.latitude, h.longitude).toStringAsFixed(1)} km away',
-                                    style: TextStyle(
-                                      color: Theme.of(context).primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
+                                Icon(Icons.near_me, size: 14, color: Theme.of(context).primaryColor),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Showing nearest hospitals to you',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).primaryColor,
                                   ),
+                                ),
                               ],
                             ),
-                            trailing: const Icon(
-                              Icons.arrow_forward_ios,
-                              size: 16,
-                            ),
-                            onTap: () => _showHospitalDetails(context, h),
                           ),
-                        );
-                      },
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: hospitals.length,
+                            itemBuilder: (context, index) {
+                              final h = hospitals[index];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: Theme.of(context).primaryColor,
+                                    child: const Icon(
+                                      Icons.local_hospital,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    h.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(h.city),
+                                      if (_userPosition != null)
+                                        Text(
+                                          '${_calculateDistance(h.latitude, h.longitude).toStringAsFixed(1)} km away',
+                                          style: TextStyle(
+                                            color: Theme.of(context).primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  trailing: const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 16,
+                                  ),
+                                  onTap: () => _showHospitalDetails(context, h),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                     // --- MAP VIEW ---
                     // Passes the data to the interactive Map Widget.

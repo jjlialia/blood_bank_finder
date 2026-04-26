@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../core/models/hospital_model.dart';
 import '../../core/services/database_service.dart';
 import '../../core/services/location_service.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 class HospitalPickerSheet extends StatefulWidget {
   final Function(HospitalModel) onHospitalSelected;
@@ -23,6 +25,34 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
   String? _selectedRegion;
   String? _selectedCity;
   String? _selectedBarangay;
+  Position? _userPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    _initLocation();
+  }
+
+  Future<void> _initLocation() async {
+    try {
+      final pos = await _locationSvc.getCurrentPosition();
+      if (mounted) {
+        setState(() => _userPosition = pos);
+      }
+    } catch (e) {
+      debugPrint('Error getting location for picker: $e');
+    }
+  }
+
+  double _calculateDistance(double lat, double lng) {
+    if (_userPosition == null) return 0;
+    const distance = Distance();
+    return distance.as(
+      LengthUnit.Kilometer,
+      LatLng(_userPosition!.latitude, _userPosition!.longitude),
+      LatLng(lat, lng),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,14 +144,46 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                     )
                     .toList();
 
+                // SORT BY DISTANCE if GPS is available
+                if (_userPosition != null) {
+                  hospitals.sort((a, b) {
+                    final distA = _calculateDistance(a.latitude, a.longitude);
+                    final distB = _calculateDistance(b.latitude, b.longitude);
+                    return distA.compareTo(distB);
+                  });
+                }
+
                 if (hospitals.isEmpty)
                   return const Center(child: Text('No hospitals found.'));
 
-                return ListView.builder(
-                  controller: scrollController,
-                  itemCount: hospitals.length,
-                  itemBuilder: (context, index) {
+                return Column(
+                  children: [
+                    if (_userPosition != null && hospitals.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.near_me, size: 14, color: Theme.of(context).primaryColor),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Showing nearest hospitals to you',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: hospitals.length,
+                        itemBuilder: (context, index) {
                     final h = hospitals[index];
+                    final distance = _calculateDistance(h.latitude, h.longitude);
+
                     return ListTile(
                       leading: const CircleAvatar(
                         child: Icon(Icons.local_hospital),
@@ -130,23 +192,40 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                         h.name,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text('${h.barangay}, ${h.city}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${h.barangay}, ${h.city}'),
+                          if (_userPosition != null)
+                            Text(
+                              '${distance.toStringAsFixed(1)} km away',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
                       onTap: () {
                         //Returning data to the parent.
                         widget.onHospitalSelected(h);
                         Navigator.pop(context);
                       },
                     );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
-      ),
-    );
-  }
+    ],
+  ),
+),
+);
+}
 
   // --- UI HELPER: Location Modal Selector ---
   // Note: Internal logic omitted for brevity, handles LocationService orchestration.

@@ -64,24 +64,14 @@ class LandingScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 60),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.bloodtype,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'BLOOD BANK',
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'BLOOD BANK',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
                   ),
                   const Spacer(),
                   Text(
