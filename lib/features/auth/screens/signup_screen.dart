@@ -6,6 +6,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/location_picker.dart';
+import 'landing_screen.dart';
 import '../../user/screens/user_home_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -47,9 +48,10 @@ class _SignupScreenState extends State<SignupScreen> {
       }
 
       //if walay error sa babaw i false na ni para dli kabalik ang user og adto na sa home screen.
+      // Go to LandingScreen as requested ("after login/signout")
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const UserHomeScreen()),
+        MaterialPageRoute(builder: (context) => const LandingScreen()),
         (route) => false,
       );
     }

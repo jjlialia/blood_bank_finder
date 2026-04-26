@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:blood_bank_finder/core/providers/auth_provider.dart';
 import 'package:blood_bank_finder/features/auth/screens/login_screen.dart';
+import 'package:blood_bank_finder/features/auth/screens/landing_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/user_home_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/profile_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/notifications_screen.dart';
@@ -169,7 +170,7 @@ class UserDrawer extends StatelessWidget {
               context.read<AuthProvider>().logout();
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                MaterialPageRoute(builder: (context) => const LandingScreen()),
                 (route) => false,
               );
             },

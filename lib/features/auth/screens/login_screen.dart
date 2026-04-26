@@ -7,6 +7,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import 'signup_screen.dart';
+import 'landing_screen.dart';
 import '../../user/screens/user_home_screen.dart';
 import '../../super_admin/screens/super_admin_dashboard.dart';
 import '../../hospital/screens/hospital_admin_dashboard.dart';
@@ -60,10 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
           break;
       }
 
-      //switch screen na according sa user role.
+      // Navigate to LandingScreen as requested ("put a landing page after login")
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => nextScreen),
+        MaterialPageRoute(builder: (context) => const LandingScreen()),
       );
     }
   }

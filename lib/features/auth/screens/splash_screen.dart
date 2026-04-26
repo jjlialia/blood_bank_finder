@@ -8,6 +8,7 @@ import 'login_screen.dart';
 import '../../user/screens/user_home_screen.dart';
 import '../../super_admin/screens/super_admin_dashboard.dart';
 import '../../hospital/screens/hospital_admin_dashboard.dart';
+import 'landing_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -67,15 +68,22 @@ class _SplashScreenState extends State<SplashScreen>
         context,
         MaterialPageRoute(builder: (context) => nextScreen),
       );
+    } else {
+      // If not authenticated, go to Landing Page
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LandingScreen()),
+      );
     }
   }
 
-  void _navigateToLogin() {
+  void _navigateToLanding() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      MaterialPageRoute(builder: (context) => const LandingScreen()),
     );
   }
+
 
   @override
   void dispose() {
@@ -146,7 +154,7 @@ class _SplashScreenState extends State<SplashScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: ElevatedButton(
-                    onPressed: _navigateToLogin,
+                    onPressed: _navigateToLanding,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
@@ -155,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    child: const Text('Proceed to Login'),
+                    child: const Text('Get Started'),
                   ),
                 ),
               ],

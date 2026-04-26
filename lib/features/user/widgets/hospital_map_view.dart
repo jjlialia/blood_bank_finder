@@ -81,11 +81,11 @@ class _HospitalMapViewState extends State<HospitalMapView> {
         height: 80,
         child: GestureDetector(
           onTap: () => widget.onHospitalTap(h),
-          child: const Column(
+          child: Column(
             children: [
               Icon(
-                Icons.location_on,
-                color: Colors.red,
+                Icons.local_hospital,
+                color: Theme.of(context).primaryColor,
                 size: 40,
               ),
             ],
