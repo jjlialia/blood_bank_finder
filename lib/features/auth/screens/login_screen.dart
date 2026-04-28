@@ -9,9 +9,6 @@ import '../../../shared/widgets/custom_text_field.dart';
 import 'signup_screen.dart';
 import 'landing_screen.dart';
 import 'otp_screen.dart';
-import '../../user/screens/user_home_screen.dart';
-import '../../super_admin/screens/super_admin_dashboard.dart';
-import '../../hospital/screens/hospital_admin_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
