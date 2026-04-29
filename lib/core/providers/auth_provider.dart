@@ -1,207 +1,135 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
-import '../models/audit_log_model.dart';
-import '../services/database_service.dart';
-import '../services/api_service.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../features/auth/domain/entities/user.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/infrastructure/repositories/firebase_auth_repository.dart';
+import '../../features/auth/infrastructure/mappers/user_mapper.dart';
+import '../../features/auth/application/use_cases/login_use_case.dart';
+import '../../features/auth/application/use_cases/auth_use_cases.dart';
+import '../../features/super_admin/domain/entities/audit_log.dart';
 
 class AuthProvider with ChangeNotifier {
-  final DatabaseService _db = DatabaseService();
-  final ApiService _api = ApiService();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // DDD Components
+  late final IAuthRepository _repository;
+  late final LoginUseCase _loginUseCase;
+  late final SignupUseCase _signupUseCase;
+  late final LogoutUseCase _logoutUseCase;
+  late final SendOtpUseCase _sendOtpUseCase;
+  late final VerifyOtpUseCase _verifyOtpUseCase;
 
-  UserModel? _user;
+  // Legacy/UI State
+  UserEntity? _userEntity;
   bool _isLoading = false;
-  StreamSubscription<UserModel?>? _userSubscription;
+  StreamSubscription<UserEntity?>? _userSubscription;
 
-  UserModel? get user => _user;
+  // Compatibility getter
+  UserEntity? get user => _userEntity;
+  UserEntity? get userEntity => _userEntity;
   bool get isLoading => _isLoading;
-  bool get isAuthenticated => _user != null;
+  bool get isAuthenticated => _userEntity != null;
 
   AuthProvider() {
-    _auth.authStateChanges().listen((firebaseUser) {
-      if (firebaseUser != null) {
-        _startUserListener(firebaseUser.uid);
-      } else {
-        _stopUserListener();
-      }
-    });
-  }
+    _repository = FirebaseAuthRepository();
+    _loginUseCase = LoginUseCase(_repository);
+    _signupUseCase = SignupUseCase(_repository);
+    _logoutUseCase = LogoutUseCase(_repository);
+    _sendOtpUseCase = SendOtpUseCase(_repository);
+    _verifyOtpUseCase = VerifyOtpUseCase(_repository);
 
-  void _startUserListener(String uid) {
-    _userSubscription?.cancel();
-    _userSubscription = _db.streamUser(uid).listen((userData) {
-      _user = userData;
-      if (_user?.isBanned ?? false) {
-        logout(); // Auto logout if banned
+    _userSubscription = _repository.onAuthStateChanged.listen((user) {
+      _userEntity = user;
+      if (_userEntity?.isBanned ?? false) {
+        logout();
       }
       notifyListeners();
     });
   }
 
-  void _stopUserListener() {
+  @override
+  void dispose() {
     _userSubscription?.cancel();
-    _userSubscription = null;
-    _user = null;
-    notifyListeners();
+    super.dispose();
   }
 
-  //login
+  // login
   Future<String?> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // 1. Admin bypass
-      if (email == 'admin@gmail.com' && password == '1234') {
-        _user = UserModel(
-          uid: 'superadmin_bypass',
-          email: email,
-          role: 'superadmin',
-          firstName: 'System',
-          lastName: 'Admin',
-          fatherName: 'Root',
-          mobile: '0000000000',
-          gender: 'Other',
-          bloodGroup: 'All',
-          islandGroup: 'Cloud',
-          region: 'Cloud',
-          city: 'Cloud',
-          barangay: 'Cloud',
-          address: 'Mainframe',
-          isBanned: false,
-          createdAt: DateTime.now(),
-        );
+      final result = await _loginUseCase.execute(email, password);
+      
+      if (result == null) {
         _isLoading = false;
         notifyListeners();
-        return null; // Success
-      }
-
-      // Firebase Auth
-      UserCredential credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      //Fetch Firestore details.
-      //delay for web para sure before fetching data
-      if (identical(0, 0.0)) {
-        // Simple check for web (Dart2JS)
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
-
-      UserModel? userData;
-      try {
-        userData = await _db.getUser(credential.user!.uid);
-      } catch (e) {
-        // If we still get a permission error, it's a structural rule issue.
-        print('Firestore getUser error: $e');
-        if (e.toString().contains('permission-denied')) {
-          return 'Access Denied: Your account exists in Auth but could not be verified in the database. Please contact an administrator.';
-        }
-        rethrow;
-      }
-
-      if (userData == null) {
-        await logout();
-        _isLoading = false;
         return 'User profile not found. Please complete your registration.';
       }
 
-      if (userData.isBanned) {
+      if (result.isBanned) {
         await logout();
         _isLoading = false;
+        notifyListeners();
         return 'Your account has been banned. Please contact support.';
       }
 
-      _user = userData;
-      _startUserListener(userData.uid);
+      _userEntity = result;
 
       // Audit Log: Login
-      await _db.logAction(AuditLogModel(
+      await _logAction(AuditLogEntity(
         id: '',
         action: 'USER_LOGIN',
         category: 'Auth',
-        description: '${userData.firstName} ${userData.lastName} logged in.',
-        userId: userData.uid,
-        userName: '${userData.firstName} ${userData.lastName}',
-        userRole: userData.role,
+        description: '${result.firstName} ${result.lastName} logged in.',
+        userId: result.uid,
+        userName: '${result.firstName} ${result.lastName}',
+        userRole: result.role,
         timestamp: DateTime.now(),
       ));
 
       _isLoading = false;
       notifyListeners();
       return null; // Success
-    } on FirebaseAuthException catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      return e.message ?? 'Authentication failed';
     } catch (e) {
       _isLoading = false;
       notifyListeners();
       return e.toString();
     }
-  } //balik na sa login_screen.dart
-
-  Future<void> logout() async {
-    await _auth.signOut();
-    _stopUserListener();
   }
 
-  //signup
+  Future<void> logout() async {
+    await _logoutUseCase.execute();
+    _userEntity = null;
+    notifyListeners();
+  }
+
+  // signup
   Future<String?> signup(Map<String, dynamic> data, String password) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: data['email'],
-        password: password,
-      );
+      final result = await _signupUseCase.execute(data, password);
+      
+      if (result != null) {
+        _userEntity = result;
 
-      final newUser = UserModel(
-        uid: credential.user!.uid,
-        email: data['email'],
-        role: data['role'] ?? 'user',
-        firstName: data['firstName'] ?? '',
-        lastName: data['lastName'] ?? '',
-        fatherName: data['fatherName'] ?? '',
-        mobile: data['mobile'] ?? '',
-        gender: data['gender'] ?? '',
-        bloodGroup: data['bloodGroup'] ?? '',
-        islandGroup: data['islandGroup'] ?? '',
-        region: data['region'] ?? '',
-        city: data['city'] ?? '',
-        barangay: data['barangay'] ?? '',
-        address: data['address'] ?? '',
-        isBanned: false,
-        createdAt: DateTime.now(),
-      );
-
-      await _api.saveUser(newUser);
-      _user = newUser;
-      _startUserListener(newUser.uid);
-
-      // Audit Log: Signup
-      await _db.logAction(AuditLogModel(
-        id: '',
-        action: 'USER_SIGNUP',
-        category: 'Auth',
-        description: 'New account created for ${newUser.email}.',
-        userId: newUser.uid,
-        userName: '${newUser.firstName} ${newUser.lastName}',
-        userRole: newUser.role,
-        timestamp: DateTime.now(),
-      ));
+        // Audit Log: Signup
+        await _logAction(AuditLogEntity(
+          id: '',
+          action: 'USER_SIGNUP',
+          category: 'Auth',
+          description: 'New account created for ${result.email}.',
+          userId: result.uid,
+          userName: '${result.firstName} ${result.lastName}',
+          userRole: result.role,
+          timestamp: DateTime.now(),
+        ));
+      }
 
       _isLoading = false;
       notifyListeners();
       return null;
-    } on FirebaseAuthException catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      return e.message ?? 'Signup failed';
     } catch (e) {
       _isLoading = false;
       notifyListeners();
@@ -212,7 +140,7 @@ class AuthProvider with ChangeNotifier {
   // OTP Flow
   Future<String?> sendOtp(String email) async {
     try {
-      await _api.sendOtp(email);
+      await _sendOtpUseCase.execute(email);
       return null;
     } catch (e) {
       return e.toString();
@@ -221,10 +149,15 @@ class AuthProvider with ChangeNotifier {
 
   Future<String?> verifyOtp(String email, String otp) async {
     try {
-      await _api.verifyOtp(email, otp);
+      await _verifyOtpUseCase.execute(email, otp);
       return null;
     } catch (e) {
       return e.toString();
     }
+  }
+
+  // Internal helper for audit logs to remove DatabaseService dependency
+  Future<void> _logAction(AuditLogEntity log) async {
+    await FirebaseFirestore.instance.collection('audit_logs').add(log.toFirestore());
   }
 }

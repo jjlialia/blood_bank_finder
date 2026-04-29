@@ -1,20 +1,23 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../widgets/super_admin_drawer.dart';
-import '../../../core/services/database_service.dart';
-import '../../../core/models/user_model.dart';
-import '../../../core/models/hospital_model.dart';
-import '../../../core/models/blood_request_model.dart';
+import '../../auth/domain/entities/user.dart';
+import '../../hospital/domain/entities/hospital.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../presentation/providers/super_admin_provider.dart';
+import '../../hospital/presentation/providers/hospital_provider.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
 
 class SuperAdminDashboard extends StatelessWidget {
   const SuperAdminDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final db = DatabaseService();
+    final superAdminProvider = context.read<SuperAdminProvider>();
+    final hospitalProvider = context.read<HospitalProvider>();
+    final bloodRequestProvider = context.read<BloodRequestProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -27,14 +30,14 @@ class SuperAdminDashboard extends StatelessWidget {
         ],
       ),
       drawer: const SuperAdminDrawer(),
-      body: StreamBuilder<List<BloodRequestModel>>(
-        stream: db.streamAllBloodRequests(),
+      body: StreamBuilder<List<BloodRequestEntity>>(
+        stream: bloodRequestProvider.streamAllRequests(),
         builder: (context, requestSnapshot) {
-          return StreamBuilder<List<UserModel>>(
-            stream: db.streamAllUsers(),
+          return StreamBuilder<List<UserEntity>>(
+            stream: superAdminProvider.streamAllUsers(),
             builder: (context, userSnapshot) {
-              return StreamBuilder<List<HospitalModel>>(
-                stream: db.streamHospitals(),
+              return StreamBuilder<List<HospitalEntity>>(
+                stream: hospitalProvider.streamHospitals(),
                 builder: (context, hospitalSnapshot) {
                   final requests = requestSnapshot.data ?? [];
                   final users = userSnapshot.data ?? [];
@@ -109,7 +112,7 @@ class SuperAdminDashboard extends StatelessWidget {
                         const SizedBox(height: 32),
                         _buildSectionTitle('Platform Health'),
                         const SizedBox(height: 16),
-                        _buildGlobalInventorySection(db, hospitals),
+                        _buildGlobalInventorySection(hospitals),
 
                         const SizedBox(height: 32),
                         _buildSectionTitle('User Growth (Last 7 Days)'),
@@ -191,7 +194,7 @@ class SuperAdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildDemandSupplyChart(List<BloodRequestModel> requests) {
+  Widget _buildDemandSupplyChart(List<BloodRequestEntity> requests) {
     final pendingRequests =
         requests.where((r) => r.status == 'pending' && r.type == 'Request').length;
     final completedDonations =
@@ -262,8 +265,7 @@ class SuperAdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildGrowthChart(List<UserModel> users) {
-    // Generate simple growth data for last 7 days
+  Widget _buildGrowthChart(List<UserEntity> users) {
     final now = DateTime.now();
     final spots = List.generate(7, (index) {
       final day = now.subtract(Duration(days: 6 - index));
@@ -307,9 +309,7 @@ class SuperAdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildGlobalInventorySection(DatabaseService db, List<HospitalModel> hospitals) {
-    // For now, we'll sum up the lengths of available blood types as a proxy for diversity/stock
-    // In a real app, you'd aggregate the actual 'units' from subcollections.
+  Widget _buildGlobalInventorySection(List<HospitalEntity> hospitals) {
     int totalDiversity = 0;
     for (var h in hospitals) {
       totalDiversity += h.availableBloodTypes.length;
@@ -357,27 +357,3 @@ class SuperAdminDashboard extends StatelessWidget {
     );
   }
 }
-
-/// FILE: super_admin_dashboard.dart
-///
-/// DESCRIPTION:
-/// The primary system command center. It provides the Super Admin with a
-/// macro-level view of the entire platform's health, aggregating data
-/// across all users and all hospital facilities.
-///
-/// DATA FLOW OVERVIEW:
-/// 1. RECEIVES DATA FROM:
-///    - 'DatabaseService.streamAllUsers': For total population count.
-///    - 'DatabaseService.streamHospitals': For facility infrastructure count.
-///    - 'DatabaseService.streamAllBloodRequests': For system-wide request and
-///       donation metrics.
-/// 2. PROCESSING:
-///    - Data Aggregation: Counts objects in the streamed lists.
-///    - Specific Filtering: Separates 'Requests' from 'Donations' using
-///      the 'type' field in the shared request stream.
-/// 3. SENDS DATA TO:
-///    - GUI: Updates the four primary stat cards in real-time as the
-///      database changes.
-/// 4. OUTPUTS/GUI:
-///    - A high-contrast grid of "Executive Stat Cards" (Users, Hospitals,
-///      Pending Requests, Total Donations).

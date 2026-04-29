@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/models/blood_request_model.dart';
-import '../../../core/services/database_service.dart';
+import 'package:provider/provider.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
 import '../widgets/super_admin_drawer.dart';
 import 'package:intl/intl.dart';
 
@@ -9,13 +10,13 @@ class GlobalLogScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DatabaseService db = DatabaseService();
+    final bloodRequestProvider = context.read<BloodRequestProvider>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('System Audit Trail')),
       drawer: const SuperAdminDrawer(),
-      body: StreamBuilder<List<BloodRequestModel>>(
-        stream: db.streamAllBloodRequests(),
+      body: StreamBuilder<List<BloodRequestEntity>>(
+        stream: bloodRequestProvider.streamAllRequests(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -62,7 +63,7 @@ class GlobalLogScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
+              color: Colors.blue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.history, color: Colors.blue, size: 20),
@@ -86,7 +87,7 @@ class GlobalLogScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineItem(BloodRequestModel log,
+  Widget _buildTimelineItem(BloodRequestEntity log,
       {required bool isFirst, required bool isLast}) {
     final isRequest = log.type == 'Request';
     final accentColor = isRequest ? Colors.red : Colors.green;
@@ -95,7 +96,6 @@ class GlobalLogScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Timeline indicator
           SizedBox(
             width: 40,
             child: Column(
@@ -113,7 +113,7 @@ class GlobalLogScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: accentColor.withValues(alpha: 0.2),
+                        color: accentColor.withOpacity(0.2),
                         spreadRadius: 2,
                         blurRadius: 4,
                       ),
@@ -130,7 +130,6 @@ class GlobalLogScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // Content Card
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 24),
@@ -142,7 +141,7 @@ class GlobalLogScreen extends StatelessWidget {
                   border: Border.all(color: Colors.grey[200]!),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
+                      color: Colors.black.withOpacity(0.02),
                       offset: const Offset(0, 2),
                       blurRadius: 4,
                     ),
@@ -235,7 +234,7 @@ class GlobalLogScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

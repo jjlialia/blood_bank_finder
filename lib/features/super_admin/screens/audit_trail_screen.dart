@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/models/audit_log_model.dart';
-import '../../../core/services/database_service.dart';
+import 'package:provider/provider.dart';
+import '../domain/entities/audit_log.dart';
+import '../presentation/providers/super_admin_provider.dart';
 import '../widgets/super_admin_drawer.dart';
 
 class AuditTrailScreen extends StatelessWidget {
@@ -9,7 +10,7 @@ class AuditTrailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DatabaseService db = DatabaseService();
+    final superAdminProvider = context.read<SuperAdminProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -17,8 +18,8 @@ class AuditTrailScreen extends StatelessWidget {
         centerTitle: true,
       ),
       drawer: const SuperAdminDrawer(),
-      body: StreamBuilder<List<AuditLogModel>>(
-        stream: db.streamAuditLogs(),
+      body: StreamBuilder<List<AuditLogEntity>>(
+        stream: superAdminProvider.streamAuditLogs(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -44,7 +45,7 @@ class AuditTrailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAuditItem(AuditLogModel log) {
+  Widget _buildAuditItem(AuditLogEntity log) {
     IconData icon;
     Color color;
 

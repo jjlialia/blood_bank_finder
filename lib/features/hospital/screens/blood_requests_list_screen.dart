@@ -1,19 +1,18 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../core/models/blood_request_model.dart';
-import '../../../core/services/database_service.dart';
-import '../../../core/services/api_service.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
+import '../../hospital/presentation/providers/hospital_provider.dart';
+import '../../auth/domain/entities/user.dart';
+import '../../super_admin/domain/entities/audit_log.dart';
+import '../../super_admin/presentation/providers/super_admin_provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../chat/services/chat_service.dart';
+import '../../chat/presentation/providers/chat_provider.dart';
 import '../../chat/screens/chat_room_screen.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import '../widgets/no_hospital_assigned.dart';
-import '../../../core/models/user_model.dart';
-import '../../../core/models/inventory_model.dart';
-import '../../../core/models/audit_log_model.dart';
+import '../../hospital/domain/entities/inventory.dart';
 
 class BloodRequestsListScreen extends StatefulWidget {
   const BloodRequestsListScreen({super.key});
@@ -24,10 +23,6 @@ class BloodRequestsListScreen extends StatefulWidget {
 }
 
 class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
-  final DatabaseService _db = DatabaseService();
-  final ApiService _api = ApiService();
-
-  //Controls what requests are visible in the GUI.
   String _selectedFilter = 'All';
   final List<String> _filters = [
     'All',
@@ -41,6 +36,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
     final hospitalId = auth.user?.hospitalId;
+    final bloodRequestProvider = context.read<BloodRequestProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -55,8 +51,8 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
               children: [
                 _buildFilterRow(),
                 Expanded(
-                  child: StreamBuilder<List<BloodRequestModel>>(
-                    stream: _db.streamHospitalRequests(hospitalId),
+                  child: StreamBuilder<List<BloodRequestEntity>>(
+                    stream: bloodRequestProvider.streamHospitalRequests(hospitalId),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) return _buildErrorView(snapshot.error);
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -110,7 +106,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
               label: Text(filter),
               selected: isSelected,
               onSelected: (selected) => setState(() => _selectedFilter = filter),
-              selectedColor: Colors.red.withValues(alpha: 0.1),
+              selectedColor: Colors.red.withOpacity(0.1),
               backgroundColor: Colors.white,
               labelStyle: TextStyle(
                 color: isSelected ? Colors.red : Colors.grey[600],
@@ -125,7 +121,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  void _showDetailedRequestView(BuildContext context, BloodRequestModel req) {
+  void _showDetailedRequestView(BuildContext context, BloodRequestEntity req) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -138,33 +134,35 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
         builder: (context, scrollController) {
           final isDonation = req.type == 'Donate';
           final accentColor = isDonation ? Colors.blue : Colors.red;
+          final superAdminProvider = context.read<SuperAdminProvider>();
+          final hospitalProvider = context.read<HospitalProvider>();
 
           return Container(
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            child: FutureBuilder<UserModel?>(
-              future: _db.getUser(req.userId),
+            child: FutureBuilder<UserEntity?>(
+              future: superAdminProvider.getUser(req.userId),
               builder: (context, userSnapshot) {
                 final userProfile = userSnapshot.data;
 
-                return StreamBuilder<List<InventoryModel>>(
-                  stream: _db.streamInventory(req.hospitalId),
+                return StreamBuilder<List<InventoryEntity>>(
+                  stream: hospitalProvider.streamInventory(req.hospitalId),
                   builder: (context, invSnapshot) {
                     final inventory = invSnapshot.data ?? [];
                     final stockItem = inventory.firstWhere(
                       (i) => i.bloodType == req.bloodType,
-                      orElse: () => InventoryModel(
+                      orElse: () => InventoryEntity(
                         bloodType: req.bloodType,
                         units: 0,
+                        status: 'Empty',
                         lastUpdated: DateTime.now(),
                       ),
                     );
 
                     return Column(
                       children: [
-                        // Handle
                         Container(
                           margin: const EdgeInsets.symmetric(vertical: 12),
                           width: 40,
@@ -179,7 +177,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                             controller: scrollController,
                             padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                             children: [
-                              // --- HEADER SECTION ---
                               Row(
                                 children: [
                                   _buildTypeIndicator(req.bloodType, accentColor),
@@ -223,12 +220,8 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                                 ],
                               ),
                               const SizedBox(height: 24),
-
-                              // --- INVENTORY INSIGHT ---
                               if (!isDonation) _buildInventoryInsight(req, stockItem),
                               const SizedBox(height: 24),
-
-                              // --- QUICK ACTIONS ---
                               Row(
                                 children: [
                                   Expanded(
@@ -250,26 +243,20 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                                 ],
                               ),
                               const SizedBox(height: 32),
-
-                              // --- REQUESTER PROFILE ---
                               _sectionTitle('Requester Profile'),
                               const SizedBox(height: 12),
                               _buildProfileCard(userProfile, req),
                               const SizedBox(height: 24),
-
                               _sectionTitle('Transaction Details'),
                               const SizedBox(height: 12),
                               _buildDetailsCard(req, isDonation, accentColor),
                               const SizedBox(height: 24),
-
                               if (!isDonation) ...[
                                 _sectionTitle('Medical Context'),
                                 const SizedBox(height: 12),
                                 _buildMedicalContextCard(req),
                                 const SizedBox(height: 32),
                               ],
-
-                              // --- MANAGEMENT HUD ---
                               _sectionTitle('Process Case'),
                               const SizedBox(height: 12),
                               _buildUpdateStatusSection(context, req),
@@ -293,9 +280,9 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
       width: 60,
       height: 60,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         shape: BoxShape.circle,
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
       ),
       child: Center(
         child: Text(
@@ -310,7 +297,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  Widget _buildRequestCard(BloodRequestModel req, int index) {
+  Widget _buildRequestCard(BloodRequestEntity req, int index) {
     final isDonation = req.type == 'Donate';
     final accentColor = isDonation ? Colors.blue : Colors.red;
 
@@ -319,16 +306,18 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
       background: _swipeBg(Colors.green, Icons.check, Alignment.centerLeft),
       confirmDismiss: (direction) async {
         final admin = context.read<AuthProvider>().user;
+        final bloodRequestProvider = context.read<BloodRequestProvider>();
+        final superAdminProvider = context.read<SuperAdminProvider>();
         final newStatus = direction == DismissDirection.startToEnd ? 'completed' : 'rejected';
-        await _api.updateRequestStatus(
+        
+        await bloodRequestProvider.updateRequestStatus(
           req.id!,
           newStatus,
           adminMessage: 'Status updated via swipe.',
         );
 
-        // Audit Log
         if (admin != null) {
-          await _db.logAction(AuditLogModel(
+          await superAdminProvider.logAction(AuditLogEntity(
             id: '',
             action: 'REQUEST_STATUS_UPDATED',
             category: 'Admin',
@@ -356,7 +345,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withOpacity(0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -365,7 +354,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
           child: IntrinsicHeight(
             child: Row(
               children: [
-                // Activity gradient strip
                 Container(
                   width: 6,
                   decoration: BoxDecoration(
@@ -377,7 +365,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [accentColor, accentColor.withValues(alpha: 0.5)],
+                      colors: [accentColor, accentColor.withOpacity(0.5)],
                     ),
                   ),
                 ),
@@ -430,7 +418,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                              Container(
                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                decoration: BoxDecoration(
-                                 color: accentColor.withValues(alpha: 0.08),
+                                 color: accentColor.withOpacity(0.08),
                                  borderRadius: BorderRadius.circular(8),
                                ),
                                child: Text(
@@ -440,7 +428,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                                    fontWeight: FontWeight.w900,
                                    fontSize: 14,
                                  ),
-                               ),
+                                ),
                              ),
                            ],
                          ),
@@ -500,16 +488,16 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  Widget _buildInventoryInsight(BloodRequestModel req, InventoryModel stock) {
+  Widget _buildInventoryInsight(BloodRequestEntity req, InventoryEntity stock) {
     final hasEnough = stock.units >= req.quantity;
     final statusColor = hasEnough ? Colors.green : Colors.orange;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.05),
+        color: statusColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+        border: Border.all(color: statusColor.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -534,7 +522,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                   hasEnough
                       ? 'You have enough stock fulfill this request (${stock.units} Units available).'
                       : 'Stock is low. Only ${stock.units} Units of ${req.bloodType} available.',
-                  style: TextStyle(color: statusColor.withValues(alpha: 0.8), fontSize: 12),
+                  style: TextStyle(color: statusColor.withOpacity(0.8), fontSize: 12),
                 ),
               ],
             ),
@@ -544,7 +532,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  Widget _buildProfileCard(UserModel? user, BloodRequestModel req) {
+  Widget _buildProfileCard(UserEntity? user, BloodRequestEntity req) {
     if (user == null) {
       return Container(
         padding: const EdgeInsets.all(16),
@@ -599,7 +587,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  Widget _buildDetailsCard(BloodRequestModel req, bool isDonation, Color color) {
+  Widget _buildDetailsCard(BloodRequestEntity req, bool isDonation, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -625,13 +613,13 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  Widget _buildMedicalContextCard(BloodRequestModel req) {
+  Widget _buildMedicalContextCard(BloodRequestEntity req) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.02),
+        color: Colors.red.withOpacity(0.02),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.red.withOpacity(0.1)),
       ),
       child: Column(
         children: [
@@ -649,14 +637,14 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  Future<void> _openChat(BuildContext context, BloodRequestModel req) async {
+  Future<void> _openChat(BuildContext context, BloodRequestEntity req) async {
     final auth = context.read<AuthProvider>();
     final currentAdmin = auth.user;
     if (currentAdmin == null) return;
 
-    final chatService = ChatService();
+    final chatProvider = context.read<ChatProvider>();
     final participantId = currentAdmin.hospitalId ?? currentAdmin.uid;
-    final chatId = await chatService.createOrGetChat(
+    final chatId = await chatProvider.createOrGetChat(
       participantId,
       req.userId,
       {
@@ -687,9 +675,9 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
         vertical: large ? 8 : 4,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(large ? 12 : 8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         status.toUpperCase(),
@@ -702,10 +690,9 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  //Status Update Section
   Widget _buildUpdateStatusSection(
     BuildContext context,
-    BloodRequestModel req,
+    BloodRequestEntity req,
   ) {
     String selectedStatus = req.status;
     final messageController = TextEditingController();
@@ -715,7 +702,7 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DropdownButtonFormField<String>(
-            initialValue: selectedStatus,
+            value: selectedStatus,
             decoration: const InputDecoration(labelText: 'New Status'),
             items: ['pending', 'on progress', 'completed', 'rejected']
                 .map(
@@ -738,9 +725,11 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
           ElevatedButton(
             onPressed: () async {
               final admin = context.read<AuthProvider>().user;
+              final bloodRequestProvider = context.read<BloodRequestProvider>();
+              final superAdminProvider = context.read<SuperAdminProvider>();
+
               try {
-                //Saves status and triggers alert to the user.
-                await _api.updateRequestStatus(
+                await bloodRequestProvider.updateRequestStatus(
                   req.id!,
                   selectedStatus,
                   adminMessage: messageController.text.isNotEmpty
@@ -748,9 +737,8 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
                       : null,
                 );
 
-                // Audit Log
                 if (admin != null) {
-                  await _db.logAction(AuditLogModel(
+                  await superAdminProvider.logAction(AuditLogEntity(
                     id: '',
                     action: 'REQUEST_STATUS_UPDATED',
                     category: 'Admin',
@@ -784,7 +772,6 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     );
   }
 
-  // UI Helpers
   Widget _swipeBg(Color color, IconData icon, Alignment align) {
     return Container(
       color: color,
@@ -798,22 +785,18 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: color ?? Colors.grey[700]),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(value, style: const TextStyle(fontSize: 16)),
-            ],
+          Icon(icon, size: 16, color: color ?? Colors.blueGrey),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              ],
+            ),
           ),
         ],
       ),
@@ -822,47 +805,46 @@ class _BloodRequestsListScreenState extends State<BloodRequestsListScreen> {
 
   Widget _sectionTitle(String title) {
     return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.5,
+      title.toUpperCase(),
+      style: TextStyle(
+        color: Colors.grey[600],
+        fontSize: 11,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 1.5,
       ),
     );
   }
 
-  String _formatDate(DateTime date, {bool full = false}) {
-    if (full) {
-      return DateFormat('MMM d, yyyy · h:mm a').format(date);
-    }
-    final now = DateTime.now();
-    final diff = now.difference(date);
-
-    if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}m ago';
-    } else if (diff.inHours < 24) {
-      return '${diff.inHours}h ago';
-    } else {
-      return DateFormat('MMM d').format(date);
-    }
-  }
-
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed':
-        return Colors.green[700]!;
-      case 'rejected':
-        return Colors.red[700]!;
+      case 'pending':
+        return Colors.orange;
       case 'on progress':
-        return Colors.blue[700]!;
+        return Colors.blue;
+      case 'completed':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
       default:
-        return Colors.orange[700]!;
+        return Colors.grey;
     }
   }
 
-  Widget _buildErrorView(Object? error) {
+  String _formatDate(DateTime date, {bool full = false}) {
+    if (full) return DateFormat('MMMM d, yyyy • h:mm a').format(date);
+    return DateFormat('MMM d, h:mm a').format(date);
+  }
+
+  Widget _buildErrorView(dynamic error) {
     return Center(
-      child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          const SizedBox(height: 16),
+          Text('Something went wrong: $error'),
+        ],
+      ),
     );
   }
 }

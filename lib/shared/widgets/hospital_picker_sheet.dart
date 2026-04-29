@@ -1,14 +1,13 @@
-library;
-
 import 'package:flutter/material.dart';
-import '../../core/models/hospital_model.dart';
-import '../../core/services/database_service.dart';
+import 'package:provider/provider.dart';
+import '../../features/hospital/domain/entities/hospital.dart';
+import '../../features/hospital/presentation/providers/hospital_provider.dart';
 import '../../core/services/location_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 class HospitalPickerSheet extends StatefulWidget {
-  final Function(HospitalModel) onHospitalSelected;
+  final Function(HospitalEntity) onHospitalSelected;
 
   const HospitalPickerSheet({super.key, required this.onHospitalSelected});
 
@@ -17,7 +16,6 @@ class HospitalPickerSheet extends StatefulWidget {
 }
 
 class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
-  final DatabaseService _db = DatabaseService();
   final LocationService _locationSvc = LocationService();
 
   String _searchQuery = '';
@@ -56,7 +54,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    
+    final hospitalProvider = context.read<HospitalProvider>();
 
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
@@ -67,7 +65,6 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
         ),
         child: Column(
           children: [
-            //Header and Filters
             Container(
               padding: const EdgeInsets.all(16),
             child: Column(
@@ -77,16 +74,14 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                //Search by name.
                 TextField(
                   onChanged: (v) => setState(() => _searchQuery = v),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Search Hospital Name...',
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: Icon(Icons.search),
                   ),
                 ),
                 const SizedBox(height: 12),
-                //  Geography Filter Chips.
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -121,21 +116,19 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
             ),
           ),
 
-          // action: The Resulting List
           Expanded(
-            child: StreamBuilder<List<HospitalModel>>(
-              //Subscribing to a dynamically filtered Firestore stream.
-              stream: _db.streamHospitals(
+            child: StreamBuilder<List<HospitalEntity>>(
+              stream: hospitalProvider.streamHospitals(
                 islandGroup: _selectedIsland,
                 region: _selectedRegion,
                 city: _selectedCity,
                 barangay: _selectedBarangay,
               ),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
+                }
 
-                // processing: Name filtering on top of the geographic stream.
                 final hospitals = (snapshot.data ?? [])
                     .where(
                       (h) => h.name.toLowerCase().contains(
@@ -144,7 +137,6 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                     )
                     .toList();
 
-                // SORT BY DISTANCE if GPS is available
                 if (_userPosition != null) {
                   hospitals.sort((a, b) {
                     final distA = _calculateDistance(a.latitude, a.longitude);
@@ -153,8 +145,9 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                   });
                 }
 
-                if (hospitals.isEmpty)
+                if (hospitals.isEmpty) {
                   return const Center(child: Text('No hospitals found.'));
+                }
 
                 return Column(
                   children: [
@@ -208,7 +201,6 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
                         ],
                       ),
                       onTap: () {
-                        //Returning data to the parent.
                         widget.onHospitalSelected(h);
                         Navigator.pop(context);
                       },
@@ -227,8 +219,6 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
 );
 }
 
-  // --- UI HELPER: Location Modal Selector ---
-  // Note: Internal logic omitted for brevity, handles LocationService orchestration.
   Future<void> _showLocationPicker(BuildContext context, String type) async {
     List<String> items = [];
     String title = '';
@@ -403,6 +393,7 @@ class _HospitalPickerSheetState extends State<HospitalPickerSheet> {
     );
   }
 }
+
 
 /// FILE: hospital_picker_sheet.dart (Shared Widget)
 ///

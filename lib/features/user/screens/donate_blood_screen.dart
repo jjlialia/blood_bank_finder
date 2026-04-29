@@ -1,10 +1,8 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/blood_request_model.dart';
-import '../../../core/models/hospital_model.dart';
-import '../../../core/services/api_service.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
+import '../../hospital/domain/entities/hospital.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/hospital_picker_sheet.dart';
@@ -17,10 +15,9 @@ class DonateBloodScreen extends StatefulWidget {
 }
 
 class _DonateBloodScreenState extends State<DonateBloodScreen> {
-  //
   int _currentStep = 0;
   String? _selectedBloodType;
-  HospitalModel? _selectedHospital;
+  HospitalEntity? _selectedHospital;
   final _unitsController = TextEditingController(text: '1.0');
   final _contactController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -28,7 +25,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
 
-  // must be all TRUE to proceed.
   bool _isSworn = false;
   bool _ageOk = false;
   bool _weightOk = false;
@@ -47,7 +43,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
         type: StepperType.vertical,
         currentStep: _currentStep,
         onStepContinue: () {
-          //  Validation for Eligibility Quiz.
           if (_currentStep == 0) {
             if (!(_ageOk && _weightOk && _travelOk && _medsOk && _wellOk)) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -59,7 +54,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               return;
             }
           }
-          // Validation Gate for Details Form.
           if (_currentStep == 3) {
             if (!_formKey.currentState!.validate()) return;
           }
@@ -67,7 +61,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           if (_currentStep < 5) {
             setState(() => _currentStep++);
           } else {
-            // Submit the gathered data to the server.
             _submitDonation(auth);
           }
         },
@@ -75,7 +68,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
           if (_currentStep > 0) setState(() => _currentStep--);
         },
         steps: [
-          // Health Screening.
           Step(
             title: const Text('Eligibility Quiz'),
             isActive: _currentStep >= 0,
@@ -130,12 +122,11 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ],
             ),
           ),
-          //  Blood Group.
           Step(
             title: const Text('Select Blood Type'),
             isActive: _currentStep >= 1,
             content: DropdownButtonFormField<String>(
-              initialValue: _selectedBloodType,
+              value: _selectedBloodType,
               items: [
                 'A+',
                 'A-',
@@ -150,7 +141,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               decoration: const InputDecoration(labelText: 'Your Blood Type'),
             ),
           ),
-          //  Hospital Selection.
           Step(
             title: const Text('Select Hospital'),
             isActive: _currentStep >= 2,
@@ -159,7 +149,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               children: [
                 InkWell(
                   onTap: () {
-                    // Opens sub-sheet nga gakuha hospital data sa Firestore.
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
@@ -220,7 +209,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ],
             ),
           ),
-          // Contact and Quantity.
           Step(
             title: const Text('Details'),
             isActive: _currentStep >= 3,
@@ -253,7 +241,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ),
             ),
           ),
-          // Appointment Scheduling.
           Step(
             title: const Text('Schedule Appointment'),
             isActive: _currentStep >= 4,
@@ -302,7 +289,6 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
               ],
             ),
           ),
-          // Legal Declaration.
           Step(
             title: const Text('Declaration'),
             isActive: _currentStep >= 5,
@@ -334,8 +320,8 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
     }
 
     try {
-      final api = ApiService();
-      final request = BloodRequestModel(
+      final bloodRequestProvider = context.read<BloodRequestProvider>();
+      final request = BloodRequestEntity(
         userId: auth.user!.uid,
         userName: '${auth.user!.firstName} ${auth.user!.lastName}',
         type: 'Donate',
@@ -354,7 +340,7 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
             : null,
       );
 
-      await api.createBloodRequest(request);
+      await bloodRequestProvider.createBloodRequest(request);
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -374,3 +360,4 @@ class _DonateBloodScreenState extends State<DonateBloodScreen> {
     }
   }
 }
+

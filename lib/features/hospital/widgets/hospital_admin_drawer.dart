@@ -9,7 +9,7 @@ import 'package:blood_bank_finder/features/hospital/screens/blood_requests_list_
 import 'package:blood_bank_finder/features/hospital/screens/hospital_profile_screen.dart';
 import 'package:blood_bank_finder/features/chat/screens/chat_list_screen.dart';
 import 'package:blood_bank_finder/features/chat/screens/chat_room_screen.dart';
-import 'package:blood_bank_finder/features/chat/services/chat_service.dart';
+import 'package:blood_bank_finder/features/chat/presentation/providers/chat_provider.dart';
 
 class HospitalAdminDrawer extends StatelessWidget {
   const HospitalAdminDrawer({super.key});
@@ -96,8 +96,8 @@ class HospitalAdminDrawer extends StatelessWidget {
               final currentUser = auth.user;
               if (currentUser == null || currentUser.hospitalId == null) return;
               
-              final chatService = ChatService();
-              final chatId = await chatService.createOrGetChat(
+              final chatProvider = context.read<ChatProvider>();
+              final chatId = await chatProvider.createOrGetChat(
                 currentUser.hospitalId!,
                 'superadmin',
                 {

@@ -1,11 +1,9 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/blood_request_model.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/services/database_service.dart';
 import '../widgets/user_drawer.dart';
 import 'find_blood_bank_screen.dart';
 import 'donate_blood_screen.dart';
@@ -19,16 +17,15 @@ class UserHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // live. sa authprovider
     final auth = context.watch<AuthProvider>();
     final theme = Theme.of(context);
     final user = auth.user;
+    final bloodRequestProvider = context.read<BloodRequestProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
-          //message shortcut
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             onPressed: () => Navigator.push(
@@ -36,7 +33,6 @@ class UserHomeScreen extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const ChatListScreen()),
             ),
           ),
-          // notification shortcut
           IconButton(
             icon: const Icon(Icons.notifications_none),
             onPressed: () => Navigator.push(
@@ -54,7 +50,6 @@ class UserHomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Banner and Greeting
             Stack(
               children: [
                 Image.asset(
@@ -77,7 +72,6 @@ class UserHomeScreen extends StatelessWidget {
                     );
                   },
                 ),
-                //Dark gradient, white text
                 Container(
                   width: double.infinity,
                   height: 220,
@@ -93,7 +87,6 @@ class UserHomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Showing the users name from the AuthProvider.
                 Positioned(
                   top: 40,
                   left: 24,
@@ -137,7 +130,6 @@ class UserHomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Call-to-Action (Donation)
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -210,7 +202,6 @@ class UserHomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Quick Actions Selection
                   Text(
                     'Quick Actions',
                     style: theme.textTheme.titleLarge?.copyWith(
@@ -246,7 +237,6 @@ class UserHomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 32),
-                  // Recent Activity Preview (live)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -271,10 +261,9 @@ class UserHomeScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Live StreamBuilder: shows the 2 most recent requests/donations
                   if (user != null)
-                    StreamBuilder<List<BloodRequestModel>>(
-                      stream: DatabaseService().streamUserRequests(user.uid),
+                    StreamBuilder<List<BloodRequestEntity>>(
+                      stream: bloodRequestProvider.streamUserRequests(user.uid),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -328,7 +317,6 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  //UI HELPER: interactive card
   Widget _buildQuickAction(
     BuildContext context,
     String label,
@@ -376,10 +364,8 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 
-  // UI HELPER: compact card for a real blood request / donation
-  Widget _buildRequestPreview(BuildContext context, BloodRequestModel r) {
+  Widget _buildRequestPreview(BuildContext context, BloodRequestEntity r) {
     final theme = Theme.of(context);
-    final isRequest = r.type.toLowerCase() == 'request';
 
     Color statusColor;
     Color statusBg;
@@ -435,7 +421,7 @@ class UserHomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                isRequest ? 'Blood Request' : 'Donation',
+                r.isRequest ? 'Blood Request' : 'Donation',
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
@@ -477,3 +463,4 @@ class UserHomeScreen extends StatelessWidget {
     );
   }
 }
+

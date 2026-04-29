@@ -1,14 +1,13 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../widgets/hospital_admin_drawer.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/services/database_service.dart';
-import '../../../core/models/blood_request_model.dart';
-import '../../../core/models/inventory_model.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
+import '../domain/entities/inventory.dart';
+import '../presentation/providers/hospital_provider.dart';
 import '../widgets/no_hospital_assigned.dart';
 
 class HospitalAdminDashboard extends StatelessWidget {
@@ -18,7 +17,8 @@ class HospitalAdminDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
     final hospitalId = auth.user?.hospitalId;
-    final DatabaseService db = DatabaseService();
+    final bloodRequestProvider = context.read<BloodRequestProvider>();
+    final hospitalProvider = context.read<HospitalProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -30,11 +30,11 @@ class HospitalAdminDashboard extends StatelessWidget {
       drawer: const HospitalAdminDrawer(),
       body: hospitalId == null || hospitalId.isEmpty
           ? const NoHospitalAssigned()
-          : StreamBuilder<List<BloodRequestModel>>(
-              stream: db.streamHospitalRequests(hospitalId),
+          : StreamBuilder<List<BloodRequestEntity>>(
+              stream: bloodRequestProvider.streamHospitalRequests(hospitalId),
               builder: (context, requestSnap) {
-                return StreamBuilder<List<InventoryModel>>(
-                  stream: db.streamInventory(hospitalId),
+                return StreamBuilder<List<InventoryEntity>>(
+                  stream: hospitalProvider.streamInventory(hospitalId),
                   builder: (context, inventorySnap) {
                     if (requestSnap.connectionState == ConnectionState.waiting ||
                         inventorySnap.connectionState == ConnectionState.waiting) {
@@ -44,20 +44,19 @@ class HospitalAdminDashboard extends StatelessWidget {
                     final requests = requestSnap.data ?? [];
                     final inventory = inventorySnap.data ?? [];
 
-                    // Calculate Stats ---
                     final pendingCount =
                         requests.where((r) => r.status == 'pending').length;
                     
                     final now = DateTime.now();
                     final donationsThisMonth = requests.where((r) => 
-                      r.type == 'Donate' && 
+                      r.isRequest == false && 
                       r.status == 'completed' &&
                       r.createdAt.month == now.month &&
                       r.createdAt.year == now.year
                     ).length;
 
                     final lowStockTypes =
-                        inventory.where((i) => i.units < 5).toList();
+                        inventory.where((i) => i.isLowStock).toList();
 
                     return SingleChildScrollView(
                       padding: const EdgeInsets.all(20),
@@ -67,7 +66,6 @@ class HospitalAdminDashboard extends StatelessWidget {
                           _buildHeader('Hospital Overview'),
                           const SizedBox(height: 16),
                           
-                          // Stat row 1
                           Row(
                             children: [
                               Expanded(
@@ -91,13 +89,11 @@ class HospitalAdminDashboard extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
 
-                          // Activity Chart ---
                           _buildHeader('Weekly Activity (Last 7 Days)'),
                           const SizedBox(height: 12),
                           _buildActivityChart(requests),
                           const SizedBox(height: 24),
 
-                          // Critical Alerts ---
                           if (lowStockTypes.isNotEmpty) ...[
                             _buildHeader('Critical Stock Alerts'),
                             const SizedBox(height: 8),
@@ -166,7 +162,7 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityChart(List<BloodRequestModel> requests) {
+  Widget _buildActivityChart(List<BloodRequestEntity> requests) {
     final now = DateTime.now();
     final last7Days = List.generate(7, (i) {
       final date = now.subtract(Duration(days: 6 - i));
@@ -178,20 +174,19 @@ class HospitalAdminDashboard extends StatelessWidget {
 
     for (var date in last7Days) {
       requestCounts[date] = requests.where((r) => 
-        r.type == 'Request' && 
+        r.isRequest && 
         r.createdAt.year == date.year && 
         r.createdAt.month == date.month && 
         r.createdAt.day == date.day
       ).length;
       
       donationCounts[date] = requests.where((r) => 
-        r.type == 'Donate' && 
+        !r.isRequest && 
         r.createdAt.year == date.year && 
         r.createdAt.month == date.month && 
         r.createdAt.day == date.day
       ).length;
     }
-    // Calculate max to scale chart
     int maxCount = 0;
     for (var count in requestCounts.values) {
       if (count > maxCount) maxCount = count;
@@ -267,7 +262,7 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildAlertsList(List<InventoryModel> alerts) {
+  Widget _buildAlertsList(List<InventoryEntity> alerts) {
     return Column(
       children: alerts.map((a) => Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -283,7 +278,7 @@ class HospitalAdminDashboard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '${a.bloodType} is critically low: ${a.units} units',
+                '${a.bloodType} is critically low: ${a.units.toInt()} units',
                 style: TextStyle(
                   color: Colors.orange.shade900,
                   fontWeight: FontWeight.w600,
@@ -296,7 +291,7 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildInventorySummaryPlain(List<InventoryModel> items) {
+  Widget _buildInventorySummaryPlain(List<InventoryEntity> items) {
     if (items.isEmpty) {
       return const Center(child: Text('No inventory data.'));
     }
@@ -307,7 +302,7 @@ class HospitalAdminDashboard extends StatelessWidget {
         child: Column(
           children: items.map((i) {
             final double progress = (i.units / 20).clamp(0.0, 1.0);
-            final Color color = i.units < 5 ? Colors.red : Colors.green;
+            final Color color = i.isLowStock ? Colors.red : Colors.green;
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Column(
@@ -320,7 +315,7 @@ class HospitalAdminDashboard extends StatelessWidget {
                         'Type ${i.bloodType}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      Text('${i.units} Units', style: TextStyle(color: color, fontSize: 12)),
+                      Text('${i.units.toInt()} Units', style: TextStyle(color: color, fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -342,3 +337,4 @@ class HospitalAdminDashboard extends StatelessWidget {
     );
   }
 }
+

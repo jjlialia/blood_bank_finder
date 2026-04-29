@@ -8,7 +8,7 @@ import 'package:blood_bank_finder/features/user/screens/profile_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/notifications_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/my_requests_screen.dart';
 import 'package:blood_bank_finder/features/chat/screens/chat_room_screen.dart';
-import 'package:blood_bank_finder/features/chat/services/chat_service.dart';
+import 'package:blood_bank_finder/features/chat/presentation/providers/chat_provider.dart';
 
 class UserDrawer extends StatelessWidget {
   const UserDrawer({super.key});
@@ -141,8 +141,8 @@ class UserDrawer extends StatelessWidget {
               final currentUser = auth.user;
               if (currentUser == null) return;
 
-              final chatService = ChatService();
-              final chatId = await chatService
+              final chatProvider = context.read<ChatProvider>();
+              final chatId = await chatProvider
                   .createOrGetChat(currentUser.uid, 'superadmin', {
                     currentUser.uid:
                         '${currentUser.firstName} ${currentUser.lastName}',

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../../core/models/hospital_model.dart';
+import '../../hospital/domain/entities/hospital.dart';
 import 'package:geolocator/geolocator.dart';
 
 class HospitalMapView extends StatefulWidget {
-  final List<HospitalModel> hospitals;
-  final Function(HospitalModel) onHospitalTap;
+  final List<HospitalEntity> hospitals;
+  final Function(HospitalEntity) onHospitalTap;
   final LatLng? initialCenter;
   final double initialZoom;
 
@@ -133,3 +133,4 @@ class _HospitalMapViewState extends State<HospitalMapView> {
     );
   }
 }
+

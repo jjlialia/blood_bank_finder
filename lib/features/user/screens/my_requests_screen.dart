@@ -1,24 +1,21 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/blood_request_model.dart';
-import '../../../core/models/hospital_model.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
+import '../../hospital/domain/entities/hospital.dart';
+import '../../hospital/presentation/providers/hospital_provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/services/database_service.dart';
 
 class MyRequestsScreen extends StatelessWidget {
   const MyRequestsScreen({super.key});
-
-
-  // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final uid = auth.user?.uid;
     final theme = Theme.of(context);
+    final bloodRequestProvider = context.read<BloodRequestProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -28,8 +25,8 @@ class MyRequestsScreen extends StatelessWidget {
       ),
       body: uid == null
           ? const Center(child: Text('Not logged in.'))
-          : StreamBuilder<List<BloodRequestModel>>(
-              stream: DatabaseService().streamUserRequests(uid),
+          : StreamBuilder<List<BloodRequestEntity>>(
+              stream: bloodRequestProvider.streamUserRequests(uid),
               builder: (context, snapshot) {
                 // Loading
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -103,12 +100,10 @@ class MyRequestsScreen extends StatelessWidget {
   }
 }
 
-// ── Single card ──────────────────────────────────────────────────────────────
-
 class _RequestCard extends StatelessWidget {
   const _RequestCard({required this.item});
 
-  final BloodRequestModel item;
+  final BloodRequestEntity item;
 
   Color _statusColor(String s) {
     switch (s.toLowerCase()) {
@@ -124,9 +119,9 @@ class _RequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isRequest = item.type.toLowerCase() == 'request';
-    final accentColor = isRequest ? Colors.red[800]! : Colors.blue[800]!;
+    final accentColor = item.isRequest ? Colors.red[800]! : Colors.blue[800]!;
     final statusColor = _statusColor(item.status);
+    final hospitalProvider = context.read<HospitalProvider>();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -144,7 +139,6 @@ class _RequestCard extends StatelessWidget {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            // Status/Type accent strip
             Container(
               width: 8,
               decoration: BoxDecoration(
@@ -161,7 +155,6 @@ class _RequestCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header: Date & Status
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -178,7 +171,6 @@ class _RequestCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Core Info: Blood Type & Hospital
                     Row(
                       children: [
                         Container(
@@ -212,7 +204,7 @@ class _RequestCard extends StatelessWidget {
                                   letterSpacing: -0.2,
                                 ),
                               ),
-                              if (item.type == 'Request' && item.patientName != null)
+                              if (item.isRequest && item.patientName != null)
                                 Text(
                                   'PATIENT: ${item.patientName}',
                                   style: TextStyle(
@@ -221,8 +213,8 @@ class _RequestCard extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              FutureBuilder<HospitalModel?>(
-                                future: DatabaseService().getHospital(item.hospitalId),
+                              FutureBuilder<HospitalEntity?>(
+                                future: hospitalProvider.getHospital(item.hospitalId),
                                 builder: (context, snapshot) {
                                   if (snapshot.hasData && snapshot.data != null) {
                                     return Text(
@@ -241,7 +233,6 @@ class _RequestCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Details: Quantity & Appointment
                     Row(
                       children: [
                         Icon(Icons.water_drop_outlined, size: 14, color: Colors.grey[600]),
@@ -250,7 +241,7 @@ class _RequestCard extends StatelessWidget {
                           '${item.quantity.toInt()} Unit(s)',
                           style: TextStyle(color: Colors.grey[700], fontSize: 13, fontWeight: FontWeight.w600),
                         ),
-                        if (item.type == 'Request' && item.urgency == 'Emergency') ...[
+                        if (item.isRequest && item.urgency == 'Emergency') ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -278,8 +269,6 @@ class _RequestCard extends StatelessWidget {
                           ),
                       ],
                     ),
-                    
-                    // Admin Message or Instructions
                     if (item.adminMessage != null && item.adminMessage!.isNotEmpty) ...[
                       const SizedBox(height: 20),
                       Container(
@@ -361,3 +350,4 @@ class _RequestCard extends StatelessWidget {
     );
   }
 }
+

@@ -3,6 +3,8 @@ library;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class LocationService {
   // ang external brain for Philippine geography.
@@ -37,6 +39,26 @@ class LocationService {
     return await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
+  }
+
+  /// Converts a text address to geographic coordinates.
+  Future<Location?> getCoordinatesFromAddress(String address) async {
+    if (kIsWeb) {
+      // Web fallback: PSGC API doesn't provide geocoding, and geocoding package
+      // has limited support. In a real app, you'd use Google Maps or Nominatim.
+      // For now, returning null for web as we are moving away from the custom backend.
+      return null; 
+    }
+
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        return locations.first;
+      }
+    } catch (e) {
+      print('Geocoding error: $e');
+    }
+    return null;
   }
 
   // In-memory cache to prevent the app from asking the internet for the same thing twice.

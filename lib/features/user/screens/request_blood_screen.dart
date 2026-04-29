@@ -1,10 +1,8 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/blood_request_model.dart';
-import '../../../core/models/hospital_model.dart';
-import '../../../core/services/api_service.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
+import '../../hospital/domain/entities/hospital.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -20,13 +18,12 @@ class RequestBloodScreen extends StatefulWidget {
 class _RequestBloodScreenState extends State<RequestBloodScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // mo hold sa users selections
   String? _selectedBloodType;
-  HospitalModel? _selectedHospital;
+  HospitalEntity? _selectedHospital;
   final _unitsController = TextEditingController(text: '1.0');
   final _contactController = TextEditingController();
   final _patientNameController = TextEditingController();
-  final _patientHospitalController = TextEditingController(); // NEW
+  final _patientHospitalController = TextEditingController(); 
   final _wardController = TextEditingController();
   final _reasonController = TextEditingController();
   String _selectedUrgency = 'Regular';
@@ -35,7 +32,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill the blood type from the logged-in user's profile.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userBloodGroup =
           context.read<AuthProvider>().user?.bloodGroup ?? '';
@@ -45,7 +41,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     });
   }
 
-  ///
   void _submitRequest(AuthProvider auth) async {
     if (_selectedHospital == null || _selectedBloodType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,10 +50,9 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
     }
 
     try {
-      final api = ApiService();
+      final bloodRequestProvider = context.read<BloodRequestProvider>();
 
-      //Create the data structure for the backend. Model.
-      final request = BloodRequestModel(
+      final request = BloodRequestEntity(
         userId: auth.user!.uid,
         userName: '${auth.user!.firstName} ${auth.user!.lastName}',
         type: 'Request',
@@ -76,8 +70,7 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
         medicalReason: _reasonController.text,
       );
 
-      //Send the package over the network.
-      await api.createBloodRequest(request);
+      await bloodRequestProvider.createBloodRequest(request);
 
       if (!mounted) return;
 
@@ -112,9 +105,8 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
           key: _formKey,
           child: Column(
             children: [
-              //  Blood selection dropdown.
               DropdownButtonFormField<String>(
-                initialValue: _selectedBloodType,
+                value: _selectedBloodType,
                 items: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
@@ -124,7 +116,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              //Interactive Hospital selection sheet.
               InkWell(
                 onTap: () {
                   showModalBottomSheet(
@@ -168,7 +159,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                   ),
                 ),
               ),
-              // Displaying location preview once nakapili og hospital
               if (_selectedHospital != null) ...[
                 const SizedBox(height: 8),
                 Padding(
@@ -180,7 +170,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              // Units required.
               CustomTextField(
                 label: 'Quantity (Units)',
                 controller: _unitsController,
@@ -195,7 +184,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              // --- PATIENT DETAILS SECTION ---
               Row(
                 children: [
                   Icon(Icons.person_pin_outlined, size: 20, color: theme.primaryColor),
@@ -279,7 +267,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                     v == null || v.isEmpty ? 'Contact required' : null,
               ),
               const SizedBox(height: 16),
-              //Legal verification checkbox.
               CheckboxListTile(
                 title: const Text(
                   'I solemnly swear this request is for a medical need.',
@@ -290,7 +277,6 @@ class _RequestBloodScreenState extends State<RequestBloodScreen> {
                 onChanged: (v) => setState(() => _isSworn = v ?? false),
               ),
               const SizedBox(height: 32),
-              //Triggers data submission.
               CustomButton(
                 label: 'Post Emergency Request',
                 onPressed: _isSworn ? () => _submitRequest(auth) : null,

@@ -1,11 +1,10 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/blood_request_model.dart';
-import '../../../core/services/database_service.dart';
+import '../../blood_request/domain/entities/blood_request.dart';
+import '../../blood_request/presentation/providers/blood_request_provider.dart';
+import '../../notification/domain/entities/notification.dart';
 import '../../../core/providers/auth_provider.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -25,8 +24,6 @@ class NotificationsScreen extends StatelessWidget {
       body: userId == null
           ? const Center(child: Text('Unauthorized'))
           : StreamBuilder<QuerySnapshot>(
-              // Creating a live to the database.
-              // Give only notifications where userId matches mine.
               stream: FirebaseFirestore.instance
                   .collection('notifications')
                   .where('userId', isEqualTo: userId)
@@ -81,25 +78,22 @@ class NotificationsScreen extends StatelessWidget {
                   );
                 }
 
-                //Rendering the list of alerts from the streamed data.
+                final items = snapshot.data!.docs.map((doc) => NotificationEntity.fromFirestore(doc)).toList();
+
                 return ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
+                  itemCount: items.length,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   itemBuilder: (context, index) {
-                    final doc = snapshot.data!.docs[index];
-                    final data = doc.data() as Map<String, dynamic>;
-                    final bool isRead = data['isRead'] ?? false;
-                    final String type = data['type'] ?? 'default';
-                    final String body = data['body'] ?? '';
-                    final accentColor = _getColorForType(type);
+                    final item = items[index];
+                    final accentColor = _getColorForType(item.type);
 
                     return GestureDetector(
                       onTap: () {
                         FirebaseFirestore.instance
                             .collection('notifications')
-                            .doc(doc.id)
+                            .doc(item.id)
                             .update({'isRead': true});
-                        _showNotificationDetails(context, data);
+                        _showNotificationDetails(context, item);
                       },
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -108,12 +102,12 @@ class NotificationsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: isRead ? Colors.black.withValues(alpha: 0.02) : accentColor.withValues(alpha: 0.08),
+                              color: item.isRead ? Colors.black.withOpacity(0.02) : accentColor.withOpacity(0.08),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
                           ],
-                          border: isRead ? Border.all(color: Colors.grey[100]!) : Border.all(color: accentColor.withValues(alpha: 0.1)),
+                          border: item.isRead ? Border.all(color: Colors.grey[100]!) : Border.all(color: accentColor.withOpacity(0.1)),
                         ),
                         child: IntrinsicHeight(
                           child: Row(
@@ -121,7 +115,7 @@ class NotificationsScreen extends StatelessWidget {
                               Container(
                                 width: 5,
                                 decoration: BoxDecoration(
-                                  color: isRead ? Colors.grey[300] : accentColor,
+                                  color: item.isRead ? Colors.grey[300] : accentColor,
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(20),
                                     bottomLeft: Radius.circular(20),
@@ -137,11 +131,11 @@ class NotificationsScreen extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
-                                          color: accentColor.withValues(alpha: 0.1),
+                                          color: accentColor.withOpacity(0.1),
                                           shape: BoxShape.circle,
                                         ),
                                         child: Icon(
-                                          _getIconForType(type),
+                                          _getIconForType(item.type),
                                           color: accentColor,
                                           size: 20,
                                         ),
@@ -155,7 +149,7 @@ class NotificationsScreen extends StatelessWidget {
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Text(
-                                                  _formatRelativeTime(data['createdAt']),
+                                                  _formatRelativeTime(item.createdAt),
                                                   style: TextStyle(
                                                     color: Colors.grey[400],
                                                     fontSize: 10,
@@ -163,7 +157,7 @@ class NotificationsScreen extends StatelessWidget {
                                                     letterSpacing: 0.5,
                                                   ),
                                                 ),
-                                                if (!isRead)
+                                                if (!item.isRead)
                                                   Container(
                                                     width: 8,
                                                     height: 8,
@@ -176,16 +170,16 @@ class NotificationsScreen extends StatelessWidget {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              data['title'] ?? 'Notification',
+                                              item.title ?? 'Notification',
                                               style: TextStyle(
                                                 fontSize: 15,
-                                                fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
-                                                color: isRead ? Colors.black87 : Colors.black,
+                                                fontWeight: item.isRead ? FontWeight.w600 : FontWeight.w800,
+                                                color: item.isRead ? Colors.black87 : Colors.black,
                                               ),
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              body.contains('Schedule:') ? body.replaceAll('\n\n', '\n') : body,
+                                              item.body?.contains('Schedule:') ?? false ? item.body!.replaceAll('\n\n', '\n') : (item.body ?? ''),
                                               maxLines: 3,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
@@ -213,14 +207,13 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  /// Details Popup.
-  ///Receives map of notification data and renders a clean bottom sheet.
   void _showNotificationDetails(
     BuildContext context,
-    Map<String, dynamic> data,
+    NotificationEntity item,
   ) {
-    final accentColor = _getColorForType(data['type']);
-    final String body = data['body'] ?? 'No additional details provided.';
+    final accentColor = _getColorForType(item.type);
+    final String body = item.body ?? 'No additional details provided.';
+    final bloodRequestProvider = context.read<BloodRequestProvider>();
 
     showModalBottomSheet(
       context: context,
@@ -239,11 +232,11 @@ class NotificationsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.1),
+                      color: accentColor.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      _getIconForType(data['type']),
+                      _getIconForType(item.type),
                       color: accentColor,
                       size: 24,
                     ),
@@ -254,7 +247,7 @@ class NotificationsScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          data['title'] ?? 'Notification Details',
+                          item.title ?? 'Notification Details',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,
@@ -262,7 +255,7 @@ class NotificationsScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Received: ${_formatDate(data['createdAt'])}',
+                          'Received: ${_formatDate(item.createdAt)}',
                           style: TextStyle(
                             color: Colors.grey[500],
                             fontSize: 11,
@@ -279,7 +272,6 @@ class NotificationsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              //The core message from the Admin/System.
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -288,7 +280,7 @@ class NotificationsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withOpacity(0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -335,10 +327,9 @@ class NotificationsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // --- CASE SUMMARY CARD (Hospital Style) ---
-              if (data['requestId'] != null)
-                FutureBuilder<BloodRequestModel?>(
-                  future: DatabaseService().getRequest(data['requestId']),
+              if (item.requestId != null)
+                FutureBuilder<BloodRequestEntity?>(
+                  future: bloodRequestProvider.getRequest(item.requestId!),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: LinearProgressIndicator());
@@ -450,7 +441,6 @@ class NotificationsScreen extends StatelessWidget {
     return DateFormat('MMM d').format(date).toUpperCase();
   }
 
-  // ui helper for type
   IconData _getIconForType(String? type) {
     switch (type) {
       case 'request_approved':
@@ -466,7 +456,6 @@ class NotificationsScreen extends StatelessWidget {
     }
   }
 
-  // Converts Firestore Timestamp into a readable String ---
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return '';
     final DateTime date = (timestamp as Timestamp).toDate();

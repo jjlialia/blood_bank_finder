@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../services/chat_service.dart';
-import '../models/message_model.dart';
+import '../presentation/providers/chat_provider.dart';
+import '../domain/entities/message.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final String chatRoomId;
@@ -20,12 +20,11 @@ class ChatRoomScreen extends StatefulWidget {
 
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final ChatService _chatService = ChatService();
 
   void _sendMessage(String senderId) {
     final text = _messageController.text.trim();
     if (text.isNotEmpty) {
-      _chatService.sendMessage(widget.chatRoomId, senderId, text);
+      context.read<ChatProvider>().sendMessage(widget.chatRoomId, senderId, text);
       _messageController.clear();
     }
   }
@@ -44,6 +43,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     }
 
     final theme = Theme.of(context);
+    final chatProvider = context.read<ChatProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -54,8 +54,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<List<Message>>(
-              stream: _chatService.getMessagesStream(widget.chatRoomId),
+            child: StreamBuilder<List<MessageEntity>>(
+              stream: chatProvider.getMessagesStream(widget.chatRoomId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -89,7 +89,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     );
   }
 
-  Widget _buildMessageBubble(Message message, bool isMe, ThemeData theme) {
+  Widget _buildMessageBubble(MessageEntity message, bool isMe, ThemeData theme) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -138,7 +138,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

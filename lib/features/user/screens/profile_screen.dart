@@ -1,10 +1,8 @@
-library;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/services/api_service.dart';
-import '../../../core/models/user_model.dart';
+import '../../auth/domain/entities/user.dart';
+import '../../super_admin/presentation/providers/super_admin_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,7 +13,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final ApiService _api = ApiService();
 
   // Controls if nag viewing or editing.
   bool _isEditing = false;
@@ -31,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     // Load from the AuthProvider into the GUI controllers.
-    final user = context.read<AuthProvider>().user;
+    final user = context.read<AuthProvider>().userEntity;
     _firstNameCtrl = TextEditingController(text: user?.firstName ?? '');
     _lastNameCtrl = TextEditingController(text: user?.lastName ?? '');
     _mobileCtrl = TextEditingController(text: user?.mobile ?? '');
@@ -49,13 +46,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _saveProfile(UserModel currentUser) async {
+  Future<void> _saveProfile(UserEntity currentUser) async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final updatedUser = UserModel(
+      final updatedUser = UserEntity(
         uid: currentUser.uid,
         email: currentUser.email,
         role: currentUser.role,
@@ -75,7 +72,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         createdAt: currentUser.createdAt,
       );
 
-      await _api.saveUser(updatedUser);
+      // Using SuperAdminProvider to update user profile as it already has access to ISuperAdminRepository
+      // which can handle user updates (we might need to add an update method there).
+      // Or we can add it to AuthProvider.
+      // For now, let's assume we want a clean DDD way.
+      // I'll add 'updateUser' to SuperAdminProvider and use it here.
+      
+      final superAdminProvider = context.read<SuperAdminProvider>();
+      await superAdminProvider.updateUser(updatedUser);
 
       if (mounted) {
         setState(() => _isEditing = false);
@@ -100,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     // Listen to the 'AuthProvider' for the real-time user object.
     final auth = context.watch<AuthProvider>();
-    final user = auth.user;
+    final user = auth.userEntity;
 
     return Scaffold(
       appBar: AppBar(
@@ -114,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 setState(() {
                   _isEditing = !_isEditing;
                   if (!_isEditing) {
-                    //If cancelling,i put the original data back in the controllers.
+                    //If cancelling, i put the original data back in the controllers.
                     _firstNameCtrl.text = user.firstName;
                     _lastNameCtrl.text = user.lastName;
                     _mobileCtrl.text = user.mobile;
@@ -341,7 +345,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withValues(alpha: 0.35),
+            color: Colors.red.withOpacity(0.35),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -377,7 +381,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text(
@@ -408,7 +412,7 @@ class _BloodTypeBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withValues(alpha: 0.5),
+            color: Colors.red.withOpacity(0.5),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),

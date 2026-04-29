@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/models/hospital_model.dart';
-import '../../../core/services/database_service.dart';
-import '../../../core/services/api_service.dart';
+import '../../hospital/domain/entities/hospital.dart';
+import '../presentation/providers/hospital_provider.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../core/services/location_service.dart';
 import '../widgets/hospital_admin_drawer.dart';
@@ -17,12 +16,10 @@ class HospitalProfileScreen extends StatefulWidget {
 }
 
 class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
-  final DatabaseService _db = DatabaseService();
-  final ApiService _api = ApiService();
   final LocationService _locationSvc = LocationService();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
-  HospitalModel? _hospital;
+  HospitalEntity? _hospital;
 
   late TextEditingController _nameController;
   late TextEditingController _emailController;
@@ -51,12 +48,12 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
 
   Future<void> _loadHospital() async {
     final auth = context.read<AuthProvider>();
+    final hospitalProvider = context.read<HospitalProvider>();
     final hospitalId = auth.user?.hospitalId;
 
     if (hospitalId != null && hospitalId.isNotEmpty) {
-      final h = await _db.getHospital(hospitalId);
+      final h = await hospitalProvider.getHospital(hospitalId);
       if (h != null) {
-        // Pre-fetch locations for existing data
         final regions = await _locationSvc.getRegionsByIsland(h.islandGroup);
         final currentRegion = regions.firstWhere(
           (r) => r['name'] == h.region,
@@ -170,7 +167,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 },
               ),
               DropdownButtonFormField<String>(
-                initialValue: _selectedIsland,
+                value: _selectedIsland,
                 decoration: const InputDecoration(labelText: 'Island Group'),
                 items: ['Luzon', 'Visayas', 'Mindanao']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
@@ -202,7 +199,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 const LinearProgressIndicator()
               else if (_selectedIsland != null)
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedRegion,
+                  value: _selectedRegion,
                   decoration: const InputDecoration(labelText: 'Region'),
                   items: _regions
                       .map(
@@ -238,7 +235,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 const LinearProgressIndicator()
               else if (_selectedRegion != null)
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCity,
+                  value: _selectedCity,
                   decoration: const InputDecoration(labelText: 'City'),
                   items: _cities
                       .map(
@@ -271,7 +268,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
                 const LinearProgressIndicator()
               else if (_selectedCity != null)
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedBarangay,
+                  value: _selectedBarangay,
                   decoration: const InputDecoration(labelText: 'Barangay'),
                   items: _barangays
                       .map(
@@ -370,8 +367,9 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    final hospitalProvider = context.read<HospitalProvider>();
 
-    final updated = HospitalModel(
+    final updated = HospitalEntity(
       id: _hospital!.id,
       name: _nameController.text,
       email: _emailController.text,
@@ -390,7 +388,7 @@ class _HospitalProfileScreenState extends State<HospitalProfileScreen> {
       createdAt: _hospital!.createdAt,
     );
 
-    await _api.updateHospital(_hospital!.id!, updated);
+    await hospitalProvider.updateHospital(updated);
     if (!mounted) return;
 
     ScaffoldMessenger.of(

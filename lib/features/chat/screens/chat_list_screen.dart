@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../services/chat_service.dart';
-import '../models/chat_room_model.dart';
+import '../presentation/providers/chat_provider.dart';
+import '../domain/entities/chat_room.dart';
 import 'chat_room_screen.dart';
 
 class ChatListScreen extends StatelessWidget {
@@ -17,7 +17,7 @@ class ChatListScreen extends StatelessWidget {
     final participantId = isSuperAdmin
         ? 'superadmin'
         : (isHospitalAdmin ? auth.user!.hospitalId! : auth.user?.uid);
-    final chatService = ChatService();
+    final chatProvider = context.read<ChatProvider>();
 
     if (participantId == null) {
       return const Scaffold(
@@ -27,8 +27,8 @@ class ChatListScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Messages')),
-      body: StreamBuilder<List<ChatRoom>>(
-        stream: chatService.getChatRoomsStream(
+      body: StreamBuilder<List<ChatRoomEntity>>(
+        stream: chatProvider.getChatRoomsStream(
           participantId,
         ), //para ma pakita ang tanang nakachat nmo.
         builder: (context, snapshot) {

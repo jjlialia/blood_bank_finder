@@ -1,13 +1,11 @@
-library;
-
 import 'package:flutter/material.dart';
-import '../../../core/models/user_model.dart';
-import '../../../core/models/hospital_model.dart';
-import '../../../core/services/database_service.dart';
-import '../../../core/services/api_service.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/models/audit_log_model.dart';
+import '../../auth/domain/entities/user.dart';
+import '../../hospital/domain/entities/hospital.dart';
+import '../../hospital/presentation/providers/hospital_provider.dart';
+import '../domain/entities/audit_log.dart';
+import '../presentation/providers/super_admin_provider.dart';
 import '../widgets/super_admin_drawer.dart';
 
 class ManageUsersScreen extends StatefulWidget {
@@ -23,6 +21,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final superAdminProvider = context.read<SuperAdminProvider>();
+
     return Scaffold(
       appBar: AppBar(title: const Text('User Management')),
       drawer: const SuperAdminDrawer(),
@@ -30,8 +30,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         children: [
           _buildSearchAndFilter(),
           Expanded(
-            child: StreamBuilder<List<UserModel>>(
-              stream: _db.streamAllUsers(),
+            child: StreamBuilder<List<UserEntity>>(
+              stream: superAdminProvider.streamAllUsers(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -41,7 +41,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 }
 
                 final filteredUsers = snapshot.data!.where((u) {
-                  // Hide superadmins from general management
                   if (u.role == 'superadmin') return false;
 
                   final fullName = '${u.firstName} ${u.lastName}'.toLowerCase();
@@ -76,9 +75,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  final DatabaseService _db = DatabaseService();
-  final ApiService _api = ApiService();
-
   Widget _buildSearchAndFilter() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -86,7 +82,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
         color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, 2),
             blurRadius: 4,
           ),
@@ -141,7 +137,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  Widget _buildUserCard(UserModel user) {
+  Widget _buildUserCard(UserEntity user) {
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(top: 16),
@@ -269,7 +265,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  Widget _banToggle(UserModel user) {
+  Widget _banToggle(UserEntity user) {
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -290,11 +286,12 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
               inactiveTrackColor: Colors.red.withOpacity(0.2),
               onChanged: (active) async {
                 final admin = context.read<AuthProvider>().user;
-                await _api.toggleUserBan(user.uid, !active);
+                final superAdminProvider = context.read<SuperAdminProvider>();
                 
-                // Audit Log
+                await superAdminProvider.updateUserStatus(user.uid, !active);
+                
                 if (admin != null) {
-                  await _db.logAction(AuditLogModel(
+                  await superAdminProvider.logAction(AuditLogEntity(
                     id: '',
                     action: active ? 'USER_UNBANNED' : 'USER_BANNED',
                     category: 'Admin',
@@ -332,11 +329,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 
-  ///r: 'DatabaseService.streamHospitals' for the dropdown list.
-  void _showEditRoleDialog(UserModel user) {
+  void _showEditRoleDialog(UserEntity user) {
     String selectedRole = user.role;
     String? selectedHospitalId = user.hospitalId;
-    final hospitalsStream = _db.streamHospitals(allowAll: true);
+    final hospitalProvider = context.read<HospitalProvider>();
+    final superAdminProvider = context.read<SuperAdminProvider>();
 
     showDialog(
       context: context,
@@ -347,7 +344,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                initialValue: selectedRole,
+                value: selectedRole,
                 decoration: const InputDecoration(labelText: 'User Role'),
                 items: const [
                   DropdownMenuItem(value: 'user', child: Text('Standard User')),
@@ -365,17 +362,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                   }
                 },
               ),
-              // If the user is promoted to Admin, show the hospital picker.
               if (selectedRole == 'admin') ...[
                 const SizedBox(height: 16),
-                StreamBuilder<List<HospitalModel>>(
-                  stream: hospitalsStream,
+                StreamBuilder<List<HospitalEntity>>(
+                  stream: hospitalProvider.streamHospitals(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData)
+                    if (!snapshot.hasData) {
                       return const LinearProgressIndicator();
+                    }
                     return DropdownButtonFormField<String>(
-                      initialValue:
-                          snapshot.data!.any((h) => h.id == selectedHospitalId)
+                      value: snapshot.data!.any((h) => h.id == selectedHospitalId)
                           ? selectedHospitalId
                           : null,
                       decoration: const InputDecoration(
@@ -405,15 +401,14 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ElevatedButton(
               onPressed: () async {
                 final admin = context.read<AuthProvider>().user;
-                await _api.updateUserRole(
+                await superAdminProvider.updateUserRole(
                   user.uid,
                   selectedRole,
                   hospitalId: selectedHospitalId,
                 );
 
-                // Audit Log
                 if (admin != null) {
-                  await _db.logAction(AuditLogModel(
+                  await superAdminProvider.logAction(AuditLogEntity(
                     id: '',
                     action: 'USER_ROLE_UPDATED',
                     category: 'Admin',
@@ -444,3 +439,4 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     );
   }
 }
+
