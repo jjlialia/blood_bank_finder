@@ -25,35 +25,46 @@ service cloud.firestore {
 
     // Users Collection
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow read, write: if true;
     }
 
     // Hospitals Collection
     match /hospitals/{hospitalId} {
-      allow read: if true; // Publicly searchable
-      allow write: if false; // Handled by FastAPI (Super Admin/Hospital Admin)
+      allow read, write: if true;
       
       // Inventory Sub-collection
       match /inventory/{type} {
-        allow read: if true;
-        allow write: if false; // Handled by FastAPI
+        allow read, write: if true;
       }
     }
 
     // Blood Requests Collection
     match /blood_requests/{requestId} {
-      allow read: if isAuthenticated();
-      allow write: if false; // Handled by FastAPI
+      allow read, write: if true;
     }
 
     // Notifications Collection
     match /notifications/{notifId} {
-      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow create: if false; // Handled by FastAPI
-      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
-      allow delete: if false;
+      allow read, write: if true;
+    }
+
+    // Audit Logs Collection
+    match /audit_logs/{logId} {
+      allow read, write: if true;
+    }
+
+    // Chats Collection
+    match /chats/{chatId} {
+      allow read, write: if true;
+
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+
+    // OTP Verifications
+    match /otp_verifications/{email} {
+      allow read, write: if true;
     }
   }
 }

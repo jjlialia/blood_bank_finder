@@ -24,4 +24,8 @@ class ChatProvider with ChangeNotifier {
   Future<String> createOrGetChat(String currentUserId, String otherUserId, Map<String, dynamic>? names) async {
     return await _repository.createOrGetChat(currentUserId, otherUserId, names);
   }
+
+  Future<void> markMessagesAsRead(String chatId, String userId) async {
+    await _repository.markMessagesAsRead(chatId, userId);
+  }
 }

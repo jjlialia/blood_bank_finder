@@ -80,4 +80,25 @@ class FirestoreChatRepository implements IChatRepository {
 
     return chatId;
   }
+  @override
+  Future<void> markMessagesAsRead(String chatId, String userId) async {
+    final messages = await _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    final batch = _firestore.batch();
+    bool hasUpdates = false;
+    for (var doc in messages.docs) {
+      if (doc.data()['senderId'] != userId) {
+        batch.update(doc.reference, {'isRead': true});
+        hasUpdates = true;
+      }
+    }
+    if (hasUpdates) {
+      await batch.commit();
+    }
+  }
 }

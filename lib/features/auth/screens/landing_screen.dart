@@ -7,8 +7,36 @@ import '../../user/screens/user_home_screen.dart';
 import '../../super_admin/screens/super_admin_dashboard.dart';
 import '../../hospital/screens/hospital_admin_dashboard.dart';
 
-class LandingScreen extends StatelessWidget {
+class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
+
+  @override
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _textFadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _textFadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.4, 1.0, curve: Curves.easeIn),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +49,7 @@ class LandingScreen extends StatelessWidget {
           // Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/images/landing_bg.jpg', // We'll assume this exists or use a fallback
+              'assets/images/landing_bg.jpg',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
@@ -31,8 +59,8 @@ class LandingScreen extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         theme.primaryColor,
-                        theme.primaryColor.withValues(alpha: 0.8),
                         const Color(0xFF8B0000),
+                        Colors.black,
                       ],
                     ),
                   ),
@@ -48,9 +76,9 @@ class LandingScreen extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.2),
-                    Colors.black.withValues(alpha: 0.6),
-                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withOpacity(0.1),
+                    Colors.black.withOpacity(0.6),
+                    Colors.black.withOpacity(0.9),
                   ],
                 ),
               ),
@@ -63,103 +91,131 @@ class LandingScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 60),
-                  Text(
-                    'BLOOD BANK',
-                    style: GoogleFonts.outfit(
+                  const SizedBox(height: 40),
+                  const Hero(
+                    tag: 'app_logo',
+                    child: Icon(
+                      Icons.bloodtype,
                       color: Colors.white,
-                      fontSize: 24,
+                      size: 48,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'BLOOD BANK FINDER',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
+                      letterSpacing: 3,
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    auth.isAuthenticated
-                        ? 'Welcome Back, ${auth.user?.firstName}!'
-                        : 'Saving Lives\nTogether',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    auth.isAuthenticated
-                        ? 'Thank you for being part of our life-saving community. Your contributions make a real difference.'
-                        : 'Connect with blood donors and hospitals near you. Every drop counts in an emergency.',
-                    style: GoogleFonts.outfit(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 60,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (auth.isAuthenticated) {
-                          // Navigate to dashboard
-                          Widget nextScreen;
-                          switch (auth.user?.role) {
-                            case 'superadmin':
-                              nextScreen = const SuperAdminDashboard();
-                              break;
-                            case 'admin':
-                              nextScreen = const HospitalAdminDashboard();
-                              break;
-                            default:
-                              nextScreen = const UserHomeScreen();
-                          }
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => nextScreen),
-                          );
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: theme.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        auth.isAuthenticated ? 'Enter Dashboard' : 'Get Started',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (!auth.isAuthenticated)
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          // Maybe navigate to info or just stay
-                        },
-                        child: Text(
-                          'Learn More About Us',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w500,
+                  FadeTransition(
+                    opacity: _textFadeAnimation,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          auth.isAuthenticated
+                              ? 'Welcome Back,\n${auth.user?.firstName}!'
+                              : 'Saving Lives\nTogether',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 44,
+                            fontWeight: FontWeight.w900,
+                            height: 1.1,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 20),
+                        Text(
+                          auth.isAuthenticated
+                              ? 'Thank you for being part of our life-saving community. Your contributions make a real difference.'
+                              : 'Connect with blood donors and hospitals near you. Every drop counts in an emergency.',
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 48),
+                        // Premium Primary Button
+                        GestureDetector(
+                          onTap: () {
+                            if (auth.isAuthenticated) {
+                              Widget nextScreen;
+                              switch (auth.user?.role) {
+                                case 'superadmin':
+                                  nextScreen = const SuperAdminDashboard();
+                                  break;
+                                case 'admin':
+                                  nextScreen = const HospitalAdminDashboard();
+                                  break;
+                                default:
+                                  nextScreen = const UserHomeScreen();
+                              }
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (_) => nextScreen),
+                              );
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                              );
+                            }
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white,
+                                  Colors.white.withOpacity(0.9),
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                auth.isAuthenticated ? 'Enter Dashboard' : 'Get Started',
+                                style: GoogleFonts.outfit(
+                                  color: theme.primaryColor,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        if (!auth.isAuthenticated)
+                          Center(
+                            child: TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                'Learn More About Our Mission',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 40),
+                      ],
                     ),
-                  const SizedBox(height: 40),
+                  ),
                 ],
               ),
             ),

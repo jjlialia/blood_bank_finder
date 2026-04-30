@@ -66,6 +66,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 }
 
                 final messages = snapshot.data ?? [];
+                
+                // Mark as read when messages are received
+                if (messages.isNotEmpty) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    chatProvider.markMessagesAsRead(widget.chatRoomId, participantId);
+                  });
+                }
 
                 if (messages.isEmpty) {
                   return const Center(child: Text('Say hi!'));

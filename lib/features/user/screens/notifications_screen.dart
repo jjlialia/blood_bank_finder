@@ -429,9 +429,8 @@ class NotificationsScreen extends StatelessWidget {
     }
   }
 
-  String _formatRelativeTime(dynamic timestamp) {
-    if (timestamp == null) return '';
-    final DateTime date = (timestamp as Timestamp).toDate();
+  String _formatRelativeTime(DateTime? date) {
+    if (date == null) return '';
     final now = DateTime.now();
     final diff = now.difference(date);
 
@@ -456,9 +455,8 @@ class NotificationsScreen extends StatelessWidget {
     }
   }
 
-  String _formatDate(dynamic timestamp) {
-    if (timestamp == null) return '';
-    final DateTime date = (timestamp as Timestamp).toDate();
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
     return '${date.day}/${date.month} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

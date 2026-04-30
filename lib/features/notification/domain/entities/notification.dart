@@ -30,7 +30,9 @@ class NotificationEntity {
       userId: data['userId'] ?? '',
       message: data['message'] ?? '',
       isRead: data['isRead'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: data['createdAt'] is Timestamp 
+          ? (data['createdAt'] as Timestamp).toDate() 
+          : (data['createdAt'] as DateTime? ?? DateTime.now()),
       type: data['type'],
       title: data['title'],
       body: data['body'],

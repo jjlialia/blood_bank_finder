@@ -44,7 +44,7 @@ class HospitalMapper {
     final data = doc.data() as Map<String, dynamic>;
     return InventoryEntity(
       id: doc.id,
-      bloodType: data['bloodType'] ?? '',
+      bloodType: data['bloodType'] ?? doc.id,
       units: (data['units'] ?? 0).toDouble(),
       status: data['status'] ?? 'Available',
       lastUpdated: (data['lastUpdated'] as Timestamp?)?.toDate() ?? DateTime.now(),

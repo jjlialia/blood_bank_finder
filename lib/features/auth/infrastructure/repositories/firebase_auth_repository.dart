@@ -1,4 +1,5 @@
-import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import '../../domain/entities/user.dart';
@@ -8,6 +9,9 @@ import '../mappers/user_mapper.dart';
 class FirebaseAuthRepository implements IAuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // TODO: Move to a config file
+  static const String _apiBaseUrl = 'http://localhost:8000';
 
   @override
   Future<UserEntity?> login(String email, String password) async {
@@ -83,30 +87,37 @@ class FirebaseAuthRepository implements IAuthRepository {
 
   @override
   Future<void> sendOtp(String email) async {
-    // Note: OTP service was originally in ApiService. 
-    // For pure DDD, we might need a dedicated NotificationService or similar.
-    // For now, I'll keep the logic here if it's just a Firestore call or external API.
-    // Assuming ApiService.sendOtp was an external API call.
-    // In this migration, we want to remove ApiService.
-    // If ApiService.sendOtp was just a Firestore trigger:
-    await _firestore.collection('otp_requests').add({
-      'email': email,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBaseUrl/auth/send-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (response.statusCode != 200) {
+        final data = jsonDecode(response.body);
+        throw Exception(data['detail'] ?? 'Failed to send OTP');
+      }
+    } catch (e) {
+      throw Exception('Connection error: Could not reach OTP service. Is the backend running?');
+    }
   }
 
   @override
   Future<void> verifyOtp(String email, String otp) async {
-    // Same for verifyOtp.
-    final query = await _firestore
-        .collection('otp_requests')
-        .where('email', isEqualTo: email)
-        .where('otp', isEqualTo: otp)
-        .limit(1)
-        .get();
-    
-    if (query.docs.isEmpty) {
-      throw Exception('Invalid OTP');
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBaseUrl/auth/verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'otp': otp}),
+      );
+
+      if (response.statusCode != 200) {
+        final data = jsonDecode(response.body);
+        throw Exception(data['detail'] ?? 'Invalid or expired OTP');
+      }
+    } catch (e) {
+      throw Exception('Connection error: Could not verify OTP. Is the backend running?');
     }
   }
 

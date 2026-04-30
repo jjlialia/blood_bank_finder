@@ -139,26 +139,50 @@ class UserDrawer extends StatelessWidget {
             onTap: () async {
               final auth = context.read<AuthProvider>();
               final currentUser = auth.user;
-              if (currentUser == null) return;
+              if (currentUser == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('User not logged in')),
+                );
+                return;
+              }
 
-              final chatProvider = context.read<ChatProvider>();
-              final chatId = await chatProvider
-                  .createOrGetChat(currentUser.uid, 'superadmin', {
-                    currentUser.uid:
-                        '${currentUser.firstName} ${currentUser.lastName}',
-                    'superadmin': 'System Admin',
-                  });
-              if (!context.mounted) return;
-              Navigator.pop(context); // Close drawer
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatRoomScreen(
-                    chatRoomId: chatId,
-                    otherParticipantName: 'System Admin',
-                  ),
-                ),
+              // Show loading
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(child: CircularProgressIndicator()),
               );
+
+              try {
+                final chatProvider = context.read<ChatProvider>();
+                final chatId = await chatProvider.createOrGetChat(
+                  currentUser.uid, 
+                  'superadmin', 
+                  {
+                    currentUser.uid: '${currentUser.firstName} ${currentUser.lastName}',
+                    'superadmin': 'System Admin',
+                  }
+                );
+                if (!context.mounted) return;
+                Navigator.pop(context); // Close loading dialog
+                Navigator.pop(context); // Close drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatRoomScreen(
+                      chatRoomId: chatId,
+                      otherParticipantName: 'System Admin',
+                    ),
+                  ),
+                );
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context); // Close loading dialog
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to start chat: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
             },
           ),
           const Spacer(),

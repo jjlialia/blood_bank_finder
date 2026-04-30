@@ -158,6 +158,11 @@ class AuthProvider with ChangeNotifier {
 
   // Internal helper for audit logs to remove DatabaseService dependency
   Future<void> _logAction(AuditLogEntity log) async {
-    await FirebaseFirestore.instance.collection('audit_logs').add(log.toFirestore());
+    try {
+      await FirebaseFirestore.instance.collection('audit_logs').add(log.toFirestore());
+    } catch (e) {
+      print('Warning: Failed to create audit log: $e');
+      // We don't throw here to avoid blocking the user flow (login/signup)
+    }
   }
 }

@@ -6,4 +6,5 @@ abstract class IChatRepository {
   Stream<List<MessageEntity>> getMessagesStream(String chatId);
   Future<void> sendMessage(String chatId, String senderId, String text);
   Future<String> createOrGetChat(String currentUserId, String otherUserId, Map<String, dynamic>? names);
+  Future<void> markMessagesAsRead(String chatId, String userId);
 }
