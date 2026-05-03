@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Finder - Super Admin Flow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+    <style>
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #ef4444;
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .mermaid-container {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 1100px;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Super Admin Feature Map</h1>
+        <p>System Oversight & Governance Flow</p>
+    </div>
+    
+    <div class="mermaid-container">
+        <pre class="mermaid">
+flowchart TD
+    %% Styling
+    classDef start_end fill:#ef4444,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef process fill:#334155,stroke:#94a3b8,stroke-width:1px,color:#fff;
+    classDef decision fill:#7c3aed,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef io fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef db fill:#f59e0b,stroke:#fff,stroke-width:2px,color:#fff;
+
+    %% Node Definitions
+    DASHBOARD(["Super Admin Dashboard"])
+    MANAGE_HOSP["Manage Hospitals"]
+    MANAGE_USERS["Manage Users"]
+    AUDIT_TRAIL["Audit Trail / Global Logs"]
+    REGISTER_HOSP["Hospital Registration"]
+    
+    %% Processes
+    GET_SYSTEM_STATS["Process: Fetch Global Metrics"]
+    UPDATE_USER_STATUS["Process: toggleUserBanStatus"]
+    VERIFY_HOSP["Process: verifyHospital"]
+    DELETE_HOSP["Process: deleteHospital"]
+    
+    %% Decisions
+    BAN_CHOICE{"Action: Ban or Unban User?"}
+    HOSP_ACTION{"Action: Verify or Remove?"}
+    
+    %% Inputs/Outputs
+    USER_SEARCH[/"Input: Search by Email/Name"/]
+    HOSP_DATA[/"Input: New Hospital Credentials"/]
+    LOG_FILTER[/"Input: Filter Logs by Category/User"/]
+    REPORT_OUT[/ "Output: System Health Summary"/]
+
+    %% Database
+    DB_USERS[("Firestore: users")]
+    DB_HOSP[("Firestore: hospitals")]
+    DB_AUDIT[("Firestore: audit_logs")]
+
+    %% Connections
+    DASHBOARD --> GET_SYSTEM_STATS
+    GET_SYSTEM_STATS --> REPORT_OUT
+    REPORT_OUT --> DASHBOARD
+    
+    %% User Management Flow
+    DASHBOARD -- "Manage Users" --> MANAGE_USERS
+    MANAGE_USERS --> USER_SEARCH
+    USER_SEARCH --> DB_USERS
+    DB_USERS -- "User Data" --> MANAGE_USERS
+    MANAGE_USERS --> BAN_CHOICE
+    BAN_CHOICE --> UPDATE_USER_STATUS
+    UPDATE_USER_STATUS --> DB_USERS
+    UPDATE_USER_STATUS -- "Security Log" --> DB_AUDIT
+    
+    %% Hospital Management Flow
+    DASHBOARD -- "Manage Hospitals" --> MANAGE_HOSP
+    MANAGE_HOSP --> DB_HOSP
+    DB_HOSP -- "Hospital List" --> MANAGE_HOSP
+    MANAGE_HOSP --> HOSP_ACTION
+    HOSP_ACTION -- "Verify" --> VERIFY_HOSP
+    HOSP_ACTION -- "Delete" --> DELETE_HOSP
+    VERIFY_HOSP --> DB_HOSP
+    DELETE_HOSP --> DB_HOSP
+    VERIFY_HOSP -- "Admin Log" --> DB_AUDIT
+    
+    %% Registration Flow
+    DASHBOARD -- "New Hospital" --> REGISTER_HOSP
+    REGISTER_HOSP --> HOSP_DATA
+    HOSP_DATA --> DB_HOSP
+    
+    %% Audit Flow
+    DASHBOARD -- "Audit Logs" --> AUDIT_TRAIL
+    AUDIT_TRAIL --> LOG_FILTER
+    LOG_FILTER --> DB_AUDIT
+    DB_AUDIT -- "Stream Logs" --> AUDIT_TRAIL
+
+    %% Style Application
+    class DASHBOARD start_end;
+    class MANAGE_HOSP,MANAGE_USERS,AUDIT_TRAIL,REGISTER_HOSP,GET_SYSTEM_STATS,UPDATE_USER_STATUS,VERIFY_HOSP,DELETE_HOSP process;
+    class BAN_CHOICE,HOSP_ACTION decision;
+    class USER_SEARCH,HOSP_DATA,LOG_FILTER,REPORT_OUT io;
+    class DB_USERS,DB_HOSP,DB_AUDIT db;
+        </pre>
+    </div>
+</body>
+</html>

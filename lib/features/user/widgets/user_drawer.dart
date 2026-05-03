@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:blood_bank_finder/core/providers/auth_provider.dart';
-import 'package:blood_bank_finder/features/auth/screens/login_screen.dart';
 import 'package:blood_bank_finder/features/auth/screens/landing_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/user_home_screen.dart';
 import 'package:blood_bank_finder/features/user/screens/profile_screen.dart';
@@ -150,19 +149,18 @@ class UserDrawer extends StatelessWidget {
               showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (context) => const Center(child: CircularProgressIndicator()),
+                builder: (context) =>
+                    const Center(child: CircularProgressIndicator()),
               );
 
               try {
                 final chatProvider = context.read<ChatProvider>();
-                final chatId = await chatProvider.createOrGetChat(
-                  currentUser.uid, 
-                  'superadmin', 
-                  {
-                    currentUser.uid: '${currentUser.firstName} ${currentUser.lastName}',
-                    'superadmin': 'System Admin',
-                  }
-                );
+                final chatId = await chatProvider
+                    .createOrGetChat(currentUser.uid, 'superadmin', {
+                      currentUser.uid:
+                          '${currentUser.firstName} ${currentUser.lastName}',
+                      'superadmin': 'System Admin',
+                    });
                 if (!context.mounted) return;
                 Navigator.pop(context); // Close loading dialog
                 Navigator.pop(context); // Close drawer
@@ -179,7 +177,10 @@ class UserDrawer extends StatelessWidget {
                 if (context.mounted) {
                   Navigator.pop(context); // Close loading dialog
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to start chat: $e'), backgroundColor: Colors.red),
+                    SnackBar(
+                      content: Text('Failed to start chat: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               }

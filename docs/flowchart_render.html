@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Finder - Authentication Flow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+    <style>
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #ef4444;
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .mermaid-container {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 1000px;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Authentication System Flow</h1>
+        <p>Blood Bank Finder - End-to-End Logic Diagram</p>
+    </div>
+    
+    <div class="mermaid-container">
+        <pre class="mermaid">
+flowchart TD
+    %% Styling
+    classDef start_end fill:#ef4444,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef process fill:#334155,stroke:#94a3b8,stroke-width:1px,color:#fff;
+    classDef decision fill:#7c3aed,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef io fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef db fill:#f59e0b,stroke:#fff,stroke-width:2px,color:#fff;
+
+    %% Node Definitions
+    START(["Start App"])
+    SPLASH["Splash Screen"]
+    IS_AUTH{"Is Authenticated?"}
+    LANDING["Landing Screen"]
+    LOGIN["Login Screen"]
+    SIGNUP["Signup Screen"]
+    INPUT_CRED[/"Input Email & Password"/]
+    ADMIN_BYPASS{"Admin Bypass?"}
+    SEND_OTP["Process: sendOtp"]
+    OTP_SCREEN["OTP Screen"]
+    INPUT_OTP[/"Input OTP Code"/]
+    VERIFY_OTP{"OTP Valid?"}
+    DO_LOGIN["Process: login"]
+    IS_BANNED{"Is Banned?"}
+    LOG_ACTION["Process: _logAction"]
+    DB[("Firebase Auth / Firestore")]
+    INPUT_REG[/"Input Registration Data"/]
+    DO_SIGNUP["Process: signup"]
+    ROLE{"Check User Role"}
+    USER_HOME(["User Home Screen"])
+    HOSPITAL_HOME(["Hospital Admin Dashboard"])
+    SUPER_HOME(["Super Admin Dashboard"])
+    LOGOUT["Process: logout"]
+
+    %% Apply Styles
+    class START,USER_HOME,HOSPITAL_HOME,SUPER_HOME start_end;
+    class SPLASH,LANDING,LOGIN,SIGNUP,SEND_OTP,DO_LOGIN,LOG_ACTION,DO_SIGNUP,LOGOUT process;
+    class IS_AUTH,ADMIN_BYPASS,VERIFY_OTP,IS_BANNED,ROLE decision;
+    class INPUT_CRED,OTP_SCREEN,INPUT_OTP,INPUT_REG io;
+    class DB db;
+
+    %% Connections
+    START --> SPLASH
+    SPLASH --> IS_AUTH
+    
+    IS_AUTH -- "No" --> LANDING
+    IS_AUTH -- "Yes" --> ROLE
+    
+    LANDING --> LOGIN
+    LOGIN --> INPUT_CRED
+    LOGIN -- "Sign Up Link" --> SIGNUP
+    
+    SIGNUP --> INPUT_REG
+    INPUT_REG --> DO_SIGNUP
+    DO_SIGNUP --> DB
+    DO_SIGNUP --> LOG_ACTION
+    LOG_ACTION --> ROLE
+    
+    INPUT_CRED --> ADMIN_BYPASS
+    
+    ADMIN_BYPASS -- "No" --> SEND_OTP
+    SEND_OTP --> OTP_SCREEN
+    OTP_SCREEN --> INPUT_OTP
+    INPUT_OTP --> VERIFY_OTP
+    
+    VERIFY_OTP -- "No" --> OTP_SCREEN
+    VERIFY_OTP -- "Yes" --> DO_LOGIN
+    
+    ADMIN_BYPASS -- "Yes" --> DO_LOGIN
+    
+    DO_LOGIN --> DB
+    DO_LOGIN --> IS_BANNED
+    
+    IS_BANNED -- "Yes" --> LOGOUT
+    LOGOUT --> LANDING
+    
+    IS_BANNED -- "No" --> LOG_ACTION
+    
+    ROLE -- "superadmin" --> SUPER_HOME
+    ROLE -- "admin" --> HOSPITAL_HOME
+    ROLE -- "user" --> USER_HOME
+        </pre>
+    </div>
+</body>
+</html>

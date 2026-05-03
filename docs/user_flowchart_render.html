@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Finder - User Feature Flow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+    <style>
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #ef4444;
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .mermaid-container {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 1200px;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Regular User Feature Map</h1>
+        <p>Complete Operational Procedures & Navigation</p>
+    </div>
+    
+    <div class="mermaid-container">
+        <pre class="mermaid">
+flowchart TD
+    %% Styling
+    classDef start_end fill:#ef4444,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef process fill:#334155,stroke:#94a3b8,stroke-width:1px,color:#fff;
+    classDef decision fill:#7c3aed,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef io fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef db fill:#f59e0b,stroke:#fff,stroke-width:2px,color:#fff;
+
+    %% Nodes
+    DASHBOARD(["User Dashboard"])
+    DRAWER["User Drawer (Navigation)"]
+    
+    %% Main Actions
+    FIND_BANKS["Find Blood Banks"]
+    REQUEST_BLOOD["Request Blood"]
+    DONATE_BLOOD["Donate Blood"]
+    MY_HISTORY["My History / Activity"]
+    CHAT_CENTER["Chat Center"]
+    NOTIFICATIONS["Notifications"]
+    PROFILE["Profile Management"]
+    
+    %% Logic & Processes
+    SUBMIT_REQ["Process: Create Blood Request"]
+    SUBMIT_DON["Process: Schedule Donation"]
+    VALIDATE{"Form Valid?"}
+    IS_REQ_TYPE{"Type: Request or Donation?"}
+    CHAT_TARGET{"Target: Admin or Hospital?"}
+    
+    %% Inputs/Outputs
+    REQ_INPUT[/"Input: Patient Info, Blood Type, Urgency"/]
+    DON_INPUT[/"Input: Selected Hospital, Date"/]
+    SEARCH_INPUT[/"Input: Hospital Name/Location"/]
+    RESULTS[/ "Output: Filtered List of Banks"/]
+    STATUS_OUT[/ "Output: Approval/Rejection Alert"/]
+    
+    %% Database
+    DB_REQ[("Firestore: blood_requests")]
+    DB_CHAT[("Firestore: chat_rooms")]
+    DB_USER[("Firestore: users")]
+
+    %% Connections
+    DASHBOARD --> DRAWER
+    
+    %% Find Banks Flow
+    DASHBOARD -- "Quick Action" --> FIND_BANKS
+    FIND_BANKS --> SEARCH_INPUT
+    SEARCH_INPUT --> RESULTS
+    RESULTS -- "View Details" --> FIND_BANKS
+    
+    %% Request Flow
+    DASHBOARD -- "Emergency Request" --> REQUEST_BLOOD
+    REQUEST_BLOOD --> REQ_INPUT
+    REQ_INPUT --> VALIDATE
+    VALIDATE -- "No" --> REQUEST_BLOOD
+    VALIDATE -- "Yes" --> SUBMIT_REQ
+    SUBMIT_REQ --> IS_REQ_TYPE
+    IS_REQ_TYPE -- "isRequest: true" --> DB_REQ
+    
+    %% Donation Flow
+    DASHBOARD -- "Donate Now" --> DONATE_BLOOD
+    DONATE_BLOOD --> DON_INPUT
+    DON_INPUT --> SUBMIT_DON
+    SUBMIT_DON --> IS_REQ_TYPE
+    IS_REQ_TYPE -- "isRequest: false" --> DB_REQ
+    
+    %% History & Status
+    DB_REQ -- "Stream Data" --> MY_HISTORY
+    DB_REQ -- "Trigger Notification" --> STATUS_OUT
+    STATUS_OUT --> NOTIFICATIONS
+    
+    %% Chat Flow
+    DRAWER -- "Contact Support" --> CHAT_TARGET
+    DASHBOARD -- "Chat Icon" --> CHAT_CENTER
+    CHAT_TARGET -- "System Admin" --> CHAT_CENTER
+    CHAT_CENTER --> DB_CHAT
+    
+    %% Profile Flow
+    DRAWER -- "My Profile" --> PROFILE
+    PROFILE --> INPUT_PROF[/"Input: New Contact / Blood Group"/]
+    INPUT_PROF --> DB_USER
+    
+    %% Style Application
+    class DASHBOARD start_end;
+    class FIND_BANKS,REQUEST_BLOOD,DONATE_BLOOD,MY_HISTORY,CHAT_CENTER,NOTIFICATIONS,PROFILE process;
+    class SUBMIT_REQ,SUBMIT_DON process;
+    class VALIDATE,IS_REQ_TYPE,CHAT_TARGET decision;
+    class REQ_INPUT,DON_INPUT,SEARCH_INPUT,RESULTS,STATUS_OUT,INPUT_PROF io;
+    class DB_REQ,DB_CHAT,DB_USER db;
+        </pre>
+    </div>
+</body>
+</html>

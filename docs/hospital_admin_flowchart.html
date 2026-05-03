@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Finder - Hospital Admin Flow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+    <style>
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #ef4444;
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .mermaid-container {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 1100px;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Hospital Admin Feature Map</h1>
+        <p>Blood Management & Request Processing Flow</p>
+    </div>
+    
+    <div class="mermaid-container">
+        <pre class="mermaid">
+flowchart TD
+    %% Styling
+    classDef start_end fill:#ef4444,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef process fill:#334155,stroke:#94a3b8,stroke-width:1px,color:#fff;
+    classDef decision fill:#7c3aed,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef io fill:#0ea5e9,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef db fill:#f59e0b,stroke:#fff,stroke-width:2px,color:#fff;
+
+    %% Node Definitions
+    DASHBOARD(["Hospital Admin Dashboard"])
+    REQ_LIST["Blood Requests List"]
+    INVENTORY["Inventory Management"]
+    HOSP_PROFILE["Hospital Profile"]
+    CHAT_LIST["Chat List"]
+    
+    %% Processes
+    STREAM_STATS["Process: Stream Hospital Stats"]
+    UPDATE_REQ["Process: updateRequestStatus"]
+    UPDATE_INV["Process: updateInventory"]
+    SAVE_PROFILE["Process: updateHospitalDetails"]
+    
+    %% Decisions
+    STATUS_CHOICE{"Action: Approve, Reject, or Complete?"}
+    INV_CHANGE{"Action: Increase or Decrease Stock?"}
+    
+    %% Inputs/Outputs
+    FILTER_TYPE[/"Input: Filter by Pending/Approved"/]
+    INV_INPUT[/"Input: Blood Type & Unit Count"/]
+    PROFILE_INPUT[/"Input: Address, Contact, Logo"/]
+    NOTIF_OUT[/ "Output: Push Notification to User"/]
+
+    %% Database
+    DB_REQ[("Firestore: blood_requests")]
+    DB_INV[("Firestore: blood_inventory")]
+    DB_HOSP[("Firestore: hospitals")]
+    DB_AUDIT[("Firestore: audit_logs")]
+
+    %% Connections
+    DASHBOARD --> STREAM_STATS
+    STREAM_STATS --> DASHBOARD
+    
+    %% Request Management Flow
+    DASHBOARD -- "View Requests" --> REQ_LIST
+    REQ_LIST --> FILTER_TYPE
+    FILTER_TYPE --> DB_REQ
+    DB_REQ -- "List Requests" --> REQ_LIST
+    REQ_LIST --> STATUS_CHOICE
+    
+    STATUS_CHOICE --> UPDATE_REQ
+    UPDATE_REQ --> DB_REQ
+    UPDATE_REQ --> NOTIF_OUT
+    UPDATE_REQ -- "Auto Log" --> DB_AUDIT
+    
+    %% Inventory Flow
+    DASHBOARD -- "Manage Stock" --> INVENTORY
+    INVENTORY --> INV_INPUT
+    INV_INPUT --> INV_CHANGE
+    INV_CHANGE --> UPDATE_INV
+    UPDATE_INV --> DB_INV
+    UPDATE_INV -- "Log Action" --> DB_AUDIT
+    
+    %% Profile Flow
+    DASHBOARD -- "Edit Profile" --> HOSP_PROFILE
+    HOSP_PROFILE --> PROFILE_INPUT
+    PROFILE_INPUT --> SAVE_PROFILE
+    SAVE_PROFILE --> DB_HOSP
+    
+    %% Chat Flow
+    DASHBOARD -- "Messages" --> CHAT_LIST
+    CHAT_LIST -- "Reply to Donor" --> DB_CHAT[("Firestore: chat_rooms")]
+
+    %% Style Application
+    class DASHBOARD start_end;
+    class REQ_LIST,INVENTORY,HOSP_PROFILE,CHAT_LIST,STREAM_STATS,UPDATE_REQ,UPDATE_INV,SAVE_PROFILE process;
+    class STATUS_CHOICE,INV_CHANGE decision;
+    class FILTER_TYPE,INV_INPUT,PROFILE_INPUT,NOTIF_OUT io;
+    class DB_REQ,DB_INV,DB_HOSP,DB_AUDIT db;
+        </pre>
+    </div>
+</body>
+</html>

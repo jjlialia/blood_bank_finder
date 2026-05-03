@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Finder - Database ERD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #ef4444;
+            --accent-hover: #dc2626;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --pk-color: #fbbf24;
+            --fk-color: #60a5fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 20%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 5rem;
+        }
+
+        header {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0) 0%, var(--bg-color) 100%),
+                        url('https://images.unsplash.com/photo-1615461066841-6116ecaaba7f?q=80&w=2000&auto=format&fit=crop') center/cover;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: -50px auto 0;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 3;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 32px;
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        .erd-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .entities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .entity-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .entity-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .entity-header {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .entity-name {
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .entity-type {
+            font-size: 0.75rem;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-color);
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+            font-weight: 600;
+        }
+
+        .attributes-list {
+            padding: 1rem 1.5rem;
+        }
+
+        .attribute-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.9rem;
+        }
+
+        .attribute-item:last-child {
+            border-bottom: none;
+        }
+
+        .attr-name {
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .attr-type {
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+
+        .tag {
+            font-size: 0.65rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .tag-pk { background: rgba(251, 191, 36, 0.1); color: var(--pk-color); }
+        .tag-fk { background: rgba(96, 165, 250, 0.1); color: var(--fk-color); }
+
+        .relationships-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .rel-item {
+            background: rgba(15, 23, 42, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .rel-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .rel-cardinality {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .rel-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .entities-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <h1>System Architecture ERD</h1>
+            <p class="subtitle">100% accurate database schema for the Blood Bank Finder system based on actual implementation models.</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- ERD DIAGRAM SECTION -->
+        <section class="section-card">
+            <h2>Visual Entity Relationship Diagram</h2>
+            <div class="erd-container">
+                <pre class="mermaid">
+erDiagram
+    USERS ||--o{ BLOOD_REQUESTS : "initiates"
+    HOSPITALS ||--o{ BLOOD_REQUESTS : "handles"
+    HOSPITALS ||--o{ INVENTORY : "maintains"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    BLOOD_REQUESTS ||--o{ NOTIFICATIONS : "triggers"
+    USERS ||--o{ CHATS : "participates"
+    CHATS ||--o{ MESSAGES : "contains"
+    USERS ||--o{ MESSAGES : "sends"
+    HOSPITALS ||--o{ USERS : "employs (admin)"
+
+    USERS {
+        string uid PK
+        string email
+        string role
+        string firstName
+        string lastName
+        string fatherName
+        string mobile
+        string gender
+        string bloodGroup
+        string islandGroup
+        string region
+        string city
+        string barangay
+        string address
+        string hospitalId FK
+        boolean isBanned
+        datetime createdAt
+    }
+
+    HOSPITALS {
+        string id PK
+        string name
+        string email
+        string islandGroup
+        string region
+        string city
+        string barangay
+        string address
+        string contactNumber
+        float latitude
+        float longitude
+        list availableBloodTypes
+        boolean isActive
+        datetime createdAt
+    }
+
+    BLOOD_REQUESTS {
+        string id PK
+        string userId FK
+        string userName
+        string type
+        string bloodType
+        string status
+        string hospitalId FK
+        string hospitalName
+        string contactNumber
+        float quantity
+        string patientName
+        string patientHospital
+        string urgency
+        string hospitalWard
+        string medicalReason
+        string lastDonationDate
+        string preferredDate
+        string preferredTime
+        string adminMessage
+        datetime createdAt
+    }
+
+    INVENTORY {
+        string blood_type PK
+        float units
+        datetime last_updated
+    }
+
+    NOTIFICATIONS {
+        string id PK
+        string userId FK
+        string message
+        boolean isRead
+        datetime createdAt
+        string type
+        string title
+        string body
+        string requestId FK
+    }
+
+    OTP_VERIFICATIONS {
+        string email PK
+        string otp
+        timestamp expiresAt
+        datetime createdAt
+    }
+
+    CHATS {
+        string id PK
+        list participants
+        string lastMessage
+        datetime lastUpdateTime
+        map participantNames
+    }
+
+    MESSAGES {
+        string id PK
+        string senderId FK
+        string text
+        datetime timestamp
+        boolean isRead
+    }
+                </pre>
+            </div>
+            <p class="rel-desc" style="text-align: center;">Note: This ERD represents the logical relational mapping of the Firestore NoSQL collections.</p>
+        </section>
+
+        <!-- ENTITIES DETAIL SECTION -->
+        <section class="section-card">
+            <h2>Detailed Entity List</h2>
+            <div class="entities-grid">
+                <!-- User -->
+                <div class="entity-card">
+                    <div class="entity-header">
+                        <span class="entity-name">users</span>
+                        <span class="entity-type">Collection</span>
+                    </div>
+                    <div class="attributes-list">
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-pk">PK</span> uid</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">email</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">role</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">firstName</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">lastName</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">mobile</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">bloodGroup</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-fk">FK</span> hospitalId</span> <span class="attr-type">string?</span></div>
+                        <div class="attribute-item"><span class="attr-name">isBanned</span> <span class="attr-type">bool</span></div>
+                    </div>
+                </div>
+
+                <!-- Hospital -->
+                <div class="entity-card">
+                    <div class="entity-header">
+                        <span class="entity-name">hospitals</span>
+                        <span class="entity-type">Collection</span>
+                    </div>
+                    <div class="attributes-list">
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-pk">PK</span> id</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">name</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">availableBloodTypes</span> <span class="attr-type">list&lt;str&gt;</span></div>
+                        <div class="attribute-item"><span class="attr-name">latitude</span> <span class="attr-type">float</span></div>
+                        <div class="attribute-item"><span class="attr-name">longitude</span> <span class="attr-type">float</span></div>
+                        <div class="attribute-item"><span class="attr-name">isActive</span> <span class="attr-type">bool</span></div>
+                        <div class="attribute-item"><span class="attr-name">contactNumber</span> <span class="attr-type">string</span></div>
+                    </div>
+                </div>
+
+                <!-- Blood Request -->
+                <div class="entity-card">
+                    <div class="entity-header">
+                        <span class="entity-name">blood_requests</span>
+                        <span class="entity-type">Collection</span>
+                    </div>
+                    <div class="attributes-list">
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-pk">PK</span> id</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-fk">FK</span> userId</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-fk">FK</span> hospitalId</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">type</span> <span class="attr-type">str (Req/Don)</span></div>
+                        <div class="attribute-item"><span class="attr-name">status</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">quantity</span> <span class="attr-type">float</span></div>
+                        <div class="attribute-item"><span class="attr-name">urgency</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">adminMessage</span> <span class="attr-type">string?</span></div>
+                    </div>
+                </div>
+
+                <!-- Inventory -->
+                <div class="entity-card">
+                    <div class="entity-header">
+                        <span class="entity-name">inventory</span>
+                        <span class="entity-type">Sub-collection</span>
+                    </div>
+                    <div class="attributes-list">
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-pk">PK</span> blood_type</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">units</span> <span class="attr-type">float</span></div>
+                        <div class="attribute-item"><span class="attr-name">last_updated</span> <span class="attr-type">datetime</span></div>
+                    </div>
+                </div>
+
+                <!-- Notification -->
+                <div class="entity-card">
+                    <div class="entity-header">
+                        <span class="entity-name">notifications</span>
+                        <span class="entity-type">Collection</span>
+                    </div>
+                    <div class="attributes-list">
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-pk">PK</span> id</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-fk">FK</span> userId</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-fk">FK</span> requestId</span> <span class="attr-type">string?</span></div>
+                        <div class="attribute-item"><span class="attr-name">isRead</span> <span class="attr-type">bool</span></div>
+                        <div class="attribute-item"><span class="attr-name">title</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">body</span> <span class="attr-type">string</span></div>
+                    </div>
+                </div>
+
+                <!-- Chat -->
+                <div class="entity-card">
+                    <div class="entity-header">
+                        <span class="entity-name">chats</span>
+                        <span class="entity-type">Collection</span>
+                    </div>
+                    <div class="attributes-list">
+                        <div class="attribute-item"><span class="attr-name"><span class="tag tag-pk">PK</span> id</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">participants</span> <span class="attr-type">list&lt;str&gt;</span></div>
+                        <div class="attribute-item"><span class="attr-name">lastMessage</span> <span class="attr-type">string</span></div>
+                        <div class="attribute-item"><span class="attr-name">lastUpdateTime</span> <span class="attr-type">datetime</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RELATIONSHIPS SECTION -->
+        <section class="section-card">
+            <h2>Relationships & Cardinality</h2>
+            <div class="relationships-list">
+                <div class="rel-item">
+                    <div class="rel-title">User ↔ BloodRequest <span class="rel-cardinality">(1:N)</span></div>
+                    <div class="rel-desc">A single user can initiate multiple blood requests or donations over time. Each request is linked to exactly one user.</div>
+                </div>
+                <div class="rel-item">
+                    <div class="rel-title">Hospital ↔ BloodRequest <span class="rel-cardinality">(1:N)</span></div>
+                    <div class="rel-desc">A hospital handles many requests from different users. Each request is targeted at a specific hospital.</div>
+                </div>
+                <div class="rel-item">
+                    <div class="rel-title">Hospital ↔ Inventory <span class="rel-cardinality">(1:N)</span></div>
+                    <div class="rel-desc">Each hospital maintains its own inventory levels. In Firestore, this is implemented as a sub-collection for optimal scoping.</div>
+                </div>
+                <div class="rel-item">
+                    <div class="rel-title">User ↔ ChatRoom <span class="rel-cardinality">(N:M)</span></div>
+                    <div class="rel-desc">Users can participate in multiple chats, and each chat has multiple participants (stored as an array of UIDs).</div>
+                </div>
+                <div class="rel-item">
+                    <div class="rel-title">ChatRoom ↔ Message <span class="rel-cardinality">(1:N)</span></div>
+                    <div class="rel-desc">A chat room contains an ordered stream of messages. Messages are scoped to a specific room ID.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Blood Bank Finder System Documentation | Senior Engineering Design</p>
+    </footer>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#ef4444',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#ef4444',
+                lineColor: '#64748b',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#0f172a'
+            }
+        });
+    </script>
+</body>
+</html>

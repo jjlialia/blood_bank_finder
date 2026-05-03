@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Finder - Use Cases</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent-color: #ef4444;
+            --accent-hover: #dc2626;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --user-color: #10b981;
+            --hospital-color: #3b82f6;
+            --admin-color: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 20%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            padding-bottom: 5rem;
+        }
+
+        header {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0) 0%, var(--bg-color) 100%),
+                        url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop') center/cover;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: -50px auto 0;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 3;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 32px;
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        .diagram-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .actors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .actor-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .actor-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .actor-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .actor-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .actor-info h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .actor-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .use-cases-list {
+            padding: 1.5rem;
+        }
+
+        .use-case-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .use-case-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .uc-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .uc-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            padding-left: 1.5rem;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Actor specific themes */
+        .actor-user .actor-icon { background: rgba(16, 185, 129, 0.1); color: var(--user-color); }
+        .actor-user .actor-header { border-bottom-color: rgba(16, 185, 129, 0.2); }
+        
+        .actor-hospital .actor-icon { background: rgba(59, 130, 246, 0.1); color: var(--hospital-color); }
+        .actor-hospital .actor-header { border-bottom-color: rgba(59, 130, 246, 0.2); }
+
+        .actor-admin .actor-icon { background: rgba(245, 158, 11, 0.1); color: var(--admin-color); }
+        .actor-admin .actor-header { border-bottom-color: rgba(245, 158, 11, 0.2); }
+
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .actors-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <h1>System Use Cases</h1>
+            <p class="subtitle">A comprehensive breakdown of actor roles and functional capabilities within the Blood Bank Finder ecosystem.</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- USE CASE DIAGRAM SECTION -->
+        <section class="section-card">
+            <h2>Visual Use Case Diagram</h2>
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    %% Actors
+    User((Regular User))
+    HospAdmin((Hospital Admin))
+    SuperAdmin((Super Admin))
+
+    subgraph AuthProfile [Auth & Profile]
+        UC1(Register & Verify OTP)
+        UC2(Login & Authenticate)
+        UC3(Manage Personal Profile)
+    end
+
+    subgraph BloodOps [Blood Operations]
+        UC4(Request Blood)
+        UC5(Donate Blood)
+        UC6(Search Nearby Hospitals)
+        UC7(Process Blood Request)
+        UC8(Manage Blood Inventory)
+    end
+
+    subgraph Comm [Communication]
+        UC9(Real-time Chat)
+        UC10(Receive Notifications)
+        UC11(Manual Notifications)
+    end
+
+    subgraph System [System Management]
+        UC12(Manage User Access)
+        UC13(Manage Hospital Directory)
+        UC14(Promote Users to Admin)
+        UC15(View Global Statistics)
+    end
+
+    %% Relationships
+    User --- UC1
+    User --- UC2
+    User --- UC3
+    User --- UC4
+    User --- UC5
+    User --- UC6
+    User --- UC9
+    User --- UC10
+
+    HospAdmin --- UC2
+    HospAdmin --- UC7
+    HospAdmin --- UC8
+    HospAdmin --- UC9
+    HospAdmin --- UC11
+
+    SuperAdmin --- UC2
+    SuperAdmin --- UC12
+    SuperAdmin --- UC13
+    SuperAdmin --- UC14
+    SuperAdmin --- UC15
+
+    %% Styling
+    style User fill:#10b981,stroke:#059669,color:#fff
+    style HospAdmin fill:#3b82f6,stroke:#2563eb,color:#fff
+    style SuperAdmin fill:#f59e0b,stroke:#d97706,color:#fff
+
+    linkStyle 0,1,2,3,4,5,6,7 stroke:#10b981,stroke-width:2px;
+    linkStyle 8,9,10,11,12 stroke:#3b82f6,stroke-width:2px;
+    linkStyle 13,14,15,16,17 stroke:#f59e0b,stroke-width:2px;
+                </pre>
+            </div>
+        </section>
+
+        <!-- ACTORS DETAIL SECTION -->
+        <section class="section-card">
+            <h2>Actor Capabilities</h2>
+            <div class="actors-grid">
+                <!-- Regular User -->
+                <div class="actor-card actor-user">
+                    <div class="actor-header">
+                        <div class="actor-icon">👤</div>
+                        <div class="actor-info">
+                            <h3>Regular User</h3>
+                            <p>Donors and Recipients</p>
+                        </div>
+                    </div>
+                    <div class="use-cases-list">
+                        <div class="use-case-item">
+                            <div class="uc-title">Blood Request/Donation</div>
+                            <div class="uc-desc">Initiate urgent blood requests or schedule voluntary donations at specific hospitals.</div>
+                        </div>
+                        <div class="use-case-item">
+                            <div class="uc-title">Nearby Search</div>
+                            <div class="uc-desc">Use geolocation to find the closest hospitals with available blood types.</div>
+                        </div>
+                        <div class="use-case-item">
+                            <div class="uc-title">Communication</div>
+                            <div class="uc-desc">Chat directly with hospital admins regarding active requests and receive status alerts.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hospital Admin -->
+                <div class="actor-card actor-hospital">
+                    <div class="actor-header">
+                        <div class="actor-icon">🏥</div>
+                        <div class="actor-info">
+                            <h3>Hospital Admin</h3>
+                            <p>Facility Managers</p>
+                        </div>
+                    </div>
+                    <div class="use-cases-list">
+                        <div class="use-case-item">
+                            <div class="uc-title">Request Processing</div>
+                            <div class="uc-desc">Review incoming donor and recipient applications; approve, reject, or mark as 'on progress'.</div>
+                        </div>
+                        <div class="use-case-item">
+                            <div class="uc-title">Inventory Control</div>
+                            <div class="uc-desc">Update and sync blood unit stock levels for visibility to the public.</div>
+                        </div>
+                        <div class="use-case-item">
+                            <div class="uc-title">Active Response</div>
+                            <div class="uc-desc">Manage real-time chats with users and send custom feedback messages.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Super Admin -->
+                <div class="actor-card actor-admin">
+                    <div class="actor-header">
+                        <div class="actor-icon">🛡️</div>
+                        <div class="actor-info">
+                            <h3>Super Admin</h3>
+                            <p>System Governors</p>
+                        </div>
+                    </div>
+                    <div class="use-cases-list">
+                        <div class="use-case-item">
+                            <div class="uc-title">Security & Governance</div>
+                            <div class="uc-desc">Ban malicious users and monitor global transaction logs for system integrity.</div>
+                        </div>
+                        <div class="use-case-item">
+                            <div class="uc-title">Infrastructure Management</div>
+                            <div class="uc-desc">Onboard new hospitals, manage directories, and assign admin permissions.</div>
+                        </div>
+                        <div class="use-case-item">
+                            <div class="uc-title">Ecosystem Oversight</div>
+                            <div class="uc-desc">View global analytics on blood availability and request fulfillment rates.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Blood Bank Finder System Documentation | Senior Product Design</p>
+    </footer>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#ef4444',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#ef4444',
+                lineColor: '#64748b',
+                secondaryColor: '#1e293b',
+                tertiaryColor: '#0f172a'
+            }
+        });
+    </script>
+</body>
+</html>
